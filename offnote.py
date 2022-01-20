@@ -66,21 +66,23 @@ def extract_command(block):
     except:
         return None
 
-def complete_command(headers, block):
-    url = f"{URL_BASE}/blocks/{block['id']}"
-    r = requests.patch(url, headers=headers, json=block)
+def complete_command(headers, command_block):
+    # Marking command as complete
+    command_block["to_do"]["checked"] = True
+    url = f"{URL_BASE}/blocks/{command_block['id']}"
+    r = requests.patch(url, headers=headers, json=command_block)
     if r.status_code != 200:
         print(r.content)
 
 
-def send_result(headers, page_id, output):
-    url = f"{URL_BASE}/blocks/{page_id}/children"
+def send_command_result(headers, command_block_id, output):
+    url = f"{URL_BASE}/blocks/{command_block_id}/children"
     body = {
         "children": [
             {
                 "object": "block",
-                "type": "paragraph",
-                "paragraph": {
+                "type": "quote",
+                "quote": {
                     "text": [
                         {
                             "type": "text", 
@@ -115,20 +117,23 @@ def main():
     # Main event loop
     while True:
         blocks = get_blocks(headers, page_id)
+
         if blocks:
-            if new_command(blocks):
-                command_block = blocks[-1]
-                command = extract_command(command_block)
-                if command:
+            command_blocks = list(filter(lambda b: b["type"] == "to_do", blocks))
+            new_commands = list(filter(lambda b: b["to_do"]["checked"] == False, command_blocks))
+            if len(new_commands) > 0:
+                for i in range(len(new_commands)):
+                    command = extract_command(new_commands[i])
+                    command_block = new_commands[i]
                     args = command.split(" ")
                     if "🎯" in command:
                         output = subprocess.run(args[:-1], capture_output=True)
                         if output.stderr:
-                            send_result(headers, page_id, output.stderr)
-                        else:
-                            command_block["to_do"]["checked"] = True
                             complete_command(headers, command_block)
-                            send_result(headers, page_id, output.stdout)
+                            send_command_result(headers, page_id, output.stderr)
+                        else:
+                            complete_command(headers, command_block)
+                            send_command_result(headers, command_block["id"], output.stdout)
         else:
             print("ZZZZ")
         sleep(SLEEP_INTERVAL)
