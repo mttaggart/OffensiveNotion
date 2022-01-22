@@ -1,16 +1,18 @@
 extern crate reqwest;
 extern crate tokio;
-extern crate text_io;
+extern crate serde_json;
+
 use std::error::Error;
 // use std::io;
 use std::collections::HashMap;
 use std::io::{self, Read, BufRead, Write};
 
 use tokio::task;
-// use tokio::io::{Error};
+use serde_json::{json};
 
 use reqwest::{Client, ClientBuilder};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+
 
 const URL_BASE: &str = "https://api.notion.com/v1";
 const API_KEY_URL: &str = "http://localhost:8888";
@@ -55,13 +57,38 @@ fn getConfigOptions() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
     )
 }
 
-async fn create_page(client: Client, config_options: ConfigOptions) -> Option<String> {
-    println!("Getting hostname");
+async fn create_page(client: Client, config_options: ConfigOptions, hostname: String) -> Option<String> {
+    println!("Creating page...");
+    let url = format!("{}/pages/", URL_BASE);
+    
     // Craft JSON Body
     let hn = hostname::get().ok()?;
+    let body: serde_json::Value = json!({
+        "parent": {
+            "type": "page_id",
+            "page_id": config_options.parent_page_id
+        },
+        "properties": {
+            "title": [{
+                "text": {
+                    "content": hostname
+                }
+            }]
+        }
+    });
+    let r = client
+        .post(url)
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
     
-    println!("{:?}", hn);
-    Some(hn.into_string().unwrap())
+    if r.status().is_success() {
+        let res_body = r.json::<serde_json::Value>().await.unwrap();
+        return Some(String::from(res_body["id"].as_str()?));
+    }
+    println!("{}",r.text().await.unwrap());
+    None
 }
 
 #[tokio::main]
@@ -74,7 +101,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         
     });
     let config_options = config_options_handle.await?.unwrap();
-    let hn = hostname::get().ok().unwrap();
+    let hn = hostname::get()
+        .ok()
+        .unwrap()
+        .into_string()
+        .unwrap();
     println!("{:?}", hn);
     println!("{:?}", config_options);
     let mut headers = HeaderMap::new();
@@ -85,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .default_headers(headers)
         .build()?;
 
-    let page_id = create_page(client, config_options)
+    let page_id = create_page(client, config_options, hn)
     .await
     .unwrap();
 
