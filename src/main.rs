@@ -99,9 +99,13 @@ async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json::Val
     let r = client.get(url).send().await.unwrap();
 
     if r.status().is_success() {
+        println!("Got blocks");
         let blocks = r.json::<serde_json::Value>().await.unwrap();
-        match blocks.get("children") {
-            Some(bs) => return Ok(bs.to_owned()),
+        match blocks.get("results") {
+            Some(bs) => {
+                println!("{:?}", bs);
+                return Ok(bs.to_owned())
+            },
             None => return Ok(json!([]))
         }
     }
@@ -201,7 +205,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut new_command_blocks: Vec<&serde_json::Value> = command_blocks
             .into_iter()
-            .filter(|&b| b["checked"] == false)
+            .filter(|&b| b["to_do"]["checked"] == false)
             .collect();
 
         for mut block in new_command_blocks {
