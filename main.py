@@ -33,7 +33,7 @@ def is_root():
     if os.geteuid() == 0:
         return
     else:
-        print("[-] You need to run this script as root!")
+        print(important + "You need to run this script as root!")
         parser.print_help()
         exit()
 
@@ -43,15 +43,15 @@ def check_docker():
     """
     Checks if Docker is installed, exits if it is not.
     """
-    print("[*] Checking Docker...")
+    print(info + "Checking Docker...")
     try:
         p = sub.Popen(['docker --version'], shell=True, stdin=sub.PIPE, stdout=sub.PIPE, stderr=sub.PIPE)
         out, err = p.communicate()
         if p.returncode == 0:
-            print("[*] Docker is installed!")
+            print(good + "Docker is installed!")
         elif p.returncode > 0:
             print(
-                "[*] Docker is not installed. Make sure to install Docker first (on Kali/Ubuntu, run: sudo apt-get "
+                important + "Docker is not installed. Make sure to install Docker first (on Kali/Ubuntu, run: sudo apt-get "
                 "install docker.io -y)")
             exit(1)
     except Exception as e:
@@ -64,29 +64,29 @@ def does_config_exist() -> bool:
     """
     Checks for the config file, returns a bool value.
     """
-    print("[*] Checking config file...")
+    print(info + "Checking config file...")
     config_file_exists = os.path.exists(config_file)
     if not config_file_exists:
-        print("[*] No config file located")
+        print(info +"No config file located")
         return False
     else:
-        print("[+] Config file located!")
+        print(good + "Config file located!")
         return True
 
 
 def take_in_vars():
     # Sleep
-    sleep_interval = ask_for_input("[*] Enter the sleep interval for the agent in seconds [default is 30s]", 30)
-    print("[+] Sleep interval: {}".format(sleep_interval))
+    sleep_interval = ask_for_input(important + "Enter the sleep interval for the agent in seconds [default is 30s]", 30)
+    print(good + "Sleep interval: {}".format(sleep_interval))
     # API Key
-    api_key = getpass.getpass("[*] Enter your Notion Developer Account API key > ")
-    print("[+] Got your API key!")
+    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
+    print(good + "Got your API key!")
     # Parent Page ID
-    print("[*] Your notion page's parent ID is the long number at the end of the URL.\n[*] For example, if your page "
+    print(important + "Your notion page's parent ID is the long number at the end of the URL.\n[*] For example, if your page "
           "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent page ID is "
           "11223344556677889900112233445566")
-    parent_page_id = input("[*] Enter your listener's parent page ID > ")
-    print("[+] Parent page ID: {}".format(parent_page_id))
+    parent_page_id = input(important + "Enter your listener's parent page ID > ")
+    print(good + "Parent page ID: {}".format(parent_page_id))
     json_vars = {
         "SLEEP": sleep_interval,
         "API_KEY": api_key,
@@ -100,6 +100,7 @@ def read_config():
     with open("config.json", "r") as jsonfile:
         data = json.load(jsonfile)
         jsonfile.close()
+    print(recc + "Your configs are: ")
     for k, v in data.items():
         if k == "api_key":
             print(r"    [*] {}: [REDACTED]".format(k))
@@ -113,7 +114,7 @@ def write_config(json_string):
 
 
 def are_configs_good() -> bool:
-    res = utils.inputs.yes_or_no("[?] Do these look good? [yes/no] [default is yes] > ", "yes")
+    res = utils.inputs.yes_or_no(important + "Do these look good? [yes/no] [default is yes] > ", "yes")
     return res
 
 
