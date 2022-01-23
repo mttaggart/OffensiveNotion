@@ -61,7 +61,7 @@ Hey, remember this is a normal Notion page! Add some documentation for your oper
 
 Why not stack up a bunch of commands to do initial check-in safety checks...
 
-![img_8.png](assets/img_8.png)
+![img.png](assets/img_8.png)
 
 ... and then run them all when an agent checks in?
 
