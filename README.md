@@ -12,7 +12,7 @@ To use Notion as a platform for offensive operations, you need a few things:
 
 - A Notion account, available [here](https://www.notion.so/signup)
 - A Notion Developers API account, available [here](https://developers.notion.com/)
-- 🦀 **Rust** 🦀. Head to [rustup](https://rustup.rs/) and run:
+- (if installing from source) 🦀 **Rust** 🦀. Head to [rustup](https://rustup.rs/) and run:
 ```
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
@@ -38,10 +38,14 @@ https://www.notion.so/LISTENER-11223344556677889900112233445566
 ... then your **parent page ID** is the number after the name of the listener, split with hyphens into the following schema: 8-4-4-4-12.
 Meaning, your parent page ID would be: `11223344-5566-7788-9900-112233445566`. This value is used to connect your agent to your listener, so keep track of it!
 
-5) Build your agent. From the root directory, enter:
+## Python Installer Script (QuickStart)
+The `main.py` script handles all setup and agent compilation.
+
+Simply enter:
 ```
-$ cargo build [--release]
+$ sudo python3 main.py
 ```
+...and follow the prompts to perform the installation. It creates a Docker container and creates the agent inside, then copies it to your physical host and deletes the container.
 
 ## Agent Control
 When your agent is built and dispatched to the target environment, it uses your secret key and the parent page ID to check in. Once this happens, a new page with the hostname of where the agent landed will appear as a child page of your listener:
