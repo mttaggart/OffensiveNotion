@@ -1,7 +1,7 @@
 # OffensiveNotion
 Notion (yes, the notetaking app) as a C2.
 
-## Wait, what?
+## Wait, What?
 Yes.
 
 ## But Why?
