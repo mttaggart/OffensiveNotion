@@ -5,19 +5,17 @@ extern crate serde_json;
 use std::process::Command;
 use std::error::Error;
 // use std::io;
-use std::collections::HashMap;
-use std::io::{self, Read, BufRead, Write};
+use std::io::{self, Write};
 use std::{thread, time};
 
-use tokio::task;
 use serde_json::{json};
 
-use reqwest::{Client, ClientBuilder};
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::{Client};
+use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 
 
 const URL_BASE: &str = "https://api.notion.com/v1";
-const API_KEY_URL: &str = "http://localhost:8888";
+// const API_KEY_URL: &str = "http://localhost:8888";
 
 #[derive(Debug)]
 struct ConfigOptions {
@@ -31,15 +29,11 @@ fn getConfigOptions() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
     println!("Getting config options!");
     let mut stdin = std::io::stdin();
     
-    println!("Getting sleep");
-
     let mut sleep_interval = String::new();
     print!("[*] Enter agent sleep interval > ");
     io::stdout().flush()?;
     stdin.read_line(&mut sleep_interval)?;
 
-    println!("Getting parent");
-    
     let mut parent_page_id = String::new();
     print!("[*] Enter parent page id > ");
     io::stdout().flush()?;
