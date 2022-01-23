@@ -71,3 +71,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 ![img.png](assets/img_9.png)
 
+## TODO
+### Setup
+- [ ] Python Setup Script for config options
+- [ ] Dynamic Docker container spin up/tear down for agent generation
