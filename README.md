@@ -38,3 +38,19 @@ Meaning, your parent page ID would be: `11223344-5566-7788-9900-112233445566`. T
 ```
 $ cargo build [--release]
 ```
+
+## Agent Control
+When your agent is built and dispatched to the target environment, it uses your secret key and the parent page ID to check in. Once this happens, a new page with the hostname of where the agent landed will appear as a child page of your listener:
+
+![img.png](assets/img_4.png)
+
+When you click on this page, you are now in the agent's "session". Which is really just a notebook page for the most part, but has some special functions.
+
+### Running commands
+Make a `To Do` block and add any shell command you want to run on the target. When you are ready to execute the command, add the bullseye emoji to the end: 🎯
+
+![img.png](assets/img_5.png)
+
+When your agent checks in, the stdout of the command will be added to the notebook under the `To Do` block as code-syntax highlighted text.
+
+![img.png](assets/img_6.png)
