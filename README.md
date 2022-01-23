@@ -1,5 +1,5 @@
 # OffensiveNotion
-Notion as a C2.
+Notion (yes, the notetaking app) as a C2.
 
 ## Wait, what?
 Yes.
