@@ -2,3 +2,4 @@
 .idea/*
 config.json
 bin/*
+src/config.rs.bak

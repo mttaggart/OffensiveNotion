@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import os
 import argparse
+
 import subprocess as sub
+from shutil import copyfile
+from shutil import move
+
+import utils
 from utils.colors import *
 from utils.inputs import *
 import getpass
@@ -113,10 +118,23 @@ def are_configs_good() -> bool:
 
 # When the configs look good:
 
-# TODO: Make copy of configs.rs and save source as config.rs.bak
+def copy_source_file():
+    print(info + "Creating agent's config source code...")
+    source_dir = curr_dir + "/src/"
+    src = source_dir + "config.rs"
+    dst = source_dir + "config.rs.bak"
+    copyfile(src, dst)
+
+
 # TODO: SED configs into config src
+def sed_source_code():
+    print(info + "Setting variables in agent source...")
+    print(important + "This function is under construction!")
 
 # TODO: SED Dockerfile for build options (release, debug, etc) from args
+def sed_dockerfile():
+    print(info + "Setting dockerfile variables...")
+    print(important + "This function is under construction!")
 
 # Start Docker container, Dockerfile handles compilation
 def docker_build():
@@ -161,7 +179,20 @@ def docker_kill():
         print(printError + str(e))
         exit(1)
 
-# TODO: Remove source file with configs and rename original back to config.src
+
+def recover_config_source():
+    print(info + "Recovering original source code...")
+    source_dir = curr_dir + "/src/"
+    old_conf = source_dir + "config.rs.bak"
+    curr_conf = source_dir + "config.rs"
+    exists = os.path.isfile(old_conf)
+    if exists:
+        try:
+            os.remove(curr_conf)
+            move(old_conf, curr_conf)
+        except Exception as e:
+            print(printError + str(e))
+
 
 # TODO: C2 check: make request to page with configs and see if the C2 works
 
@@ -186,6 +217,11 @@ def main():
         looks_good = are_configs_good()
 
     print("[+] Config looks good!")
+
+    copy_source_file()
+    sed_source_code()
+    sed_dockerfile()
+
     try:
         docker_build()
         docker_run()
@@ -193,6 +229,8 @@ def main():
         docker_kill()
     except Exception as e:
         print(printError + str(e))
+
+    recover_config_source()
     print(good + "Done! Happy hacking!")
 
 
