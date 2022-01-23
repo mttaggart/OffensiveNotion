@@ -1,5 +1,5 @@
 # OffensiveNotion
-Notion as a platform for offensive operations
+Notion as a C2.
 
 ## Wait, what?
 Yes.
@@ -12,6 +12,10 @@ To use Notion as a platform for offensive operations, you need a few things:
 
 - A Notion account, available [here](https://www.notion.so/signup)
 - A Notion Developers API account, available [here](https://developers.notion.com/)
+- 🦀 **Rust** 🦀. Head to [rustup](https://rustup.rs/) and run:
+```
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
 ### Setting Up A Listener Page
 The "listener" is just a page in a Notion notebook. But you can set it up to catch the callbacks for your agents:
