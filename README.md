@@ -75,3 +75,4 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ### Setup
 - [ ] Python Setup Script for config options
 - [ ] Dynamic Docker container spin up/tear down for agent generation
+- [ ] Parse args for Docker build options
