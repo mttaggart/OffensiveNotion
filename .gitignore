@@ -3,3 +3,6 @@
 config.json
 bin/*
 src/config.rs.bak
+
+# Excluding for experimentation
+src/config.rs

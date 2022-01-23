@@ -9,6 +9,7 @@ from shutil import move
 import utils
 from utils.colors import *
 from utils.inputs import *
+from utils.file_utils import *
 import getpass
 import json
 
@@ -87,9 +88,9 @@ def take_in_vars():
     parent_page_id = input("[*] Enter your listener's parent page ID > ")
     print("[+] Parent page ID: {}".format(parent_page_id))
     json_vars = {
-        "sleep": sleep_interval,
-        "api_key": api_key,
-        "parent_page_id": parent_page_id
+        "SLEEP": sleep_interval,
+        "API_KEY": api_key,
+        "PARENT_PAGE_ID": parent_page_id
     }
     json_string = json.dumps(json_vars)
     return json_string
@@ -129,7 +130,11 @@ def copy_source_file():
 # TODO: SED configs into config src
 def sed_source_code():
     print(info + "Setting variables in agent source...")
-    print(important + "This function is under construction!")
+    source_file = curr_dir + "/src/config.rs"
+    f = open("config.json")
+    data = json.load(f)
+    for k, v in data.items():
+        utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
 # TODO: SED Dockerfile for build options (release, debug, etc) from args
 def sed_dockerfile():
