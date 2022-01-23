@@ -41,7 +41,13 @@ Meaning, your parent page ID would be: `11223344-5566-7788-9900-112233445566`. T
 ## Python Installer Script (QuickStart)
 The `main.py` script handles all setup and agent compilation.
 
-Simply enter:
+Simply install dependencies:
+```
+$ pip3 install poetry
+$ poetry shell
+$ poetry install
+```
+Then run the main script:
 ```
 $ sudo python3 main.py
 ```

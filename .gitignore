@@ -2,7 +2,7 @@
 .idea/*
 config.json
 bin/*
-src/config.rs.bak
+agent/src/config.rs.bak
 
 # Excluding for experimentation
-src/config.rs
+agent/src/config.rs

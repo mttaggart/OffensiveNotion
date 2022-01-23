@@ -22,7 +22,7 @@ args = parser.parse_args()
 curr_dir = os.getcwd()
 config_file = curr_dir + "/config.json"
 bin_dir = curr_dir + "/bin"
-
+agent_dir = curr_dir + "/agent"
 
 # Are you root?
 def is_root():
@@ -102,7 +102,7 @@ def read_config():
         jsonfile.close()
     print(recc + "Your configs are: ")
     for k, v in data.items():
-        if k == "api_key":
+        if k == "API_KEY":
             print(r"    [*] {}: [REDACTED]".format(k))
         else:
             print(r"    [*] {}: {}".format(k, v))
@@ -122,7 +122,7 @@ def are_configs_good() -> bool:
 
 def copy_source_file():
     print(info + "Creating agent's config source code...")
-    source_dir = curr_dir + "/src/"
+    source_dir = agent_dir + "/src/"
     src = source_dir + "config.rs"
     dst = source_dir + "config.rs.bak"
     copyfile(src, dst)
@@ -131,7 +131,7 @@ def copy_source_file():
 # TODO: SED configs into config src
 def sed_source_code():
     print(info + "Setting variables in agent source...")
-    source_file = curr_dir + "/src/config.rs"
+    source_file = agent_dir + "/src/config.rs"
     f = open("config.json")
     data = json.load(f)
     for k, v in data.items():
@@ -188,9 +188,8 @@ def docker_kill():
 
 def recover_config_source():
     print(info + "Recovering original source code...")
-    source_dir = curr_dir + "/src/"
-    old_conf = source_dir + "config.rs.bak"
-    curr_conf = source_dir + "config.rs"
+    old_conf = agent_dir + "/src/config.rs.bak"
+    curr_conf = agent_dir + "/src/config.rs"
     exists = os.path.isfile(old_conf)
     if exists:
         try:
