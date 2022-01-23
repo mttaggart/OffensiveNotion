@@ -163,7 +163,7 @@ def docker_copy():
         sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/ bin/ 1>/dev/null'], shell=True)
         exists = os.path.isdir(bin_dir + "/target")
         if exists:
-            print(good + "Success! Agents are located in the bin/ directory on the host.")
+            print(good + "Success! Agents are located in the OffensiveNim/bin/ directory on this host.")
             return True
     except Exception as e:
         print(printError + str(e))
