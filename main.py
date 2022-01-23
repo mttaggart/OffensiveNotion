@@ -24,6 +24,7 @@ config_file = curr_dir + "/config.json"
 bin_dir = curr_dir + "/bin"
 agent_dir = curr_dir + "/agent"
 
+
 # Are you root?
 def is_root():
     """
@@ -52,7 +53,7 @@ def check_docker():
         elif p.returncode > 0:
             print(
                 important + "Docker is not installed. Make sure to install Docker first (on Kali/Ubuntu, run: sudo apt-get "
-                "install docker.io -y)")
+                            "install docker.io -y)")
             exit(1)
     except Exception as e:
         print(str(e))
@@ -67,7 +68,7 @@ def does_config_exist() -> bool:
     print(info + "Checking config file...")
     config_file_exists = os.path.exists(config_file)
     if not config_file_exists:
-        print(info +"No config file located")
+        print(info + "No config file located")
         return False
     else:
         print(good + "Config file located!")
@@ -82,9 +83,10 @@ def take_in_vars():
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
     print(good + "Got your API key!")
     # Parent Page ID
-    print(important + "Your notion page's parent ID is the long number at the end of the URL.\n[*] For example, if your page "
-          "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent page ID is "
-          "11223344556677889900112233445566")
+    print(
+        important + "Your notion page's parent ID is the long number at the end of the URL.\n[*] For example, if your page "
+                    "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent page ID is "
+                    "11223344556677889900112233445566")
     parent_page_id = input(important + "Enter your listener's parent page ID > ")
     print(good + "Parent page ID: {}".format(parent_page_id))
     json_vars = {
@@ -128,7 +130,6 @@ def copy_source_file():
     copyfile(src, dst)
 
 
-# TODO: SED configs into config src
 def sed_source_code():
     print(info + "Setting variables in agent source...")
     source_file = agent_dir + "/src/config.rs"
@@ -137,10 +138,12 @@ def sed_source_code():
     for k, v in data.items():
         utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
+
 # TODO: SED Dockerfile for build options (release, debug, etc) from args
 def sed_dockerfile():
     print(info + "Setting dockerfile variables...")
     print(important + "This function is under construction!")
+
 
 # Start Docker container, Dockerfile handles compilation
 def docker_build():
