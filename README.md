@@ -54,3 +54,15 @@ Make a `To Do` block and add any shell command you want to run on the target. Wh
 When your agent checks in, the stdout of the command will be added to the notebook under the `To Do` block as code-syntax highlighted text.
 
 ![img.png](assets/img_6.png)
+
+Hey, remember this is a normal Notion page! Add some documentation for your operation while you go:
+
+![img.png](assets/img_7.png)
+
+Why not stack up a bunch of commands to do initial check-in safety checks...
+
+![img_8.png](assets/img_1.png)
+
+... and then run them all when an agent checks in?
+
+![img.png](assets/img_9.png)
