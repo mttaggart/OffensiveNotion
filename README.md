@@ -39,9 +39,12 @@ https://www.notion.so/LISTENER-11223344556677889900112233445566
 Meaning, your parent page ID would be: `11223344-5566-7788-9900-112233445566`. This value is used to connect your agent to your listener, so keep track of it!
 
 ## Python Installer Script (QuickStart)
-The `main.py` script handles all setup and agent compilation.
-
-Simply install dependencies:
+The `main.py` script handles all setup and agent compilation. You need docker in order to use it.
+If you don't have docker already:
+```
+$ sudo apt-get install docker.io
+```
+Next, simply install the Python dependencies:
 ```
 $ pip3 install poetry
 $ poetry shell
