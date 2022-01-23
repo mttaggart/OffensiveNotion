@@ -65,5 +65,5 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 ... and then run them all when an agent checks in?
 
-![img_9.png](assets/img_9.png)
+![img.png](assets/img_9.png)
 
