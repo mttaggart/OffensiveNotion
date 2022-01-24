@@ -1,5 +1,4 @@
 use reqwest::{Client};
-use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json};
 
 use crate::config::{URL_BASE, ConfigOptions};
