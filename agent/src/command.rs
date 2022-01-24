@@ -1,9 +1,12 @@
 use std::error::Error;
 use std::result::Result;
+use std::io::copy;
 use std::fmt;
 use std::path::Path;
+use std::fs::File;
 use std::env::{set_current_dir, current_dir};
 use std::process::Command;
+use reqwest::{Client};
 
 pub enum CommandType {
     Cd(String),
@@ -90,6 +93,21 @@ impl NotionCommand {
                 return Ok(output_string);
             },
             CommandType::Download(s) => {
+                let client = Client::new();
+                // Get args
+                let mut args = s.split("-o");
+                // Get URL as the first arg
+                let url = args.nth(0).unwrap();
+                // Get path as the 2nd arg or the last part of the URL
+                let path = args.nth(0).unwrap_or_else(|| url.split("/").last().unwrap());
+                let r = client.get(s).send().await?;
+                if r.status().is_success() {
+                    let mut out_file = File::create(path).expect("Failed to create file");
+                    match copy(&mut r.bytes().await?.as_ref(), &mut out_file) {
+                        Ok(b)  => { return Ok(format!("{b} bytes written to {path}").to_string());},
+                        Err(_) => { return Ok("Could not write file".to_string())}
+                    }
+                }
                 return Ok(String::from("Not yet implemented!"));
             },
             CommandType::Inject(_) => {
