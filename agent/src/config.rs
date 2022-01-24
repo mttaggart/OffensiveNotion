@@ -4,7 +4,7 @@ use std::io::{self, Write};
 pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
 pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
-pub const DEFAULT_SLEEP_INTERVAL: u64 = <<SLEEP>>;
+pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 
 
 /// Storing Config Options as a struct for ergonomics.
@@ -56,7 +56,7 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
 
 pub async fn get_config_options() -> Result<ConfigOptions, Box<dyn Error>> {
     let config_options = ConfigOptions {
-        sleep_interval: DEFAULT_SLEEP_INTERVAL,
+        sleep_interval: DEFAULT_SLEEP_INTERVAL.parse().unwrap(),
         parent_page_id: String::from(DEFAULT_PARENT_PAGE_ID),
         api_key: String::from(DEFAULT_API_KEY)
     };

