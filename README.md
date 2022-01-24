@@ -84,6 +84,13 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 ![img.png](assets/img_9.png)
 
+#### Accepted Command Types
+
+* `shell [shell command]`: Executes the given shell command. Output or error will be returned.
+* `cd [dir]`: Changes directory without invoking the shell.
+* `download [url] [-o path]`: Downloads file from url. If `-o [path]` is provided, that is where the file will be written, if it can be.
+* `shutdown`: Shuts down the agent.
+
 ## TODO
 ### Setup
 - [x] Python Setup Script for config options
