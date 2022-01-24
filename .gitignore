@@ -5,7 +5,5 @@ bin/*
 agent/src/config.rs.bak
 Dockerfile.bak
 
-
-
 # Excluding for experimentation
 agent/src/config.rs

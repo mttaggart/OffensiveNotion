@@ -2,9 +2,9 @@
 use std::io::{self, Write};
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
-pub const DEFAULT_API_KEY: &str = "secret_f5XXHMdkPXSNLlUc0EuJFx2kKbjk1emWO4cLDnyH8hY";
-pub const DEFAULT_PARENT_PAGE_ID: &str = "87830f4b56e749609ab289df913f1eb4";
-pub const DEFAULT_SLEEP_INTERVAL: u64 = 10;
+pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
+pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
+pub const DEFAULT_SLEEP_INTERVAL: u64 = <<SLEEP>>;
 
 
 /// Storing Config Options as a struct for ergonomics.
