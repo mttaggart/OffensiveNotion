@@ -1,4 +1,4 @@
-                                                       use std::error::Error;
+use std::error::Error;
 use std::io::{self, Write};
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
