@@ -10,15 +10,17 @@ import utils
 from utils.colors import *
 from utils.inputs import *
 from utils.file_utils import *
+from utils.c2_linter import *
 import getpass
 import json
 
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
-# TODO: args for config, etc
-
 parser.add_argument('-o', '--os', choices=['linux', 'windows'], help='Target OS')
 parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
+parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config with "
+                                                                               "by creating a test page on your "
+                                                                               "Listener.")
 args = parser.parse_args()
 
 # Globals
@@ -112,6 +114,7 @@ def read_config():
             print(r"    [*] {}: [REDACTED]".format(k))
         else:
             print(r"    [*] {}: {}".format(k, v))
+    return data
 
 
 def write_config(json_string):
@@ -143,7 +146,6 @@ def sed_source_code():
         utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
 
-# TODO: SED Dockerfile for build options (release, debug, etc) from args
 def copy_dockerfile():
     print(info + "Creating Dockerfile...")
     src = dockerfile
@@ -161,8 +163,6 @@ def sed_dockerfile():
         utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "--release")
     else:
         utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "")
-
-
 
 
 # Start Docker container, Dockerfile handles compilation
@@ -221,13 +221,21 @@ def recover_config_source():
         except Exception as e:
             print(printError + str(e))
 
+
 def recover_dockerfile():
     print(info + "Recovering original Dockerfile...")
     orig = dockerfile + ".bak"
     new = "Dockerfile"
     move(orig, new)
 
-# TODO: C2 check: make request to page with configs and see if the C2 works
+
+def c2_lint(json_string):
+    print(info + "Checking your C2 configs...")
+    c2_check = utils.c2_linter.create_page(json_string["API_KEY"], json_string["PARENT_PAGE_ID"])
+    if c2_check:
+        print(good + "C2 check passed! Check your Notion notebook for a C2_LINT_TEST page.")
+    else:
+        print(printError + "C2 check failed. Check your config.json file.")
 
 def main():
     is_root()
@@ -240,7 +248,10 @@ def main():
         json_vars = take_in_vars()
         write_config(json_vars)
 
-    read_config()
+    json_vars = read_config()
+    # C2 Lint
+    if args.c2lint:
+        c2_lint(json_vars)
     looks_good = are_configs_good()
 
     while not looks_good:
