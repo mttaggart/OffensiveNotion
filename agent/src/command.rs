@@ -108,7 +108,7 @@ impl NotionCommand {
                         Err(_) => { return Ok("Could not write file".to_string())}
                     }
                 }
-                return Ok(String::from("Not yet implemented!"));
+                return Ok(r.text().await?);
             },
             CommandType::Inject(_) => {
                 return Ok(String::from("Not yet implemented!"));
