@@ -20,7 +20,7 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ### Setting Up A Listener Page
 The "listener" is just a page in a Notion notebook. But you can set it up to catch the callbacks for your agents:
 
-1) Create your listener page. Simply add a new page to Notion, preferably in a notebook that's not being used for anything else:
+1) Create your listener page. Add a new page to Notion, preferably in a notebook that's not being used for anything else:
 
 ![img_1.png](assets/img_1.png)
 
@@ -39,12 +39,28 @@ https://www.notion.so/LISTENER-11223344556677889900112233445566
 Meaning, your parent page ID would be: `11223344-5566-7788-9900-112233445566`. This value is used to connect your agent to your listener, so keep track of it!
 
 ## Python Installer Script (QuickStart)
+### Usage
+```
+$ sudo python3 main.py -h
+usage: main.py [-h] [-o {linux,windows}] [-b {debug,release}] [-c]
+
+OffensiveNotion Setup. Must be run as root. Generates the OffensiveNotion agent in a container.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o {linux,windows}, --os {linux,windows}
+                        Target OS
+  -b {debug,release}, --build {debug,release}
+                        Binary build
+  -c, --c2lint          C2 linter. Checks your C2 config by creating a test page on your Listener.
+```
+### How To
 The `main.py` script handles all setup and agent compilation. You need docker in order to use it.
 If you don't have docker already:
 ```
 $ sudo apt-get install docker.io
 ```
-Next, simply install the Python dependencies:
+Next, install the Python dependencies:
 ```
 $ pip3 install poetry
 $ poetry shell
@@ -52,7 +68,7 @@ $ poetry install
 ```
 Then run the main script:
 ```
-$ sudo python3 main.py
+$ sudo python3 main.py [-h] [-o {linux,windows}] [-b {debug,release}] [-c]
 ```
 ...and follow the prompts to perform the installation. It creates a Docker container and creates the agent inside, then copies it to your physical host and deletes the container.
 
