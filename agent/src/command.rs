@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::result::Result;
 use std::fmt;
-use std::boxed;
 use std::path::Path;
 use std::env::{set_current_dir, current_dir};
 use std::process::Command;
@@ -61,7 +60,7 @@ impl NotionCommand {
         match &self.commmand_type {
             CommandType::Cd(s) => {
                 let new_path = Path::new(&s);
-                set_current_dir(new_path);
+                set_current_dir(new_path).unwrap();
 
                 return Ok(
                     String::from(current_dir()?
@@ -93,7 +92,7 @@ impl NotionCommand {
             CommandType::Download(s) => {
                 return Ok(String::from("Not yet implemented!"));
             },
-            CommandType::Inject(s) => {
+            CommandType::Inject(_) => {
                 return Ok(String::from("Not yet implemented!"));
             },
             CommandType::Shutdown => {
