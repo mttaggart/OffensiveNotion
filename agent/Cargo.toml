@@ -10,3 +10,9 @@ reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 serde_json = "1.0"
 hostname = "^0.3"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
