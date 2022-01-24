@@ -16,6 +16,9 @@ import json
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
 # TODO: args for config, etc
+
+parser.add_argument('-o', '--os', choices=['linux', 'windows'], help='Target OS')
+parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
 args = parser.parse_args()
 
 # Globals
@@ -23,6 +26,7 @@ curr_dir = os.getcwd()
 config_file = curr_dir + "/config.json"
 bin_dir = curr_dir + "/bin"
 agent_dir = curr_dir + "/agent"
+dockerfile = curr_dir + "/Dockerfile"
 
 
 # Are you root?
@@ -140,9 +144,25 @@ def sed_source_code():
 
 
 # TODO: SED Dockerfile for build options (release, debug, etc) from args
+def copy_dockerfile():
+    print(info + "Creating Dockerfile...")
+    src = dockerfile
+    dst = "Dockerfile.bak"
+    copyfile(src, dst)
+
+
 def sed_dockerfile():
     print(info + "Setting dockerfile variables...")
-    print(important + "This function is under construction!")
+    if args.os == "windows":
+        utils.file_utils.sed_inplace(dockerfile, "{OS}", "--target x86_64-pc-windows-gnu")
+    else:
+        utils.file_utils.sed_inplace(dockerfile, "{OS}", "")
+    if args.build == "release":
+        utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "--release")
+    else:
+        utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "")
+
+
 
 
 # Start Docker container, Dockerfile handles compilation
@@ -201,6 +221,11 @@ def recover_config_source():
         except Exception as e:
             print(printError + str(e))
 
+def recover_dockerfile():
+    print(info + "Recovering original Dockerfile...")
+    orig = dockerfile + ".bak"
+    new = "Dockerfile"
+    move(orig, new)
 
 # TODO: C2 check: make request to page with configs and see if the C2 works
 
@@ -223,11 +248,12 @@ def main():
         write_config(json_vars)
         read_config()
         looks_good = are_configs_good()
-
     print("[+] Config looks good!")
 
     copy_source_file()
     sed_source_code()
+
+    copy_dockerfile()
     sed_dockerfile()
 
     try:
@@ -239,6 +265,8 @@ def main():
         print(printError + str(e))
 
     recover_config_source()
+    recover_dockerfile()
+
     print(good + "Done! Happy hacking!")
 
 
