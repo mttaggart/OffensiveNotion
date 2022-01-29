@@ -82,6 +82,9 @@ def does_config_exist() -> bool:
 
 
 def take_in_vars():
+    """
+    Intakes vars fgor Sleep, API Key, and Parent Page ID.
+    """
     # Sleep
     sleep_interval = ask_for_input(important + "Enter the sleep interval for the agent in seconds [default is 30s]", 30)
     print(good + "Sleep interval: {}".format(sleep_interval))
@@ -90,9 +93,11 @@ def take_in_vars():
     print(good + "Got your API key!")
     # Parent Page ID
     print(
-        important + "Your notion page's parent ID is the long number at the end of the URL.\n[*] For example, if your page "
-                    "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent page ID is "
-                    "11223344556677889900112233445566")
+        "\n" + important + "Your notion page's parent ID is the long number at the end of the page's URL.\n[*] For example, "
+                    "if your page "
+                    "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent "
+                    "page ID is "
+                    "11223344556677889900112233445566\n")
     parent_page_id = input(important + "Enter your listener's parent page ID > ")
     print(good + "Parent page ID: {}".format(parent_page_id))
     json_vars = {
@@ -255,17 +260,26 @@ def main():
     looks_good = are_configs_good()
 
     while not looks_good:
+        # This could definitely use some work, seems sloppy
         json_vars = take_in_vars()
         write_config(json_vars)
-        read_config()
+        json_vars = read_config()
+        if args.c2lint:
+            c2_lint(json_vars)
         looks_good = are_configs_good()
     print("[+] Config looks good!")
 
-    copy_source_file()
-    sed_source_code()
+    try:
+        copy_source_file()
+        sed_source_code()
+    except Exception as e:
+        print(printError + str(e))
 
-    copy_dockerfile()
-    sed_dockerfile()
+    try:
+        copy_dockerfile()
+        sed_dockerfile()
+    except Exception as e:
+        print(printError + str(e))
 
     try:
         docker_build()
@@ -275,8 +289,11 @@ def main():
     except Exception as e:
         print(printError + str(e))
 
-    recover_config_source()
-    recover_dockerfile()
+    try:
+        recover_config_source()
+        recover_dockerfile()
+    except Exception as e:
+        print(printError + str(e))
 
     print(good + "Done! Happy hacking!")
 
