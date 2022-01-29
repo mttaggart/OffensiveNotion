@@ -88,6 +88,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
+                        println!("Got command: {}", s);
                         let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle().await?;
                         let command_block_id = block["id"].as_str().unwrap();
