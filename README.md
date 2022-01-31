@@ -106,6 +106,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 * `cd [dir]`: Changes directory without invoking the shell.
 * `download [url] [path]`: Downloads file from url. If `[path]` is provided, that is where the file will be written, if it can be.
 * `shutdown`: Shuts down the agent.
+* `inject [url] [pid]`: Injects shellcode into the given PID using process injection (CreateRemoteThread). Windows-only. 
 * `ps`: Lists processes
 
 ## TODO
