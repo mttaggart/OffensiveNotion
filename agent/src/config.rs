@@ -1,4 +1,6 @@
+extern crate serde;
 extern crate serde_json;
+use serde::{Serialize, Deserialize};
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
@@ -26,7 +28,7 @@ pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 /// api_key: String also added at compile
 /// 
 /// config_file_path: String where the json for config will be read/written
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ConfigOptions {
     pub sleep_interval: u64,
     pub parent_page_id: String,

