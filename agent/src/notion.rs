@@ -1,5 +1,5 @@
-use reqwest::{Client};
-use serde_json::{json};
+use reqwest::Client;
+use serde_json::json;
 
 use crate::config::{URL_BASE, ConfigOptions};
 
