@@ -1,8 +1,8 @@
 extern crate serde_json;
-use serde_json::json;
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
+use std::fmt;
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
@@ -34,15 +34,27 @@ pub struct ConfigOptions {
     pub config_file_path: String
 }
 
+#[derive(Debug)]
+pub struct ConfigError(String);
+
+impl fmt::Display for ConfigError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Error for ConfigError {}
+
 impl ConfigOptions {
 
     /// Converts loaded json data into `ConfigOptions`
     pub fn from_json(j: serde_json::Value) -> ConfigOptions {
+        println!("{:?}", j);
         ConfigOptions {
             sleep_interval: j["sleep_interval"].as_u64().unwrap(),
-            parent_page_id: j["parent_page_id"].to_string(),
-            api_key: j["api_key"].to_string(),
-            config_file_path: j["config_file_path"].to_string()
+            parent_page_id: j["parent_page_id"].to_string().replace('"', ""),
+            api_key: j["api_key"].to_string().replace('"', ""),
+            config_file_path: j["config_file_path"].to_string().replace('"', "")
         }
     }
 }
@@ -87,22 +99,32 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
 }
 
 /// Sets default config options from defined constants.
-pub async fn get_config_options() -> Result<ConfigOptions, Box<dyn Error>> {
+pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
     let config_options = ConfigOptions {
         sleep_interval: DEFAULT_SLEEP_INTERVAL.parse().unwrap(),
         parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
         api_key: DEFAULT_API_KEY.to_string(),
         config_file_path: CONFIG_FILE_PATH.to_string()
     };
+    
     Ok(config_options)
 }
 
 /// Ingests config from a saved JSON file.
-pub async fn load_config_options() -> Result<ConfigOptions, Box<dyn Error>> {
-    if let Ok(c) = fs::read_to_string(CONFIG_FILE_PATH) {
-        let cfg = json!(c);
-        Ok(ConfigOptions::from_json(cfg))
+pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, ConfigError> {
+
+    let config_file_path = match c {
+        Some(p) => p,
+        None => CONFIG_FILE_PATH
+    };
+
+    if let Ok(c) = fs::read_to_string(config_file_path) {
+        if let Ok(cfg) = serde_json::from_str(c.as_str()) {
+            Ok(ConfigOptions::from_json(cfg))
+        } else {
+            Err(ConfigError("Could not convert config file to JSON".to_string()))
+        }
     } else {
-        get_config_options().await
+        Err(ConfigError("Could not load config file".to_string()))
     }
 }

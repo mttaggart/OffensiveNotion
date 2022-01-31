@@ -13,7 +13,8 @@ mod config;
 use config::{
     ConfigOptions,
     get_config_options, 
-    get_config_options_debug
+    get_config_options_debug,
+    load_config_options
 };
 
 mod notion;
@@ -39,11 +40,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     return get_config_options_debug();
                 });
                 config_options = config_options_handle.await?.unwrap();
+            // Handle alternative config file location
+            } else if a == "-c" {
+                let config_file_path = args().nth(2).unwrap();
+                config_options = load_config_options(Some(config_file_path.as_str())).await?;
             } else {
                 config_options = get_config_options().await?;
             }
         },
-        None => {config_options = get_config_options().await?;}
+        None => {
+            config_options = load_config_options(None).await?;
+        }
     }
     
     let hn = hostname::get()
