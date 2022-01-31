@@ -1,6 +1,6 @@
 extern crate serde;
 extern crate serde_json;
-use serde::{Serialize, Deserialize};
+use serde::Serialize;
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
