@@ -82,20 +82,16 @@ impl NotionCommand {
                 );
             },
             CommandType::Shell(s) => {
-                let args: Vec<&str> = s.split(" ")
-                .filter(|&a| !a.is_empty())
-                .collect();
-                println!("{:?}", args);
                 let output = if cfg!(target_os = "windows") {
                     Command::new("cmd")
                         .arg("/c")
-                        .args(args)
+                        .arg(s)
                         .output()
                         .expect("failed to execute process")
                 } else {
                     Command::new("/bin/bash")
                         .arg("-c")
-                        .args(args)
+                        .arg(s)
                         .output()
                         .expect("failed to execute process")
                 };
