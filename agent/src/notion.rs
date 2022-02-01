@@ -1,27 +1,38 @@
-use reqwest::{Client};
-use serde_json::{json};
+use reqwest::Client;
+use serde_json::json;
 
 use crate::config::{URL_BASE, ConfigOptions};
 
+/// This is a Noation limitation
+const CHUNK_SIZE: usize = 2000;
+
 /// Sends the result of a command back to the to-do block that made the request.
+/// Notion has a per-block limit of 2000 bytes. To get around this, we split
+/// the output into chunks of 2000 bytes apiece.
+/// 
+/// Notion still has a limit of 100 children per block, so the effective limit of
+/// the output size, without multiple blocks, is 2MiB.
 pub async fn send_result(client: &Client, command_block_id: &str, output: String) {
+    println!("{output}");
+    let chunks:Vec<serde_json::Value> = output
+        .as_bytes()
+        .chunks(CHUNK_SIZE)
+        .map(|c| json!({
+            "object": "block",
+            "type": "quote",
+            "quote": {
+                "text": [{
+                    "type": "text",
+                    "text": { "content": String::from_utf8(c.to_vec()).unwrap()},
+                    "annotations": {"code": true}
+                }]
+            }
+        }))
+        .collect();
+
     let url = format!("{URL_BASE}/blocks/{command_block_id}/children");
     let body : serde_json::Value = json!({
-        "children": [
-            {
-                "object": "block",
-                "type": "quote",
-                "quote": {
-                    "text": [
-                        {
-                            "type": "text",
-                            "text": {"content": output},
-                            "annotations": {"code": true}
-                        }
-                    ]
-                }
-            }
-        ]
+        "children": chunks
     });
     let r = client
         .patch(url)
