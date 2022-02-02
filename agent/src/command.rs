@@ -1,11 +1,11 @@
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
+#[cfg(windows)] use std::ptr;
 use serde_json::to_string as json_to_string;
 use std::error::Error;
 use std::result::Result;
 use std::io::copy;
 use std::fmt;
-use std::ptr;
 use std::path::Path;
 use std::fs::{write, File};
 use std::env::{set_current_dir, current_dir};
