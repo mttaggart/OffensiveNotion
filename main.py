@@ -83,10 +83,10 @@ def does_config_exist() -> bool:
 
 def take_in_vars():
     """
-    Intakes vars fgor Sleep, API Key, and Parent Page ID.
+    Intakes vars for Sleep, API Key, and Parent Page ID.
     """
     # Sleep
-    sleep_interval = ask_for_input(important + "Enter the sleep interval for the agent in seconds [default is 30s]", 30)
+    sleep_interval = ask_for_input(important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
     print(good + "Sleep interval: {}".format(sleep_interval))
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
