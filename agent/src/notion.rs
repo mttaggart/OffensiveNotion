@@ -19,13 +19,14 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
         .chunks(CHUNK_SIZE)
         .map(|c| json!({
             "object": "block",
-            "type": "quote",
-            "quote": {
+            "type": "code",
+            "code": {
                 "text": [{
                     "type": "text",
                     "text": { "content": String::from_utf8(c.to_vec()).unwrap()},
                     "annotations": {"code": true}
-                }]
+                }],
+                "language": "shell"
             }
         }))
         .collect();
