@@ -23,6 +23,7 @@ pub enum CommandType {
     Pwd,
     Inject(String),
     Save(String),
+    Persist(String),
     Shutdown,
     Unknown
 }
@@ -62,6 +63,7 @@ impl NotionCommand {
                 "pwd"      => CommandType::Pwd,
                 "inject"   => CommandType::Inject(command_string),
                 "save"     => CommandType::Save(command_string),
+                "persist"  => CommandType::Persist(command_string),
                 "shutdown" => CommandType::Shutdown,
                 _          => CommandType::Unknown
             };
@@ -196,11 +198,14 @@ impl NotionCommand {
                 write(config_options.config_file_path.trim(), json_to_string(config_options)?)?;
                 Ok(format!("Config file saved to {s}").to_string())
             },
+            CommandType::Persist(s) => {
+               Ok("Persisting!".to_string())
+            },
             CommandType::Shutdown => {
-                return Ok(String::from("Shutting down"));
+                Ok(String::from("Shutting down"))
             },
             CommandType::Unknown => {
-                return Ok(String::from("Unknown command type"));
+                Ok(String::from("Unknown command type"))
             }
         }
     }
