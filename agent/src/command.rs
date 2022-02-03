@@ -190,9 +190,11 @@ impl NotionCommand {
                 Ok("Can only inject shellcode on Windows!".to_string())
             }
             CommandType::Save(s) => {
-                config_options.config_file_path = s.to_string();
-                write(s.trim(), json_to_string(config_options)?)?;
-                Ok("Config file saved to {s}".to_string())
+                if !s.is_empty() {
+                    config_options.config_file_path = s.to_string();
+                }
+                write(config_options.config_file_path.trim(), json_to_string(config_options)?)?;
+                Ok(format!("Config file saved to {s}").to_string())
             },
             CommandType::Shutdown => {
                 return Ok(String::from("Shutting down"));
