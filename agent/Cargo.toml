@@ -22,3 +22,6 @@ opt-level = 3
 kernel32-sys = "0.2.2"
 winapi = { version = "0.3", features = ["winnt"] }
 winreg = "0.10"
+
+[build-dependencies]
+windres = "0.2"
