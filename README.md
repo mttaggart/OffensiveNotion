@@ -152,9 +152,8 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
     - [ ] systemd service
 
 - Windows
-  - [ ] `inject`
+  - [x] `inject`
   - [ ] `runas`
-
   - Persist:
     - [x] `startup`
     - [x] `registry`
