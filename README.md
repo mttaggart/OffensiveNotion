@@ -125,6 +125,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
   - [x] `pwd`
   - [x] `save`
   - [x] `shutdown`
+  - [ ] `sleep [#]` to adjust callback
   
 ### Documentation
 - [ ] Quickstart
@@ -139,11 +140,14 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 ## SHOULD
 ### Agent
+- [ ] Jitter interval for callback time 
+
 - Commands:
   - [ ] `getprivs`
     - [ ] Linux
     - [x] Windows
   - [ ] `portscan`
+  - [ ] `sleep [#][%]` to adjust callback and jitter
 
 - Linux
   - [ ] `inject`
@@ -164,5 +168,6 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ## COULD
 - [x] Compiles with Notion icon
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
+- [ ] Mirror the notion.ico file 😈
 - Windows
   - [ ] `inject-assembly` (⚠️ large lift ⚠️)
