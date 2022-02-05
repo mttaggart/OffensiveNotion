@@ -210,8 +210,11 @@ def docker_copy():
         bin_dir_folder = "linux_" + args.build
 
     try:
+        already_there = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
+        if already_there:
+            print(info + "Agents detected. Removing and copying new ones...")
+            shutil.rmtree("bin/{}/{}".format(bin_dir_folder, agent_path), ignore_errors=True)
         sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/{} bin/{} 1>/dev/null'.format(agent_path, bin_dir_folder)], shell=True)
-        print("bin/{}/{}".format(agent_path, bin_dir_folder))
         exists = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
         if exists:
             print(good + "Success! Agent is located at bin/{} on this host.".format(bin_dir_folder))

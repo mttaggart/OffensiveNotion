@@ -4,7 +4,10 @@ agent/cfg.json
 .idea/*
 .idea/
 config.json
-bin/*
+#bin/linux_debug/*
+#bin/linux_release/*
+#bin/windows_release/*
+#bin/windows_debug/*
 agent/src/config.rs.bak
 Dockerfile.bak
 
