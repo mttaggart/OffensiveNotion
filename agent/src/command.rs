@@ -19,6 +19,7 @@ use crate::config::ConfigOptions;
 #[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
 
 mod isElevated;
+mod portscan;
 
 pub enum CommandType {
     Cd(String),
@@ -307,7 +308,7 @@ impl NotionCommand {
                 Ok(String::from(format!("Admin Context: {is_admin}").to_string()))
             },
 
-            CommandType::Portscan => {
+            CommandType::Portscan(s) => {
                 // TODO: Implement
                 let results = portscan::portscan();
                 return Ok(String::from("Under Construction!"))
