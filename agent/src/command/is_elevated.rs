@@ -1,20 +1,21 @@
 // Ref: https://users.rust-lang.org/t/how-do-i-determine-if-i-have-admin-rights-on-windows/35710/5
 
-use std::ptr::null_mut;
-use winapi::um::handleapi::CloseHandle;
-use winapi::um::processthreadsapi::GetCurrentProcess;
-use winapi::um::processthreadsapi::OpenProcessToken;
-use winapi::um::securitybaseapi::GetTokenInformation;
-use winapi::um::winnt::TokenElevation;
-use winapi::um::winnt::HANDLE;
-use winapi::um::winnt::TOKEN_ELEVATION;
+#[cfg(windows)] use std::ptr::null_mut;
+#[cfg(windows)] use winapi::um::handleapi::CloseHandle;
+#[cfg(windows)] use winapi::um::processthreadsapi::GetCurrentProcess;
+#[cfg(windows)] use winapi::um::processthreadsapi::OpenProcessToken;
+#[cfg(windows)] use winapi::um::securitybaseapi::GetTokenInformation;
+#[cfg(windows)] use winapi::um::winnt::TokenElevation;
+#[cfg(windows)] use winapi::um::winnt::HANDLE;
+#[cfg(windows)] use winapi::um::winnt::TOKEN_ELEVATION;
+#[cfg(windows)] use libc;
+#[cfg(windows)] use std::mem;
+#[cfg(windows)] use winapi::ctypes::c_void;
+#[cfg(windows)] use winapi::um::winnt::TOKEN_QUERY;
 
-use libc;
-use std::mem;
-use winapi::ctypes::c_void;
-use winapi::um::winnt::TOKEN_QUERY;
-
+#[cfg(windows)]
 pub fn is_elevated() -> bool {
+    
     //TODO: parameterize for Linux/Windows
     //On Linux, check UID/EUID for 0
 
