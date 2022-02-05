@@ -2,6 +2,7 @@ target
 agent/target
 agent/cfg.json
 .idea/*
+.idea/
 config.json
 bin/*
 agent/src/config.rs.bak
