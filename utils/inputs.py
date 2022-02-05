@@ -1,6 +1,4 @@
 
-
-
 def ask_for_input(message: str, default):
     """
     Args:

@@ -109,8 +109,68 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 * `inject [url] [pid]`: Injects shellcode into the given PID using process injection (CreateRemoteThread). Windows-only. 
 * `ps`: Lists processes
 
-## TODO
+# V 1.0.0 Release Criteria
+## MUST
 ### Setup
 - [x] Python Setup Script for config options
 - [x] Dynamic Docker container spin up/tear down for agent generation
 - [x] Parse args for Docker build options
+
+### Agent
+- Commands:
+  - [x] `shell`
+  - [x] `cd`
+  - [x] `download`
+  - [x] `ps`
+  - [x] `pwd`
+  - [x] `save`
+  - [x] `shutdown`
+  
+### Documentation
+- [ ] Quickstart
+- [ ] Install
+- [ ] Agent interaction
+  - [ ] Commands
+  - [ ] Linux commands
+  - [ ] Windows commands
+
+### Misc
+- [ ] YARA Rules
+
+## SHOULD
+### Agent
+- Commands:
+  - [ ] `getprivs`
+    - [ ] Linux
+    - [x] Windows
+  - [ ] `portscan`
+
+- Linux
+  - [ ] `inject`
+  - Persist:
+    - [ ] rc.local (`startup`?)
+    - [ ] systemd service
+
+- Windows
+  - [ ] `inject`
+  - [ ] `runas`
+
+  - Persist:
+    - [x] `startup`
+    - [x] `registry`
+    - [ ] `wmic`
+    - [ ] (Bonus) `comhijack`
+    - [ ] (Bonus) `xll`
+    
+## COULD
+- [x] Compiles with Notion icon
+- [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
+
+
+
+
+
+
+
+
+  
