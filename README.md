@@ -164,12 +164,5 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ## COULD
 - [x] Compiles with Notion icon
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
-
-
-
-
-
-
-
-
-  
+- Windows
+  - [ ] `inject-assembly` (⚠️ large lift ⚠️)
