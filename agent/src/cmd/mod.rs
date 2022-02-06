@@ -20,7 +20,6 @@ pub mod cd;
 pub mod download;
 pub mod getprivs;
 pub mod inject;
-// pub mod is_elevated;
 pub mod persist;
 pub mod portscan;
 pub mod ps;
