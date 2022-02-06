@@ -169,6 +169,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ## COULD
 - [x] Compiles with Notion icon
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
-- [ ] Mirror the notion.ico file 😈
+- [x] Mirror the notion.ico file 😈 (slightly red tint to logo)
+- [ ] "Web delivery" via Flask and one-liner for remote donwload/exec (https://www.offensive-security.com/metasploit-unleashed/web-delivery/)
 - Windows
   - [ ] `inject-assembly` (⚠️ large lift ⚠️)
