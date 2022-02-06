@@ -1,14 +1,11 @@
 use std::error::Error;
-use crate::cmd::shell;
+use sysinfo::{ProcessExt, System, SystemExt};
 
 pub async fn handle() -> Result<String, Box<dyn Error>> {
-// This is a lame kludge because getting process data is tough, but at least
-// it's ergonomic?
-    #[cfg(windows)] {
-        shell::handle(&"tasklist".to_string()).await
+    let mut process_res = String::new();
+    let sys = System::new_all();
+    for (pid, process) in sys.processes() {
+        process_res.push_str(format!("{} {}\n", pid, process.name()).as_str());
     }
-
-    #[cfg(not(windows))] {
-        shell::handle(&"ps aux".to_string()).await
-    }
+    Ok(process_res)
 }
