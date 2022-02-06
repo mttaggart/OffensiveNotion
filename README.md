@@ -140,7 +140,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 ## SHOULD
 ### Agent
-- [ ] Jitter interval for callback time 
+- [x] Jitter interval for callback time 
 
 - Commands:
   - [ ] `getprivs`
