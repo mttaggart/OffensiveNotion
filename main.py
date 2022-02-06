@@ -216,7 +216,7 @@ def docker_copy():
     if args.os == "windows":
         agent_path = "x86_64-pc-windows-gnu"
         bin_dir_folder = "windows_" + args.build
-    if args.os == "linux":
+    elif args.os == "linux":
         agent_path = args.build
         bin_dir_folder = "linux_" + args.build
     else:
