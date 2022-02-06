@@ -104,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         send_result(&client, command_block_id, output).await;
                         // Check for any final work based on command type,
                         // Like shutting down the agent
-                        match notion_command.commmand_type {
+                        match notion_command.command_type {
                             CommandType::Shutdown => {exit(0);},
                             _ => {}
                         }

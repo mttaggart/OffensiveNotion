@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::process::Command;
 
-pub async fn handle(s: String) -> Result<String, Box<dyn Error>> {
+pub async fn handle() -> Result<String, Box<dyn Error>> {
 // This is a lame kludge because getting process data is tough, but at least
 // it's ergonomic?
     let output = if cfg!(target_os = "windows") {

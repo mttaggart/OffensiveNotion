@@ -1,7 +1,7 @@
 use std::process::Command;
 use std::error::Error;
 
-pub fn handle(s: String) -> Result<String, Box<dyn Error>> {
+pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .arg("/c")

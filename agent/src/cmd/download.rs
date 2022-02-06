@@ -3,7 +3,7 @@ use std::io::copy;
 use reqwest::Client;
 use std::fs::File;
 
-pub async fn handle(s: String) -> Result<String, Box<dyn Error>> {
+pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     let client = Client::new();
     // Get args
     let mut args = s.split(" ");
