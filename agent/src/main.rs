@@ -20,8 +20,8 @@ use config::{
 mod notion;
 use notion::{get_blocks, complete_command, create_page, send_result};
 
-mod command;
-use command::{NotionCommand, CommandType};
+mod cmd;
+use cmd::{NotionCommand, CommandType};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -79,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         // Get Blocks
         let blocks = get_blocks(&client, &page_id).await?;
+
         let command_blocks: Vec<&serde_json::Value> = blocks
             .as_array()
             .unwrap()
