@@ -11,6 +11,7 @@ from utils.colors import *
 from utils.inputs import *
 from utils.file_utils import *
 from utils.c2_linter import *
+from utils.web_delivery import *
 import getpass
 import json
 
@@ -21,6 +22,16 @@ parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary 
 parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config "
                                                                                "by creating a test page on your "
                                                                                "Listener.")
+parser.add_argument('-w', '--webdelivery', default=False, action="store_true", help="Start a web delivery server to "
+                                                                                    "host and deliver your agent "
+                                                                                    "Provides convenient one liners "
+                                                                                    "to run on the target.")
+parser.add_argument('-m', '--method', choices=['powershell', 'wget-linux', 'wget-psh'], help='Method of web delivery')
+parser.add_argument('-ip', '--hostIP', help='Web server host IP.')
+parser.add_argument('-p', '--port', help='Web server host port.')
+
+
+
 args = parser.parse_args()
 
 # Globals
@@ -210,9 +221,12 @@ def docker_copy():
     if args.os == "windows":
         agent_path = "x86_64-pc-windows-gnu"
         bin_dir_folder = "windows_" + args.build
-    if args.os == "linux":
+    elif args.os == "linux":
         agent_path = args.build
         bin_dir_folder = "linux_" + args.build
+    else:
+        agent_path = ""
+        bin_dir_folder = "linux_debug"
 
     try:
         already_there = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
@@ -267,6 +281,8 @@ def c2_lint(json_string):
     else:
         print(printError + "C2 check failed. Check your config.json file.")
 
+def run_web_delivery():
+    utils.web_delivery.main(args.hostIP, args.port, args.method, args.os, args.build)
 
 def main():
     is_root()
@@ -320,9 +336,13 @@ def main():
         recover_dockerfile()
     except Exception as e:
         print(printError + str(e))
-
-    print(good + "Done! Happy hacking!")
-
+        
+    if args.webdelivery:
+        try:
+            run_web_delivery()
+        except Exception as e:
+            print(printError + str(e))
+            exit()
 
 if __name__ == "__main__":
     main()

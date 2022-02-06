@@ -10,6 +10,7 @@ bin/windows_release/*
 bin/windows_debug/*
 agent/src/config.rs.bak
 Dockerfile.bak
+utils/www/*
 
 # Excluding for experimentation
 agent/src/config.rs
