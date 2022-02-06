@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::process::Command;
 use crate::cmd::shell;
 
 pub async fn handle() -> Result<String, Box<dyn Error>> {

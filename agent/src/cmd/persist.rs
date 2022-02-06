@@ -1,6 +1,7 @@
 use std::error::Error;
-use std::path::Path;
+#[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
+#[cfg(windows)] use std::env::{var};
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 
 
