@@ -219,6 +219,9 @@ def docker_copy():
     if args.os == "linux":
         agent_path = args.build
         bin_dir_folder = "linux_" + args.build
+    else:
+        agent_path = ""
+        bin_dir_folder = "linux_debug"
 
     try:
         already_there = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
