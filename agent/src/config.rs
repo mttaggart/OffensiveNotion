@@ -7,9 +7,9 @@ use std::fs;
 use std::fmt;
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
-pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
-pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
-pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
+pub const DEFAULT_API_KEY: &str = "secret_VNp4SWSTQcFeC4W0xVoNoWIIf5dftQlpEdk6xiqg99S";
+pub const DEFAULT_PARENT_PAGE_ID: &str = "7d3a4b2ea09442c087a1d0b4ce08eeae";
+pub const DEFAULT_SLEEP_INTERVAL: &str = "5";
 
 #[cfg(windows)]
 pub const CONFIG_FILE_PATH: &str = "C:\\ProgramData\\cfg.json";
