@@ -79,9 +79,9 @@ def generate_payload(lang, host, port, uri):
 
 
 @app.route("/<path:path>")
-def get_file(path):
+def get_file(dl_path):
     """Download a file."""
-    return send_from_directory(DOWNLOAD_DIRECTORY, path, as_attachment=True)
+    return send_from_directory(DOWNLOAD_DIRECTORY, dl_path, as_attachment=True)
 
 
 def main(host, port, lang, os, build):
