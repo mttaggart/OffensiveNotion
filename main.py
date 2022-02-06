@@ -14,6 +14,8 @@ from utils.c2_linter import *
 from utils.web_delivery import *
 import getpass
 import json
+import signal
+import sys
 
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
@@ -29,8 +31,6 @@ parser.add_argument('-w', '--webdelivery', default=False, action="store_true", h
 parser.add_argument('-m', '--method', choices=['powershell', 'wget-linux', 'wget-psh'], help='Method of web delivery')
 parser.add_argument('-ip', '--hostIP', help='Web server host IP.')
 parser.add_argument('-p', '--port', help='Web server host port.')
-
-
 
 args = parser.parse_args()
 
@@ -233,7 +233,9 @@ def docker_copy():
         if already_there:
             print(info + "Agents detected. Removing and copying new ones...")
             shutil.rmtree("bin/{}/{}".format(bin_dir_folder, agent_path), ignore_errors=True)
-        sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/{} bin/{} 1>/dev/null'.format(agent_path, bin_dir_folder)], shell=True)
+        sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/{} bin/{} 1>/dev/null'.format(agent_path,
+                                                                                                       bin_dir_folder)],
+                 shell=True)
         exists = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
         if exists:
             print(good + "Success! Agent is located at bin/{} on this host.".format(bin_dir_folder))
@@ -281,8 +283,10 @@ def c2_lint(json_string):
     else:
         print(printError + "C2 check failed. Check your config.json file.")
 
+
 def run_web_delivery():
     utils.web_delivery.main(args.hostIP, args.port, args.method, args.os, args.build)
+
 
 def main():
     is_root()
@@ -312,37 +316,45 @@ def main():
     print("[+] Config looks good!")
 
     try:
-        copy_source_file()
-        sed_source_code()
-    except Exception as e:
-        print(printError + str(e))
-
-    try:
-        copy_dockerfile()
-        sed_dockerfile()
-    except Exception as e:
-        print(printError + str(e))
-
-    try:
-        docker_build()
-        docker_run()
-        docker_copy()
-        docker_kill()
-    except Exception as e:
-        print(printError + str(e))
-
-    try:
-        recover_config_source()
-        recover_dockerfile()
-    except Exception as e:
-        print(printError + str(e))
-        
-    if args.webdelivery:
         try:
-            run_web_delivery()
+            copy_source_file()
+            sed_source_code()
         except Exception as e:
             print(printError + str(e))
-            exit()
+
+        try:
+            copy_dockerfile()
+            sed_dockerfile()
+        except Exception as e:
+            print(printError + str(e))
+
+        try:
+            docker_build()
+            docker_run()
+            docker_copy()
+            docker_kill()
+        except Exception as e:
+            print(printError + str(e))
+
+        try:
+            recover_config_source()
+            recover_dockerfile()
+        except Exception as e:
+            print(printError + str(e))
+
+        if args.webdelivery:
+            try:
+                run_web_delivery()
+            except Exception as e:
+                print(printError + str(e))
+                exit()
+    except KeyboardInterrupt:
+        print(recc + 'Cleaning up and exiting...')
+        recover_config_source()
+        recover_dockerfile()
+        print(recc + "Goodbye!" + Fore.RESET)
+        sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
