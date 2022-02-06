@@ -5,6 +5,7 @@ extern crate serde_json;
 use std::{thread, time};
 use std::env::{args};
 use std::process::exit;
+use rand::prelude::*;
 
 use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
@@ -72,9 +73,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let page_id = create_page(&client, &config_options, hn)
         .await
         .unwrap();
-
-    let sleep_time = 
-        time::Duration::from_secs(config_options.sleep_interval);
     
     loop {
         // Get Blocks
@@ -114,6 +112,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 None => { continue; }
             }
         }
+
+        // Handle jitter
+        let mut rng = rand::thread_rng();
+        let jitter_time = rng.gen_range(0..config_options.jitter_time + 1);
+        let sleep_time = 
+            time::Duration::from_secs(config_options.sleep_interval + jitter_time);
 
         thread::sleep(sleep_time);
         println!("ZZZZ");

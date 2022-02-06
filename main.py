@@ -83,12 +83,16 @@ def does_config_exist() -> bool:
 
 def take_in_vars():
     """
-    Intakes vars for Sleep, API Key, and Parent Page ID.
+    Intakes vars for Sleep, Jitter Time, API Key, and Parent Page ID.
     """
     # Sleep
     sleep_interval = ask_for_input(
         important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
     print(good + "Sleep interval: {}".format(sleep_interval))
+    # Jitter Time
+    jitter_time = ask_for_input(
+        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", 10)
+    print(good + "Jitter range: {}".format(sleep_interval))
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
     print(good + "Got your API key!")
@@ -103,6 +107,7 @@ def take_in_vars():
     print(good + "Parent page ID: {}".format(parent_page_id))
     json_vars = {
         "SLEEP": sleep_interval,
+        "JITTER": jitter_time,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id
     }
