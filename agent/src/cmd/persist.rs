@@ -2,6 +2,8 @@ use std::error::Error;
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
 #[cfg(windows)] use std::env::{var};
+#[cfg(windows)] use std::env::args;
+#[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 
 

