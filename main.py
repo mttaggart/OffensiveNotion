@@ -25,10 +25,10 @@ parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="
                                                                                "by creating a test page on your "
                                                                                "Listener.")
 parser.add_argument('-w', '--webdelivery', default=False, action="store_true", help="Start a web delivery server to "
-                                                                                    "host and deliver your agent "
+                                                                                    "host and deliver your agent. "
                                                                                     "Provides convenient one liners "
                                                                                     "to run on the target.")
-parser.add_argument('-m', '--method', choices=['powershell', 'wget-linux', 'wget-psh'], help='Method of web delivery')
+parser.add_argument('-m', '--method', choices=['powershell', 'wget-linux', 'wget-psh', 'python-linux', 'python-windows'], help='Method of web delivery')
 parser.add_argument('-ip', '--hostIP', help='Web server host IP.')
 parser.add_argument('-p', '--port', help='Web server host port.')
 
@@ -348,6 +348,8 @@ def main():
             except Exception as e:
                 print(printError + str(e))
                 exit()
+        else:
+            print(good + "Done! Happy hacking!")
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
         recover_config_source()
