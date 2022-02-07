@@ -3,6 +3,11 @@ use std::io::copy;
 use reqwest::Client;
 use std::fs::File;
 
+/// Downloads a file to the local system.
+/// 
+/// Usage: `download [url] [path]`.
+/// 
+/// Defaults the the end of the URL without path option
 pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     let client = Client::new();
     // Get args

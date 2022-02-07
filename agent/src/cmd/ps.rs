@@ -1,6 +1,7 @@
 use std::error::Error;
 use sysinfo::{ProcessExt, System, SystemExt};
 
+/// Lists processes. Returns PID and process name.
 pub async fn handle() -> Result<String, Box<dyn Error>> {
     let mut process_res = String::new();
     let sys = System::new_all();

