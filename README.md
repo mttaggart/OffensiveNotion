@@ -125,7 +125,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
   - [x] `pwd`
   - [x] `save`
   - [x] `shutdown`
-  - [ ] `sleep [#]` to adjust callback
+  - [x] `sleep [#]` to adjust callback
   
 ### Documentation
 - [ ] Quickstart
@@ -147,7 +147,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
     - [ ] Linux
     - [x] Windows
   - [ ] `portscan`
-  - [ ] `sleep [#][%]` to adjust callback and jitter
+  - [x] `sleep [#][%]` to adjust callback and jitter
 
 - Linux
   - [ ] `inject` (more of a shellcode runner than injection)
