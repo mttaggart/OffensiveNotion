@@ -52,6 +52,7 @@ pub fn is_elevated() -> bool {
 }
 }
 
+/// Determines privilege levels
 pub async fn handle() -> Result<String, Box<dyn Error>> {
     // TODO: Implement Linux check
         let is_admin = is_elevated();  

