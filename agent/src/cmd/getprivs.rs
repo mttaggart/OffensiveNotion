@@ -16,9 +16,6 @@ use is_root::is_root;
 
 
 pub fn is_elevated() -> bool {
-    
-    //TODO: parameterize for Linux/Windows
-    //On Linux, check UID/EUID for 0
     #[cfg(not(windows))] {
         let is_root = is_root();
         return is_root;
