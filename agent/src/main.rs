@@ -54,11 +54,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     
-    let hn = hostname::get()
+    let mut hn = hostname::get()
         .ok()
         .unwrap()
         .into_string()
         .unwrap();
+
+    let is_admin = cmd::getprivs::is_elevated();  
+    println!("{}", is_admin);
+    if is_admin {
+        hn.push_str("*");
+    }
 
     println!("{:?}", hn);
     println!("{:?}", config_options);

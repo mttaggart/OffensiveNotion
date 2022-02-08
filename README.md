@@ -169,10 +169,8 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ## COULD
 - [x] Compiles with Notion icon
 - [x] Mirror the notion.ico file 😈 (slightly red tint to logo)
-- [x] "Web delivery" via Flask and one-liner for remote download/exec (https://www.offensive-security.com/metasploit-unleashed/web-delivery/) 
-
-
+- [x] "Web delivery" via Flask and one-liner for remote download/exec (https://www.offensive-security.com/metasploit-unleashed/web-delivery/)
+- [x] Agent checks in by POSTing hostname and username to page title with asterisk if in an admin context (getprivs at checkin)
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
-- [ ] Agent checks in by POSTing hostname and username to page title with asterisk if in an admin context (getprivs at checkin)
 - Windows
   - [ ] `inject-assembly` (⚠️ large lift ⚠️)

@@ -1,4 +1,5 @@
 use std::error::Error;
+use is_root::is_root;
 
 #[cfg(windows)] use std::ptr::null_mut;
 #[cfg(windows)] use winapi::um::handleapi::CloseHandle;
@@ -13,12 +14,17 @@ use std::error::Error;
 #[cfg(windows)] use winapi::ctypes::c_void;
 #[cfg(windows)] use winapi::um::winnt::TOKEN_QUERY;
 
-#[cfg(windows)]
+
 pub fn is_elevated() -> bool {
     
     //TODO: parameterize for Linux/Windows
     //On Linux, check UID/EUID for 0
+    #[cfg(not(windows))] {
+        let is_root = is_root();
+        return is_root;
+    }
 
+    #[cfg(windows)] {
     let mut handle: HANDLE = null_mut();
     unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut handle) };
 
@@ -43,17 +49,13 @@ pub fn is_elevated() -> bool {
     }
 
     elevation_struct.TokenIsElevated == 1
-
+}
 }
 
 pub async fn handle() -> Result<String, Box<dyn Error>> {
     // TODO: Implement Linux check
-    #[cfg(windows)] {
         let is_admin = is_elevated();  
         println!("{}", is_admin);
         Ok(String::from(format!("Admin Context: {is_admin}").to_string()))
-    }
-    #[cfg(not(windows))] {
-        Ok(String::from(format!("Under Construction!").to_string()))
-    }
+    
 }

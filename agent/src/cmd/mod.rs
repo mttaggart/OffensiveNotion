@@ -7,7 +7,7 @@ use crate::config::ConfigOptions;
 // Command modules
 mod cd;
 mod download;
-mod getprivs;
+pub mod getprivs;
 mod inject;
 mod persist;
 mod portscan;

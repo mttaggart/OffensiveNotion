@@ -17,6 +17,7 @@ winapi = "0.3.8"
 libc = "0.2.66"
 sysinfo = "0.23.0"
 rand = "0.8.0"
+is-root = "0.1.2"
 
 [build-dependencies]
 embed-resource = "1.6"
