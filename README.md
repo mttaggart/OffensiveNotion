@@ -159,13 +159,14 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 - Windows
   - [x] `inject`
-  - [ ] `runas`
+  - Lat Movement/RCE/Runas
+    - [ ] `runas` (SCshell)
   - Elevate:
     - [ ] fodhelper
   - Persist:
     - [x] `startup`
     - [x] `registry`
-    - [ ] `wmic`
+    - [ ] (Bonus) `wmic`
     - [ ] (Bonus) `comhijack`
     - [ ] (Bonus) `xll`
     
