@@ -109,7 +109,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 * `inject [url] [pid]`: Injects shellcode into the given PID using process injection (CreateRemoteThread). Windows-only. 
 * `ps`: Lists processes
 
-# V 1.0.0 Release Criteria
+# V 1.0.0 Release Criteria - "Iron Age"
 ## MUST
 ### Setup
 - [x] Python Setup Script for config options
