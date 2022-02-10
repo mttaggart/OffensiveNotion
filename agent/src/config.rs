@@ -53,7 +53,7 @@ impl ConfigOptions {
 
     /// Converts loaded json data into `ConfigOptions`
     pub fn from_json(j: serde_json::Value) -> ConfigOptions {
-        println!("{:?}", j);
+        println!("[*] Config options: {:?}", j);
         ConfigOptions {
             sleep_interval: j["sleep_interval"].as_u64().unwrap(),
             jitter_time: j["jitter_time"].as_u64().unwrap(),
