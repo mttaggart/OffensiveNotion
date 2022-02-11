@@ -7,6 +7,7 @@ use crate::config::ConfigOptions;
 // Command modules
 mod cd;
 mod download;
+pub mod elevate;
 pub mod getprivs;
 mod inject;
 mod persist;
@@ -15,7 +16,7 @@ mod ps;
 mod pwd;
 mod runas;
 mod save;
-mod shell;
+pub mod shell;
 mod sleep;
 mod shutdown;
 mod unknown;
