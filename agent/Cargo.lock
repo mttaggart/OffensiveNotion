@@ -522,6 +522,7 @@ dependencies = [
 name = "offensive_notion"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "embed-resource",
  "is-root",
  "kernel32-sys",

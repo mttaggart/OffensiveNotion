@@ -2,6 +2,7 @@ extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
+extern crate base64;
 
 use std::{thread, time};
 use std::env::{args};
@@ -11,6 +12,7 @@ use rand::prelude::*;
 use whoami::hostname;
 use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
+use base64::{encode, decode};
 
 mod config;
 use config::{
@@ -47,6 +49,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if a == "-c" {
                 let config_file_path = args().nth(2).unwrap();
                 config_options = load_config_options(Some(config_file_path.as_str())).await?;
+            } else if a == "-b" { 
+                let b64_config = args().nth(2).unwrap();
+                config_options = serde_json::from_str(b64_config.as_str()).unwrap(); 
             } else {
                 config_options = get_config_options().await?;
             }
