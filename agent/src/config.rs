@@ -35,7 +35,8 @@ pub struct ConfigOptions {
     pub jitter_time: u64,
     pub parent_page_id: String,
     pub api_key: String,
-    pub config_file_path: String
+    pub config_file_path: String,
+    pub launch_app: bool
 }
 
 #[derive(Debug)]
@@ -59,7 +60,8 @@ impl ConfigOptions {
             jitter_time: j["jitter_time"].as_u64().unwrap(),
             parent_page_id: j["parent_page_id"].to_string().replace('"', ""),
             api_key: j["api_key"].to_string().replace('"', ""),
-            config_file_path: j["config_file_path"].to_string().replace('"', "")
+            config_file_path: j["config_file_path"].to_string().replace('"', ""),
+            launch_app: j["launch_app"].as_bool().unwrap_or_default()
         }
     }
 }
@@ -104,7 +106,8 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             jitter_time: jitter_time.trim().parse().unwrap(),
             parent_page_id: parent_page_id.trim().to_string(),
             api_key: api_key.trim().to_string(),
-            config_file_path: config_file_path.trim().to_string()
+            config_file_path: config_file_path.trim().to_string(),
+            launch_app: false
         }
     )
 }
@@ -116,7 +119,8 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         jitter_time: DEFAULT_JITTER_TIME.parse().unwrap_or_else(|_| 0),
         parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
         api_key: DEFAULT_API_KEY.to_string(),
-        config_file_path: CONFIG_FILE_PATH.to_string()
+        config_file_path: CONFIG_FILE_PATH.to_string(),
+        launch_app: true
     };
     
     Ok(config_options)

@@ -5,14 +5,15 @@ extern crate whoami;
 extern crate base64;
 
 use std::{thread, time};
-use std::env::{args};
+use std::env::args;
 use std::process::exit;
+use std::process::Command;
 use rand::prelude::*;
 
 use whoami::hostname;
-use reqwest::{Client};
+use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
-use base64::{decode};
+use base64::decode;
 
 mod config;
 use config::{
@@ -36,7 +37,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle config options
     let mut config_options: ConfigOptions;
 
-    // Check for `-d` option
+    // Check for command line options
+    // -d: debug mode
+    // -c: config file
+    // -b: ingest base64 decode
     match args().nth(1) {
         Some(a) => {
             if a == "-d" {
@@ -61,6 +65,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         None => {
             config_options = load_config_options(None).await?;
+        }
+    }
+
+    // Start Notion App if configured to do so
+    if config_options.launch_app {
+        #[cfg(windows)] {
+            Command::new("C\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+            .arg("--app=https://notion.so")
+            .spawn()
+            .expect("Couldn't launch browser!");
+        }
+        #[cfg(not(windows))] {
+            Command::new("/usr/bin/google-chrome")
+            .arg("--app=https://notion.so")
+            .spawn()
+            .expect("Couldn't launch browser!");
         }
     }
     
