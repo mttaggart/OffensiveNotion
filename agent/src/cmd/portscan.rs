@@ -1,10 +1,12 @@
+use std::ops::RangeInclusive;
 use std::{error::Error, env::args, str::FromStr};
 use std::{
     net::{IpAddr, SocketAddr, ToSocketAddrs},
     time::Duration,
 };
-use futures::{self, stream, StreamExt};
+use libc::uint16_t;
 use tokio::net::TcpStream;
+use tokio::sync::mpsc::{channel, Sender, Receiver};
 
 // Scans target IP/CIDR for open ports
 // Adapted from: https://kerkour.com/rust-fast-port-scanner/
@@ -28,37 +30,68 @@ pub const MOST_COMMON_PORTS_1002: &[u16] = &[
     3001, 5001, 82, 10010, 1030, 9090, 2107, 1024, 2103, 6004, 1801, 5050, 19, 8031, 1041, 255,
 ];
 
-async fn scan(target: IpAddr, full: bool, concurrency: usize, timeout: u64) {
-    let ports = stream::iter(get_ports(full));
 
-    ports
-        .for_each_concurrent(concurrency, |port| scan_port(target, port, timeout))
-        .await;
+async fn scan(target: IpAddr, full: bool, concurrency: usize, timeout: u64) -> Vec<String> {
+    let ports = get_ports(full);
+    let (tx, mut rx) = channel::<String>(concurrency);
+    let mut scan_results: Vec<String> = Vec::new();
+
+
+    tokio::spawn(async move{
+        
+        for port in ports{
+            // .for_each_concurrent(concurrency, |port| scan_port(target, port, timeout))
+            //.await;
+            println!("[*] Scanning port {port} on host {target}");
+            let res: String = scan_port(target, port, timeout).await.unwrap();
+            if res != "" {
+                tx.send(res).await.unwrap();
+            }
+        }
+
+    });
+    while let Some(r) = rx.recv().await {
+        scan_results.push(r);
+    }
+    println!("{:?}", scan_results);
+    scan_results
 }
 
-async fn scan_port(target: IpAddr, port: u16, timeout: u64) {
+async fn scan_port(target: IpAddr, port: u16, timeout: u64) -> Result<String, Box<dyn Error>> {
     let timeout = Duration::from_secs(timeout);
     let socket_address = SocketAddr::new(target.clone(), port);
 
     match tokio::time::timeout(timeout, TcpStream::connect(&socket_address)).await {
-        Ok(Ok(_)) => println!("{}", port),
-        _ => {}
+        Ok(Ok(_)) => Ok(format!("[+] {port} is open on host {target}")),
+        _ => Ok("".to_string())
     }
 }
 
-fn get_ports(full: bool) -> Box<dyn Iterator<Item = u16>> {
+fn get_ports(full: bool) -> Vec<u16> {
     if full {
-        Box::new((1..=u16::MAX).into_iter())
+        (1..=u16::MAX).into_iter().collect()
     } else {
-        Box::new(MOST_COMMON_PORTS_1002.to_owned().into_iter())
+        MOST_COMMON_PORTS_1002.to_owned()
     }
 }
 
-#[tokio::main]
 pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
-    println!("[*] Portscan args: {}", _s);
-    let ip_addr = (_s).parse::<IpAddr>().unwrap();
-    scan(ip_addr,true,1024, 2);
+    
+    let mut args: Vec<&str> = _s.split(" ").collect();
+    println!("[*] Portscan args: {}", &_s);
 
-    Ok("Under Construction".to_string())
+    let ip_addr = args[0].parse::<IpAddr>().unwrap();
+    let full: bool = args[1].parse::<bool>().unwrap();
+    let concurrent: usize = args[2].parse::<usize>().unwrap();
+    let timeout: u64 = args[3].parse::<u64>().unwrap();
+
+    let scan_handle = tokio::spawn( async move {
+        return scan(ip_addr, full,concurrent, timeout)
+    });
+    
+    let scan_res = scan_handle.await?.await;
+
+    let print_res = scan_res.as_slice().join("\n");
+    println!("{print_res}");
+    Ok(print_res)
 }
