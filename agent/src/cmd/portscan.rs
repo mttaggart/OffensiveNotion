@@ -79,13 +79,66 @@ fn get_ports(full: bool) -> Vec<u16> {
 pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
     
     let mut args: Vec<&str> = _s.split(" ").collect();
+    
     println!("[*] Portscan args: {}", &_s);
+    println!("{}", args.len().to_string());
 
-    let ip_addr = args[0].parse::<IpAddr>().unwrap();
-    let full: bool = args[1].parse::<bool>().unwrap();
-    let concurrent: usize = args[2].parse::<usize>().unwrap();
-    let timeout: u64 = args[3].parse::<u64>().unwrap();
+    if args.len() < 3 {
+    match args.len() {
+        0 => {
+            Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
+        }
+    
+        1 => {
+            Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
+        }
 
+        2 => {
+        // checks for rest of args and handle if they don't exist     
+        let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
+        let mut full: bool = false;
+        let mut concurrent: usize = 10;
+        let mut timeout: u64 = 1;
+
+        let scan_handle = tokio::spawn( async move {
+            return scan(ip_addr, full,concurrent, timeout)
+        });
+        
+        let scan_res = scan_handle.await?.await;
+    
+        let print_res = scan_res.as_slice().join("\n");
+        //println!("{print_res}");
+        Ok(print_res)        
+        }
+        
+        3 => {
+        let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
+        let mut full: bool = args[1].parse::<bool>().unwrap();
+        let mut concurrent: usize = 10;
+        let mut timeout: u64 = 1;
+
+        let scan_handle = tokio::spawn( async move {
+            return scan(ip_addr, full,concurrent, timeout)
+        });
+        
+        let scan_res = scan_handle.await?.await;
+    
+        let print_res = scan_res.as_slice().join("\n");
+        //println!("{print_res}");
+        Ok(print_res)        
+        }
+        _ => {
+        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
+        }
+    }
+
+    } else {
+
+    let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
+    let mut full: bool = args[1].parse::<bool>().unwrap();
+    let mut concurrent: usize = args[2].parse::<usize>().unwrap();
+    let mut timeout: u64 = args[3].parse::<u64>().unwrap();
+    
     let scan_handle = tokio::spawn( async move {
         return scan(ip_addr, full,concurrent, timeout)
     });
@@ -93,6 +146,8 @@ pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
     let scan_res = scan_handle.await?.await;
 
     let print_res = scan_res.as_slice().join("\n");
-    println!("{print_res}");
-    Ok(print_res)
+    //println!("{print_res}");
+    Ok(print_res)        
+}    
+        
 }
