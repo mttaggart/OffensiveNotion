@@ -12,7 +12,7 @@ use rand::prelude::*;
 use whoami::hostname;
 use reqwest::{Client};
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
-use base64::{encode, decode};
+use base64::{decode};
 
 mod config;
 use config::{
@@ -50,8 +50,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let config_file_path = args().nth(2).unwrap();
                 config_options = load_config_options(Some(config_file_path.as_str())).await?;
             } else if a == "-b" { 
-                let b64_config = args().nth(2).unwrap();
-                config_options = serde_json::from_str(b64_config.as_str()).unwrap(); 
+                let b64_string = args().nth(2).unwrap().replace(" ", "");
+                let config_string = String::from_utf8(
+                    decode(b64_string.as_str())?
+                )?;
+                config_options = serde_json::from_str(config_string.as_str())?;
             } else {
                 config_options = get_config_options().await?;
             }
