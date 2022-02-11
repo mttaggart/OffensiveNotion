@@ -7,6 +7,7 @@ use std::{
 use libc::uint16_t;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{channel, Sender, Receiver};
+use cidr_utils;
 
 // Scans target IP/CIDR for open ports
 // Adapted from: https://kerkour.com/rust-fast-port-scanner/
