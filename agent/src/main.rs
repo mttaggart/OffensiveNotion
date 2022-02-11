@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
