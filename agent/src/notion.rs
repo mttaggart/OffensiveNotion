@@ -26,7 +26,7 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
                     "text": { "content": String::from_utf8(c.to_vec()).unwrap()},
                     "annotations": {"code": true}
                 }],
-                "language": "shell"
+                "language": "plain text"
             }
         }))
         .collect();
