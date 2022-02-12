@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(release, windows_subsystem = "windows")]
 extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
