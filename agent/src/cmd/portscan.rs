@@ -99,7 +99,7 @@ pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
     let res:bool = check_first_arg(args[0]);
     if res {
         if args.len() <= 4 {
-            Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
+            Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
         } else {
         
         //     - The first arg will -always- be the IP or CIDR, so evaluate on that and return improper usage if that isn't the case
@@ -124,6 +124,6 @@ pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
         Ok(print_res)
         }
     } else {
-        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
+        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
     }
 }
