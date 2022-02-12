@@ -17,8 +17,6 @@ use cidr_utils;
 //      portscan 172.16.5.0/24 common icmp
 //      portscan 172.16.5.4 80,3389,135,139,445,443 arp
 //      portscan 172.16.5.4 all icmp
-// 
-// 
 
 // from awk '$2~/tcp$/' /usr/share/nmap/nmap-services | sort -r -k3 | head -n 1000 | tr -s ' ' | cut -d '/' -f1 | sed 's/\S*\s*\(\S*\).*/\1,/'
 pub const MOST_COMMON_PORTS_1002: &[u16] = &[
@@ -76,77 +74,56 @@ fn get_ports(full: bool) -> Vec<u16> {
     }
 }
 
+fn check_first_arg(ip_addr: &str) -> bool {
+    println!("[*] Checking first arg...");
+
+    match IpAddr::from_str(ip_addr) {
+        Ok(ip) if ip.is_ipv4() => {
+            println!("[+] Looks like an IPv4 address.");
+            true
+        },
+        Ok(ip) => {
+            println!("[-] Does not look like an IPv4 address.");
+            false
+        }
+        _ => false
+    }
+}
+
+
 pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
     let mut args: Vec<&str> = _s.split(" ").collect();
     println!("[*] Portscan args: {}", &_s);
     println!("{}", args.len().to_string());
 
-    // TODO: figure out how to make this code not suck
-    if args.len() < 3 {
-    match args.len() {
-        0 => {
+    let res:bool = check_first_arg(args[0]);
+    if res {
+        if args.len() <= 4 {
             Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
-        }
-    
-        1 => {
-            Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
-        }
-
-        2 => {
-        // checks for rest of args and handle if they don't exist     
+        } else {
+        
+        //     - The first arg will -always- be the IP or CIDR, so evaluate on that and return improper usage if that isn't the case
+        //     - If the arg count is less than four, we know we don't have enough args to run the scan so we need to handle how that happens
+        //        - If only one arg (IP/CIDR, which we have already evaluated) run the scan with DEFAULT SETTINGS, i.e. full scan= false, 10 threads, 0 timeout.
+        //        -
+        
+        
         let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
-        let mut full: bool = false;
-        let mut concurrent: usize = 10;
-        let mut timeout: u64 = 1;
-
+        let mut full: bool = args[1].parse::<bool>().unwrap();
+        let mut concurrent: usize = args[2].parse::<usize>().unwrap();
+        let mut timeout: u64 = args[3].parse::<u64>().unwrap();
+        
+    
         let scan_handle = tokio::spawn( async move {
             return scan(ip_addr, full,concurrent, timeout)
         });
         
         let scan_res = scan_handle.await?.await;
-    
         let print_res = scan_res.as_slice().join("\n");
         //println!("{print_res}");
         Ok(print_res)
         }
-        
-        3 => {
-        let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
-        let mut full: bool = args[1].parse::<bool>().unwrap();
-        let mut concurrent: usize = 10;
-        let mut timeout: u64 = 1;
-
-        let scan_handle = tokio::spawn( async move {
-            return scan(ip_addr, full,concurrent, timeout)
-        });
-        
-        let scan_res = scan_handle.await?.await;
-    
-        let print_res = scan_res.as_slice().join("\n");
-        //println!("{print_res}");
-        Ok(print_res)        
-        }
-        _ => {
-        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
-        }
-    }
-
     } else {
-
-    let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
-    let mut full: bool = args[1].parse::<bool>().unwrap();
-    let mut concurrent: usize = args[2].parse::<usize>().unwrap();
-    let mut timeout: u64 = args[3].parse::<u64>().unwrap();
-    
-    let scan_handle = tokio::spawn( async move {
-        return scan(ip_addr, full,concurrent, timeout)
-    });
-    
-    let scan_res = scan_handle.await?.await;
-
-    let print_res = scan_res.as_slice().join("\n");
-    //println!("{print_res}");
-    Ok(print_res)        
-}    
-        
+        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]".to_string())
+    }
 }
