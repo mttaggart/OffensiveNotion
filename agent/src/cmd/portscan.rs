@@ -77,12 +77,11 @@ fn get_ports(full: bool) -> Vec<u16> {
 }
 
 pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
-    
     let mut args: Vec<&str> = _s.split(" ").collect();
-    
     println!("[*] Portscan args: {}", &_s);
     println!("{}", args.len().to_string());
 
+    // TODO: figure out how to make this code not suck
     if args.len() < 3 {
     match args.len() {
         0 => {
@@ -108,7 +107,7 @@ pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
     
         let print_res = scan_res.as_slice().join("\n");
         //println!("{print_res}");
-        Ok(print_res)        
+        Ok(print_res)
         }
         
         3 => {
