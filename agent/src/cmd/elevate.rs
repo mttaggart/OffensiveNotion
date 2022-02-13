@@ -31,6 +31,10 @@ pub fn can_elevate() -> bool {
 
 }
 
+/// Attempts to elevate privileges. If successful, a new session
+/// will be opened as the elevated user.
+/// 
+/// Usage: `elevate [password]`
 pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
     if can_elevate() {
         match s.trim() {
