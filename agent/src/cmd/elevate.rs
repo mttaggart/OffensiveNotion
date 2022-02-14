@@ -50,7 +50,7 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
         match elevate_args.nth(0).unwrap().trim() {
             "sudo" => {
                 let pwd = elevate_args.nth(0).unwrap();
-                let encoded_config = encode(to_string(config_options)?.as_bytes());
+                let encoded_config = config_options.to_base64();
                 let agent_path = args().nth(0).unwrap();
                 let cmd_string = format!("echo '{pwd}' | sudo -S  {agent_path} -b {encoded_config} & disown");
                 Command::new("/bin/bash")

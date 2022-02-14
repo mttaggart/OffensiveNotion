@@ -1,10 +1,12 @@
 extern crate serde;
 extern crate serde_json;
-use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
 use std::fmt;
+use serde::{Deserialize, Serialize};
+use serde_json::{from_str, to_string};
+use base64::{encode, decode};
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
@@ -64,6 +66,11 @@ impl ConfigOptions {
             launch_app: j["launch_app"].as_bool().unwrap_or_default()
         }
     }
+
+    pub fn to_base64(&self) -> String {
+        encode(to_string(self).unwrap().as_bytes())
+    }
+
 }
 
 /// Retrieves config options from the terminal.
