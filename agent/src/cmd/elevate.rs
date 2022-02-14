@@ -1,10 +1,7 @@
 use std::error::Error;
-use sysinfo::{ProcessExt, System, SystemExt, User, UserExt};
+use sysinfo::{System, SystemExt, UserExt};
 use whoami::username;
-use serde_json::to_string;
 use crate::config::ConfigOptions;
-use crate::cmd::shell;
-use base64::encode;
 use std::env::args;
 use std::process::Command;
 

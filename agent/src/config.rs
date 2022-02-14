@@ -5,8 +5,8 @@ use std::io::{self, Write};
 use std::fs;
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, to_string};
-use base64::{encode, decode};
+use serde_json::to_string;
+use base64::encode;
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
