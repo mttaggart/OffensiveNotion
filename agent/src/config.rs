@@ -24,13 +24,12 @@ pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 
 /// Storing Config Options as a struct for ergonomics.
 ///
-/// sleep_interval: u64 for use with `std::thread::sleep()`
-///
-/// parent_page_id: String which eventually can be added at compile
-///
-/// api_key: String also added at compile
+/// * `sleep_interval`: u64 for use with `std::thread::sleep()`
+/// * `parent_page_id`: String which eventually can be added at compile
+/// * `api_key`: String also added at compile
+/// * `config_file_path`: String where the json for config will be read/written
+/// * `launch_app`: Whether to launch the Notion web app
 /// 
-/// config_file_path: String where the json for config will be read/written
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
     pub sleep_interval: u64,
