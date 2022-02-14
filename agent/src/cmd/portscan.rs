@@ -4,19 +4,14 @@ use std::{
     net::{IpAddr, SocketAddr, ToSocketAddrs},
     time::Duration,
 };
+use cidr_utils::cidr::{IpCidr, self};
 use libc::uint16_t;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{channel, Sender, Receiver};
-use cidr_utils;
 
 // Scans target IP/CIDR for open ports
 // Adapted from: https://kerkour.com/rust-fast-port-scanner/
-//
-//     portscan [target/s] [ports ('common', 'all', or comma delimited list)] [icmp|arp|none]
-// Examples:
-//      portscan 172.16.5.0/24 common icmp
-//      portscan 172.16.5.4 80,3389,135,139,445,443 arp
-//      portscan 172.16.5.4 all icmp
+
 
 // from awk '$2~/tcp$/' /usr/share/nmap/nmap-services | sort -r -k3 | head -n 1000 | tr -s ' ' | cut -d '/' -f1 | sed 's/\S*\s*\(\S*\).*/\1,/'
 pub const MOST_COMMON_PORTS_1002: &[u16] = &[
@@ -30,19 +25,68 @@ pub const MOST_COMMON_PORTS_1002: &[u16] = &[
 ];
 
 
-async fn scan(target: IpAddr, full: bool, concurrency: usize, timeout: u64) -> Vec<String> {
+pub enum ScanTarget {
+    Address(IpAddr),
+    Cidr(IpCidr),
+    Unknown(String)
+}
+
+async fn eval_target(target: String) -> ScanTarget {
+
+    // CIDR
+    if IpCidr::is_ip_cidr(&target) {
+        println!("[*] Looks like a CIDR range.");
+        ScanTarget::Cidr(IpCidr::from_str(target.as_str()).unwrap())
+    
+    // IP
+    } else if let Ok(ip) = IpAddr::from_str(target.as_str()) {
+        println!("[*] Looks like an IP address.");
+        ScanTarget::Address(ip)
+
+    // Hostname? Maybe someday
+    
+    // Or else
+    } else {
+        ScanTarget::Unknown(target)
+    }
+}
+
+
+async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) -> Vec<String> {
     let ports = get_ports(full);
     let (tx, mut rx) = channel::<String>(concurrency);
     let mut scan_results: Vec<String> = Vec::new();
 
+    let targets: Vec<IpAddr> = match target {
+        ScanTarget::Address(a) => {
+            vec![a]
+        },
 
-    tokio::spawn(async move{
-        
-        for port in ports{
+        ScanTarget::Cidr(c) => {
+           
+            // find method for converting CIDR to vec of IP 
+            c.iter_as_ip_addr().collect()
+        },
+
+        ScanTarget::Unknown(u) => {
+            vec![]
+        }
+    };
+
+    let mut scan_targets: Vec<(IpAddr, u16)> = Vec::new();
+    for addr in targets {
+        get_ports(full).into_iter().for_each(|p| {
+            scan_targets.push((addr, p))
+        });
+    }
+    
+    tokio::spawn(async move{    
+        for (addr, port) in scan_targets{
             // .for_each_concurrent(concurrency, |port| scan_port(target, port, timeout))
             //.await;
-            println!("[*] Scanning port {port} on host {target}");
-            let res: String = scan_port(target, port, timeout).await.unwrap();
+            
+            println!("[*] Scanning port {port} on host {addr}");
+            let res: String = scan_target(addr, port, timeout).await.unwrap();
             if res != "" {
                 tx.send(res).await.unwrap();
             }
@@ -53,11 +97,20 @@ async fn scan(target: IpAddr, full: bool, concurrency: usize, timeout: u64) -> V
         scan_results.push(r);
     }
     println!("{:?}", scan_results);
+    
+    if scan_results.is_empty(){
+        scan_results.push("[*] No ports open on targets".to_string());
+    }
+    
     scan_results
 }
 
-async fn scan_port(target: IpAddr, port: u16, timeout: u64) -> Result<String, Box<dyn Error>> {
+
+
+
+async fn scan_target(target: IpAddr, port: u16, timeout: u64) -> Result<String, Box<dyn Error>> {
     let timeout = Duration::from_secs(timeout);
+    
     let socket_address = SocketAddr::new(target.clone(), port);
 
     match tokio::time::timeout(timeout, TcpStream::connect(&socket_address)).await {
@@ -74,56 +127,28 @@ fn get_ports(full: bool) -> Vec<u16> {
     }
 }
 
-fn check_first_arg(ip_addr: &str) -> bool {
-    println!("[*] Checking first arg...");
-
-    match IpAddr::from_str(ip_addr) {
-        Ok(ip) if ip.is_ipv4() => {
-            println!("[+] Looks like an IPv4 address.");
-            true
-        },
-        Ok(ip) => {
-            println!("[-] Does not look like an IPv4 address.");
-            false
-        }
-        _ => false
-    }
-}
-
-
 pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
-    let mut args: Vec<&str> = _s.split(" ").collect();
+    let args: Vec<&str> = _s.split(" ").collect();
     println!("[*] Portscan args: {}", &_s);
-    println!("{}", args.len().to_string());
 
-    let res:bool = check_first_arg(args[0]);
-    if res {
-        if args.len() <= 4 {
-            Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
-        } else {
+    if args.len() <= 4 {
+        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
+    } else {
+
+        let target: ScanTarget = eval_target(args[0].to_string()).await;
         
-        //     - The first arg will -always- be the IP or CIDR, so evaluate on that and return improper usage if that isn't the case
-        //     - If the arg count is less than four, we know we don't have enough args to run the scan so we need to handle how that happens
-        //        - If only one arg (IP/CIDR, which we have already evaluated) run the scan with DEFAULT SETTINGS, i.e. full scan= false, 10 threads, 0 timeout.
-        //        -
-        
-        
-        let mut ip_addr:IpAddr = args[0].parse::<IpAddr>().unwrap();
-        let mut full: bool = args[1].parse::<bool>().unwrap();
-        let mut concurrent: usize = args[2].parse::<usize>().unwrap();
-        let mut timeout: u64 = args[3].parse::<u64>().unwrap();
-        
+        let full: bool = args[1].parse::<bool>().unwrap();
+        let concurrent: usize = args[2].parse::<usize>().unwrap();
+        let timeout: u64 = args[3].parse::<u64>().unwrap();
     
         let scan_handle = tokio::spawn( async move {
-            return scan(ip_addr, full,concurrent, timeout)
+            return scan(target, full,concurrent, timeout)
         });
         
         let scan_res = scan_handle.await?.await;
         let print_res = scan_res.as_slice().join("\n");
         //println!("{print_res}");
         Ok(print_res)
-        }
-    } else {
-        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
     }
 }
+       
