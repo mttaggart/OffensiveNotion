@@ -1,13 +1,12 @@
-use std::ops::RangeInclusive;
 use std::{error::Error, env::args, str::FromStr};
 use std::{
     net::{IpAddr, SocketAddr, ToSocketAddrs},
     time::Duration,
 };
 use cidr_utils::cidr::{IpCidr, self};
-use libc::uint16_t;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{channel, Sender, Receiver};
+use crate::logger::Logger;
 
 // Scans target IP/CIDR for open ports
 // Adapted from: https://kerkour.com/rust-fast-port-scanner/
@@ -82,10 +81,7 @@ async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) 
     
     tokio::spawn(async move{    
         for (addr, port) in scan_targets{
-            // .for_each_concurrent(concurrency, |port| scan_port(target, port, timeout))
-            //.await;
-            
-            println!("[*] Scanning port {port} on host {addr}");
+            // &logger.info(format!("Scanning port {port} on host {addr}"));
             let res: String = scan_target(addr, port, timeout).await.unwrap();
             if res != "" {
                 tx.send(res).await.unwrap();
@@ -124,12 +120,15 @@ fn get_ports(full: bool) -> Vec<u16> {
     }
 }
 
-pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
-    let args: Vec<&str> = _s.split(" ").collect();
-    println!("[*] Portscan args: {}", &_s);
+pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    let args: Vec<&str> = s.split(" ").collect();
+    logger.debug(format!("Portscan args: {:?}", s));
 
     if args.len() <= 4 {
-        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
+        Ok(format!("[-] Improper args.
+        [*] Usage: portscan [ip] [true/false] [concurrency] [timeout]
+        [*] Example: portscan 192.168.35.5 false 10 0 🎯"
+        ))
     } else {
 
         let target: ScanTarget = eval_target(args[0].to_string()).await;
@@ -144,7 +143,7 @@ pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
         
         let scan_res = scan_handle.await?.await;
         let print_res = scan_res.as_slice().join("\n");
-        //println!("{print_res}");
+        logger.debug(format!("{print_res}"));
         Ok(print_res)
     }
 }

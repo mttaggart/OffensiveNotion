@@ -20,7 +20,7 @@ pub fn can_elevate() -> bool {
         let username = username();
         let user = s.users()
         .into_iter()
-        .filter(|u| u.name() == username )
+        .filter(|&u| u.name() == username )
         .nth(0)
         .unwrap();
     

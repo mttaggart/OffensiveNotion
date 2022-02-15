@@ -7,6 +7,7 @@ use std::env::{var, args};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 use crate::cmd::ConfigOptions;
+use crate::logger::Logger;
 
 /// Uses the specified method to establish persistence. 
 /// 

