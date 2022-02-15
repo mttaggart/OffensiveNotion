@@ -1,5 +1,6 @@
 extern crate serde;
 extern crate serde_json;
+use serde::Serialize;
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
@@ -72,7 +73,7 @@ impl ConfigOptions {
     }
 
     /// Produces a base64 encoded String of the Options.
-    /// 
+    ///
     /// This is useful for sending ConfigOptions to launch commands
     pub fn to_base64(&self) -> String {
         encode(to_string(self).unwrap().as_bytes())

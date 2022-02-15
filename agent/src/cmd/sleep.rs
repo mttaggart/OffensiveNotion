@@ -18,5 +18,5 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
         .unwrap_or_else(|_| config_options.jitter_time);
     config_options.sleep_interval = sleep_interval;
     config_options.jitter_time = jitter_time;
-    Ok(format!("Sleep time: {sleep_interval}, Jitter time: {jitter_time}"))
+    Ok(format!("[+] Sleep time: {sleep_interval}, Jitter time: {jitter_time}"))
 }
