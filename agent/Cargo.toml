@@ -12,13 +12,13 @@ reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.136", features=["derive"] }
 serde_json = "1.0"
-hostname = "^0.3"
 winapi = "0.3.8"
 libc = "0.2.66"
 sysinfo = "0.23.0"
+whoami = "1.2.1"
 rand = "0.8.0"
 is-root = "0.1.2"
-cidr-utils = "0.5.5"
+base64 = "0.13.0"
 
 [build-dependencies]
 embed-resource = "1.6"

