@@ -1,13 +1,12 @@
-use std::ops::RangeInclusive;
-use std::{error::Error, env::args, str::FromStr};
+use std::{error::Error, str::FromStr};
 use std::{
-    net::{IpAddr, SocketAddr, ToSocketAddrs},
+    net::{IpAddr, SocketAddr},
     time::Duration,
 };
-use cidr_utils::cidr::{IpCidr, self};
-use libc::uint16_t;
+use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
-use tokio::sync::mpsc::{channel, Sender, Receiver};
+use tokio::sync::mpsc::channel;
+use crate::logger::Logger;
 
 // Scans target IP/CIDR for open ports
 // Adapted from: https://kerkour.com/rust-fast-port-scanner/
@@ -53,24 +52,15 @@ async fn eval_target(target: String) -> ScanTarget {
 
 
 async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) -> Vec<String> {
-    let ports = get_ports(full);
     let (tx, mut rx) = channel::<String>(concurrency);
     let mut scan_results: Vec<String> = Vec::new();
 
+    use ScanTarget::{Address, Cidr, Unknown};
+
     let targets: Vec<IpAddr> = match target {
-        ScanTarget::Address(a) => {
-            vec![a]
-        },
-
-        ScanTarget::Cidr(c) => {
-           
-            // find method for converting CIDR to vec of IP 
-            c.iter_as_ip_addr().collect()
-        },
-
-        ScanTarget::Unknown(u) => {
-            vec![]
-        }
+        Address(a) => vec![a],
+        Cidr(c) => c.iter_as_ip_addr().collect(),
+        Unknown(_) => vec![]
     };
 
     let mut scan_targets: Vec<(IpAddr, u16)> = Vec::new();
@@ -82,10 +72,7 @@ async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) 
     
     tokio::spawn(async move{    
         for (addr, port) in scan_targets{
-            // .for_each_concurrent(concurrency, |port| scan_port(target, port, timeout))
-            //.await;
-            
-            println!("[*] Scanning port {port} on host {addr}");
+            // &logger.info(format!("Scanning port {port} on host {addr}"));
             let res: String = scan_target(addr, port, timeout).await.unwrap();
             if res != "" {
                 tx.send(res).await.unwrap();
@@ -124,12 +111,15 @@ fn get_ports(full: bool) -> Vec<u16> {
     }
 }
 
-pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
-    let args: Vec<&str> = _s.split(" ").collect();
-    println!("[*] Portscan args: {}", &_s);
+pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    let args: Vec<&str> = s.split(" ").collect();
+    logger.debug(format!("Portscan args: {:?}", s));
 
     if args.len() <= 4 {
-        Ok("[-] Improper args.\n[*] Usage: portscan [ip] [true/false] [concurrency] [timeout]\n\t  [*] Example: portscan 192.168.35.5 false 10 0 🎯".to_string())
+        Ok(format!("[-] Improper args.
+        [*] Usage: portscan [ip] [true/false] [concurrency] [timeout]
+        [*] Example: portscan 192.168.35.5 false 10 0 🎯"
+        ))
     } else {
 
         let target: ScanTarget = eval_target(args[0].to_string()).await;
@@ -144,7 +134,7 @@ pub async fn handle(_s: &String) -> Result<String, Box<dyn Error>> {
         
         let scan_res = scan_handle.await?.await;
         let print_res = scan_res.as_slice().join("\n");
-        //println!("{print_res}");
+        logger.debug(format!("{print_res}"));
         Ok(print_res)
     }
 }

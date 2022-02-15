@@ -21,8 +21,8 @@ pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
         let mut out_file = File::create(path).expect("Failed to create file");
         match copy(&mut r.bytes().await?.as_ref(), &mut out_file) {
             Ok(b)  => { return Ok(format!("{b} bytes written to {path}").to_string());},
-            Err(_) => { return Ok("Could not write file".to_string())}
+            Err(_) => { return Ok("Could not write file".to_string()); }
         }
     }
-    return Ok(r.text().await?);
+    Ok(r.text().await?)
 }
