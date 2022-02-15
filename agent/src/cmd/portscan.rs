@@ -96,17 +96,14 @@ async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) 
     while let Some(r) = rx.recv().await {
         scan_results.push(r);
     }
-    println!("{:?}", scan_results);
+    //println!("{:?}", scan_results);
     
     if scan_results.is_empty(){
-        scan_results.push("[*] No ports open on targets".to_string());
+        scan_results.push("[*] No scan results".to_string());
     }
     
     scan_results
 }
-
-
-
 
 async fn scan_target(target: IpAddr, port: u16, timeout: u64) -> Result<String, Box<dyn Error>> {
     let timeout = Duration::from_secs(timeout);
