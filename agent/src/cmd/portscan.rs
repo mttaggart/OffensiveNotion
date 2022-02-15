@@ -1,11 +1,11 @@
-use std::{error::Error, env::args, str::FromStr};
+use std::{error::Error, str::FromStr};
 use std::{
-    net::{IpAddr, SocketAddr, ToSocketAddrs},
+    net::{IpAddr, SocketAddr},
     time::Duration,
 };
-use cidr_utils::cidr::{IpCidr, self};
+use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
-use tokio::sync::mpsc::{channel, Sender, Receiver};
+use tokio::sync::mpsc::channel;
 use crate::logger::Logger;
 
 // Scans target IP/CIDR for open ports
@@ -52,24 +52,15 @@ async fn eval_target(target: String) -> ScanTarget {
 
 
 async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) -> Vec<String> {
-    let ports = get_ports(full);
     let (tx, mut rx) = channel::<String>(concurrency);
     let mut scan_results: Vec<String> = Vec::new();
 
+    use ScanTarget::{Address, Cidr, Unknown};
+
     let targets: Vec<IpAddr> = match target {
-        ScanTarget::Address(a) => {
-            vec![a]
-        },
-
-        ScanTarget::Cidr(c) => {
-           
-            // find method for converting CIDR to vec of IP 
-            c.iter_as_ip_addr().collect()
-        },
-
-        ScanTarget::Unknown(u) => {
-            vec![]
-        }
+        Address(a) => vec![a],
+        Cidr(c) => c.iter_as_ip_addr().collect(),
+        Unknown(_) => vec![]
     };
 
     let mut scan_targets: Vec<(IpAddr, u16)> = Vec::new();
