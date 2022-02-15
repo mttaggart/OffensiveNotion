@@ -19,6 +19,7 @@ whoami = "1.2.1"
 rand = "0.8.0"
 is-root = "0.1.2"
 base64 = "0.13.0"
+cidr-utils = "0.5.5"
 
 [build-dependencies]
 embed-resource = "1.6"

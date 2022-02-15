@@ -147,22 +147,24 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
     - [x] Linux
     - [x] Windows
   - [x] `sleep [#][%]` to adjust callback and jitter
-  - [ ] `portscan`
+  - [x] `portscan`
   
 
 - Linux
-  - [ ] `inject` (more of a shellcode runner than injection)
-  - Persist:
-    - [ ] rc.local (`startup`?)
-    - [ ] systemd service
-    - [ ] cronjob
+- [x] `elevate sudo`
+- [ ] `inject` (more of a shellcode runner than injection)
+- Persist:
+  - [x] bashrc
+  - [ ] rc.local (`startup`?)
+  - [ ] systemd service
+  - [ ] cronjob
 
 - Windows
   - [x] `inject`
   - Lat Movement/RCE/Runas
     - [ ] `runas` (SCshell)
   - Elevate:
-    - [ ] fodhelper
+    - [ ] `fodhelper`
   - Persist:
     - [x] `startup`
     - [x] `registry`
@@ -176,6 +178,6 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 - [x] "Web delivery" via Flask and one-liner for remote download/exec (https://www.offensive-security.com/metasploit-unleashed/web-delivery/)
 - [x] Agent checks in by POSTing hostname and username to page title with asterisk if in an admin context (getprivs at checkin)
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
-- [ ] Agent spawns kiosk mode Notion.so page
+- [x] Agent can spawn in kiosk mode Notion.so page at startup
 - Windows
   - [ ] `inject-assembly` (⚠️ large lift ⚠️)
