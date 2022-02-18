@@ -111,27 +111,9 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 # V 1.0.0 Release Criteria - "Iron Age"
 ## MUST
-### Setup
-- [x] Python Setup Script for config options
-- [x] Dynamic Docker container spin up/tear down for agent generation
-- [x] Parse args for Docker build options
 
 <details>
-<summary>Agent Commands</summary>
-### Agent
-```
-- Commands:
-  - [x] `shell`
-  - [x] `cd`
-  - [x] `download`
-  - [x] `ps`
-  - [x] `pwd`
-  - [x] `save`
-  - [x] `shutdown`
-  - [x] `sleep [#]` to adjust callback
-```
-
-</details>
+<summary> TODO </summary>
 
 ### Documentation
 - [ ] Quickstart
@@ -144,46 +126,81 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ### Misc
 - [ ] YARA Rules
 
-## SHOULD
-### Agent
-- [x] Jitter interval for callback time 
+</details>
 
+<details>
+<summary> Done </summary>
+
+### Setup
+- [x] Python Setup Script for config options
+- [x] Dynamic Docker container spin up/tear down for agent generation
+- [x] Parse args for Docker build options
+
+### Agent
+- Commands:
+  - [x] `shell`
+  - [x] `cd`
+  - [x] `download`
+  - [x] `ps`
+  - [x] `pwd`
+  - [x] `save`
+  - [x] `shutdown`
+  - [x] `sleep [#]` to adjust callback
+
+</details>
+
+## SHOULD
+<details>
+<summary> TODO </summary>
+
+- [ ] Linux `persist rc.local`
+- [ ] Linux `inject` (more of a shellcode runner than injection)
+
+- [ ] Windows `runas` (SCshell)
+
+- Persist:
+  - [ ] Windows `persist schtasks`
+  - [ ] (Bonus) `wmic`
+  - [ ] (Bonus) `comhijack`
+  - [ ] (Bonus) `xll`
+
+</details>
+
+<details>
+<summary> Done </summary>
+
+### Agent
+- [x] Jitter interval for callback time
 - Commands:
   - [x] `getprivs`
-    - [x] Linux
-    - [x] Windows
   - [x] `sleep [#][%]` to adjust callback and jitter
   - [x] `portscan`
-  
+- [x] Linux `elevate sudo`
+- [x] Windows `elevate fodhelper`
+- [x] Linux `persist bashrc`
+- [x] Linux `persist cron`
+- [x] Linux `persist service`
+- [x] Windows `inject`
+- [x] Windows `persist startup`
+- [x] Windows `persist registry`
 
-- Linux
-- [x] `elevate sudo`
-- [ ] `inject` (more of a shellcode runner than injection)
-- Persist:
-  - [x] bashrc
-  - [ ] rc.local (`startup`?)
-  - [x] systemd service
-  - [x] cronjob
+</details>
 
-- Windows
-  - [x] `inject`
-  - Lat Movement/RCE/Runas
-    - [ ] `runas` (SCshell)
-  - Elevate:
-    - [x] `fodhelper`
-  - Persist:
-    - [x] `startup`
-    - [x] `registry`
-    - [ ] (Bonus) `wmic`
-    - [ ] (Bonus) `comhijack`
-    - [ ] (Bonus) `xll`
-    
 ## COULD
+<details>
+<summary> TODO </summary>
+- [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
+- [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
+
+</details>
+
+
+<details>
+<summary> Done </summary>
 - [x] Compiles with Notion icon
 - [x] Mirror the notion.ico file 😈 (slightly red tint to logo)
 - [x] "Web delivery" via Flask and one-liner for remote download/exec (https://www.offensive-security.com/metasploit-unleashed/web-delivery/)
 - [x] Agent checks in by POSTing hostname and username to page title with asterisk if in an admin context (getprivs at checkin)
-- [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
 - [x] Agent can spawn in kiosk mode Notion.so page at startup
-- Windows
-  - [ ] `inject-assembly` (⚠️ large lift ⚠️)
+
+</details>
