@@ -14,7 +14,6 @@ use is_root::is_root;
 #[cfg(windows)] use winapi::ctypes::c_void;
 #[cfg(windows)] use winapi::um::winnt::TOKEN_QUERY;
 
-
 pub fn is_elevated() -> bool {
     #[cfg(not(windows))] {
         let is_root = is_root();
