@@ -116,7 +116,10 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 - [x] Dynamic Docker container spin up/tear down for agent generation
 - [x] Parse args for Docker build options
 
+<details>
+<summary>Agent Commands</summary>
 ### Agent
+```
 - Commands:
   - [x] `shell`
   - [x] `cd`
@@ -126,7 +129,10 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
   - [x] `save`
   - [x] `shutdown`
   - [x] `sleep [#]` to adjust callback
-  
+```
+
+</details>
+
 ### Documentation
 - [ ] Quickstart
 - [ ] Install
@@ -156,8 +162,8 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 - Persist:
   - [x] bashrc
   - [ ] rc.local (`startup`?)
-  - [ ] systemd service
-  - [ ] cronjob
+  - [x] systemd service
+  - [x] cronjob
 
 - Windows
   - [x] `inject`
