@@ -189,6 +189,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 ## COULD
 <details>
 <summary> TODO </summary>
+
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
 - [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
 
