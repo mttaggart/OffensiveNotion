@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start Notion App if configured to do so
     if config_options.launch_app {
         #[cfg(windows)] {
-            Command::new("C\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+            Command::new(r#"C\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"#)
             .arg("--app=https://notion.so")
             .spawn()
             .expect("Couldn't launch browser!");
