@@ -75,18 +75,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start Notion App if configured to do so
     if config_options.launch_app {
+        logger.info("Launching app".to_string());
+        let browser_cmd: &str;
         #[cfg(windows)] {
-            Command::new(r#"C\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"#)
-            .arg("--app=https://notion.so")
-            .spawn()
-            .expect("Couldn't launch browser!");
+            browser_cmd = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
         }
         #[cfg(not(windows))] {
-            Command::new("/usr/bin/google-chrome")
-            .arg("--app=https://notion.so")
-            .spawn()
-            .expect("Couldn't launch browser!");
+            browser_cmd = "/usr/local/bin/google-chrome";
         }
+        match Command::new(browser_cmd)
+        .arg("--app=https://notion.so")
+        .spawn() {
+            Ok(_) => {logger.info("Launching browser".to_string());},
+            Err(e) => {logger.err(e.to_string());}
+        };
     }
     
     let mut hn = hostname();
