@@ -160,7 +160,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 
 - Persist:
   - [ ] Windows `persist schtasks`
-  - [ ] (Bonus) `wmic`
+  - [x] (Bonus) `wmic`
   - [ ] (Bonus) `comhijack`
   - [ ] (Bonus) `xll`
 

