@@ -28,98 +28,6 @@ To use Notion as a platform for offensive operations, you need a few things:
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### Setting Up A Listener Page
-The "listener" is just a page in a Notion notebook. But you can set it up to catch the callbacks for your agents:
-
-1) Create your listener page. Add a new page to Notion, preferably in a notebook that's not being used for anything else:
-
-![img_1.png](assets/img_1.png)
-
-2) In the upper right corner, click "Share" and "Invite". Add your Notion Developer API account to this page:
-
-![img_2.png](assets/img_2.png)
-
-![img_3.png](assets/img_3.png)
-
-3) Copy the URL of your page down. If you're in the web browser Notion client, this can be taken from the URL of the page. In the desktop app, enter `ctl-l` to copy it to your clipboard.
-4) If your listener URL is:
-```
-https://www.notion.so/LISTENER-11223344556677889900112233445566                     
-```
-... then your **parent page ID** is the number after the name of the listener, split with hyphens into the following schema: 8-4-4-4-12.
-Meaning, your parent page ID would be: `11223344-5566-7788-9900-112233445566`. This value is used to connect your agent to your listener, so keep track of it!
-
-## Python Installer Script (QuickStart)
-### Usage
-```
-$ sudo python3 main.py -h
-usage: main.py [-h] [-o {linux,windows}] [-b {debug,release}] [-c]
-
-OffensiveNotion Setup. Must be run as root. Generates the OffensiveNotion agent in a container.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -o {linux,windows}, --os {linux,windows}
-                        Target OS
-  -b {debug,release}, --build {debug,release}
-                        Binary build
-  -c, --c2lint          C2 linter. Checks your C2 config by creating a test page on your Listener.
-```
-### How To
-The `main.py` script handles all setup and agent compilation. You need docker in order to use it.
-If you don't have docker already:
-```
-$ sudo apt-get install docker.io
-```
-Next, install the Python dependencies:
-```
-$ pip3 install poetry
-$ poetry shell
-$ poetry install
-```
-Then run the main script:
-```
-$ sudo python3 main.py [-h] [-o {linux,windows}] [-b {debug,release}] [-c]
-```
-...and follow the prompts to perform the installation. It creates a Docker container and creates the agent inside, then copies it to your physical host and deletes the container.
-
-## Agent Control
-When your agent is built and dispatched to the target environment, it uses your secret key and the parent page ID to check in. Once this happens, a new page with the hostname of where the agent landed will appear as a child page of your listener:
-
-![img.png](assets/img_4.png)
-
-When you click on this page, you are now in the agent's "session". Which is really just a notebook page for the most part, but has some special functions.
-
-### Running commands
-Make a `To Do` block and add any shell command you want to run on the target. When you are ready to execute the command, add the bullseye emoji to the end: 🎯
-
-![img.png](assets/img_5.png)
-
-When your agent checks in, the stdout of the command will be added to the notebook under the `To Do` block as code-syntax highlighted text.
-
-![img.png](assets/img_6.png)
-
-Hey, remember this is a normal Notion page! Add some documentation for your operation while you go:
-
-![img.png](assets/img_7.png)
-
-Why not stack up a bunch of commands to do initial check-in safety checks...
-
-![img.png](assets/img_8.png)
-
-... and then run them all when an agent checks in?
-
-![img.png](assets/img_9.png)
-
-#### Accepted Command Types
-
-* `shell [shell command]`: Executes the given shell command. Output or error will be returned.
-* `cd [dir]`: Changes directory without invoking the shell.
-* `download [url] [path]`: Downloads file from url. If `[path]` is provided, that is where the file will be written, if it can be.
-* `shutdown`: Shuts down the agent.
-* `inject [url] [pid]`: Injects shellcode into the given PID using process injection (CreateRemoteThread). Windows-only. 
-* `ps`: Lists processes
-
 # V 1.0.0 Release Criteria - "Iron Age"
 ## MUST
 
@@ -233,4 +141,3 @@ Badges
 [lastcommit]:https://img.shields.io/github/last-commit/HuskyHacks/OffensiveNotion?style=for-the-badge
 [img-pr-badge]:https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJzdmcyIiB3aWR0aD0iNjQ1IiBoZWlnaHQ9IjU4NSIgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8ZyBpZD0ibGF5ZXIxIj4gIDxwYXRoIGlkPSJwYXRoMjQxNyIgZD0ibTI5Ny4zIDU1MC44N2MtMTMuNzc1LTE1LjQzNi00OC4xNzEtNDUuNTMtNzYuNDM1LTY2Ljg3NC04My43NDQtNjMuMjQyLTk1LjE0Mi03Mi4zOTQtMTI5LjE0LTEwMy43LTYyLjY4NS01Ny43Mi04OS4zMDYtMTE1LjcxLTg5LjIxNC0xOTQuMzQgMC4wNDQ1MTItMzguMzg0IDIuNjYwOC01My4xNzIgMTMuNDEtNzUuNzk3IDE4LjIzNy0zOC4zODYgNDUuMS02Ni45MDkgNzkuNDQ1LTg0LjM1NSAyNC4zMjUtMTIuMzU2IDM2LjMyMy0xNy44NDUgNzYuOTQ0LTE4LjA3IDQyLjQ5My0wLjIzNDgzIDUxLjQzOSA0LjcxOTcgNzYuNDM1IDE4LjQ1MiAzMC40MjUgMTYuNzE0IDYxLjc0IDUyLjQzNiA2OC4yMTMgNzcuODExbDMuOTk4MSAxNS42NzIgOS44NTk2LTIxLjU4NWM1NS43MTYtMTIxLjk3IDIzMy42LTEyMC4xNSAyOTUuNSAzLjAzMTYgMTkuNjM4IDM5LjA3NiAyMS43OTQgMTIyLjUxIDQuMzgwMSAxNjkuNTEtMjIuNzE1IDYxLjMwOS02NS4zOCAxMDguMDUtMTY0LjAxIDE3OS42OC02NC42ODEgNDYuOTc0LTEzNy44OCAxMTguMDUtMTQyLjk4IDEyOC4wMy01LjkxNTUgMTEuNTg4LTAuMjgyMTYgMS44MTU5LTI2LjQwOC0yNy40NjF6IiBmaWxsPSIjZGQ1MDRmIi8%2BIDwvZz48L3N2Zz4%3D
 [img-license-badge]:https://img.shields.io/badge/license-mit-367588.svg?style=for-the-badge
-[img-docker-badge]:https://img.shields.io/badge/Supports-Docker-yellow.svg?style=for-the-badge&logo=docker
