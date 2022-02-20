@@ -4,6 +4,13 @@ OffensiveNotion
 <h3 align="center"> Notion (yes, the notetaking app) as a C2.</h3>
 <div align="center">
 
+---
+A collaboration by:
+
+mttaggart | HuskyHacks
+
+---
+
 [Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests][pr]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues][issues]
 
 ![GitHub last commit][lastcommit] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
