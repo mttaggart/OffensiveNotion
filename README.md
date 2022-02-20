@@ -150,21 +150,6 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 </details>
 
 ## SHOULD
-<details>
-<summary> TODO </summary>
-
-- [ ] Linux `persist rc.local`
-- [ ] Linux `inject` (more of a shellcode runner than injection)
-
-- [ ] Windows `runas` (SCshell)
-
-- Persist:
-  - [ ] Windows `persist schtasks`
-  - [x] (Bonus) `wmic`
-  - [ ] (Bonus) `comhijack`
-  - [ ] (Bonus) `xll`
-
-</details>
 
 <details>
 <summary> Done </summary>
@@ -184,6 +169,10 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 - [x] Windows `persist startup`
 - [x] Windows `persist registry`
 
+- Persist:
+  - [x] Windows `persist schtasks`
+  - [x] (Bonus) `wmic`
+  
 </details>
 
 ## COULD
@@ -191,7 +180,6 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 <summary> TODO </summary>
 
 - [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
-- [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
 
 </details>
 
@@ -206,3 +194,17 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 - [x] Agent can spawn in kiosk mode Notion.so page at startup
 
 </details>
+
+
+<details>
+<summary> For Next Release </summary>
+
+- [ ] Linux `persist rc.local`
+- [ ] Linux `inject` (more of a shellcode runner than injection)
+- [ ] Windows `runas` (SCshell)
+- [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
+- [ ] (Bonus) Windows `persist comhijack`
+- [ ] (Bonus) Windows `persist xll`
+
+</details>
+
