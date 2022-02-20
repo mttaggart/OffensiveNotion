@@ -196,8 +196,7 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 </details>
 
 
-<details>
-<summary> For Next Release </summary>
+## For Next Release
 
 - [ ] Linux `persist rc.local`
 - [ ] Linux `inject` (more of a shellcode runner than injection)
@@ -205,6 +204,3 @@ Why not stack up a bunch of commands to do initial check-in safety checks...
 - [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
 - [ ] (Bonus) Windows `persist comhijack`
 - [ ] (Bonus) Windows `persist xll`
-
-</details>
-
