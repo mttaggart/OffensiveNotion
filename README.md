@@ -31,8 +31,10 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ## Quickstart
 TODO
 
+## Documentation
+Please see the [Wiki][wiki] for setup, usage, commands, and more!
 
-# V 1.0.0 Release Criteria - "Iron Age"
+# v1.0.0 Release Criteria - "Iron Age"
 ## MUST
 
 <details>
