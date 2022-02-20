@@ -12,13 +12,13 @@ OffensiveNotion
 
 ---
 
-## Wait, What?
+### Wait, What?
 Yes.
 
-## But Why?
+### But Why?
 What started as a meme grew into a full project. Just roll with it.
 
-### Setup
+## Setup
 To use Notion as a platform for offensive operations, you need a few things:
 
 - A Notion account, available [here](https://www.notion.so/signup)
@@ -27,6 +27,10 @@ To use Notion as a platform for offensive operations, you need a few things:
 ```
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
+
+## Quickstart
+TODO
+
 
 # V 1.0.0 Release Criteria - "Iron Age"
 ## MUST
