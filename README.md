@@ -150,11 +150,11 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 Links
 -->
 
-[issues]:https://github.com/HuskyHacks/OffensiveNotion/issues "Blue-Jupyter Issues ➶"
-[wiki]:https://github.com/HuskyHacks/OffensiveNotion/wiki "Blue-Jupyter Documentation ➶"
-[repo]:https://github.com/HuskyHacks/OffensiveNotion "Blue-Jupyter Repository ➶"
-[pr]:https://github.com/HuskyHacks/OffensiveNotion/pulls "Blue-Jupyter Pull Requests ➶"
-[license]:https://github.com/HuskyHacks/OffensiveNotion/blob/master/LICENSE "Blue-Jupyter License File ➶"
+[issues]:https://github.com/HuskyHacks/OffensiveNotion/issues "OffensiveNotion Issues ➶"
+[wiki]:https://github.com/HuskyHacks/OffensiveNotion/wiki "OffensiveNotion Documentation ➶"
+[repo]:https://github.com/HuskyHacks/OffensiveNotion "OffensiveNotion Repository ➶"
+[pr]:https://github.com/HuskyHacks/OffensiveNotion/pulls "OffensiveNotion Pull Requests ➶"
+[license]:https://github.com/HuskyHacks/OffensiveNotion/blob/main/LICENSE "OffensiveNotion License File ➶"
 
 <!--
 Badges
