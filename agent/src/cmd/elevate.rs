@@ -4,7 +4,7 @@ use whoami::username;
 use crate::config::ConfigOptions;
 use std::env::args;
 use std::process::Command;
-use std::env::{var};
+#[cfg(windows)] use std::env::{var};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use crate::cmd::getprivs::is_elevated;
 
@@ -93,7 +93,6 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                                 ];
 
                                 for c in cmds {
-                                    println!("Arg: {c}");
                                     Command::new("powershell.exe")
                                     .arg(c)
                                     .spawn()?;

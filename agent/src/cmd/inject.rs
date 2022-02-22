@@ -88,10 +88,16 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
                 logger.info(format!("Got encoded bytes"));
                 for i in 0..b64_iterations {
                     logger.debug(format!("Decode iteration: {i}"));
-                    shellcode_encoded = b64_decode(shellcode_encoded)?
-                        .into_iter()
-                        .filter(|&b| b != 0x0a)
-                        .collect();
+                    match b64_decode(shellcode_encoded) {
+                        Ok(d) => {
+                            shellcode_encoded = d
+                                .into_iter()
+                                .filter(|&b| b != 0x0a)
+                                .collect();
+                        },
+                        Err(e) => { return Ok(e.to_string()); }
+                    };
+                    
                 }
                 // Convert bytes to our proper string
                 shellcode_string = String::from_utf8(shellcode_encoded)?;

