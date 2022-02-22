@@ -14,7 +14,7 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
     // Get args
     let mut args = s.split(" ");
     // Get URL as the first arg
-    let url = args.nth(0).unwrap();
+    let url = args.nth(0).unwrap_or_else(|| "");
     // Get path as the 2nd arg or the last part of the URL
     let path = args.nth(0).unwrap_or_else(|| url.split("/").last().unwrap());
     logger.debug(format!("Downloading from {url} to {path}"));
