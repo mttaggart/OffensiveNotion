@@ -34,7 +34,7 @@ What started as a meme grew into a full project. Just roll with it.
 * 🕵️‍♀️ Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
 
 ## Quickstart
-See the [Quickstart guide](https://github.com/HuskyHacks/OffensiveNotion/wiki/2.Quickstart) on how to get going right away!
+See the [Quickstart guide](https://github.com/HuskyHacks/OffensiveNotion/wiki/2.-Quickstart) on how to get going right away!
 
 ## Documentation
 Please see the [Wiki][wiki] for setup, usage, commands, and more!
