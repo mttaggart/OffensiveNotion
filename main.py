@@ -124,7 +124,7 @@ def take_in_vars():
         "JITTER": jitter_time,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
-        "LOG_LEVEL": log_level
+        "LOG_LEVEL": str(log_level)
     }
     json_string = json.dumps(json_vars)
     return json_string
