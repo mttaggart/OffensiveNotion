@@ -26,12 +26,12 @@ Yes.
 What started as a meme grew into a full project. Just roll with it.
 
 ## Features
-📡 A full-featured C2 platform built on the Notion notetaking app.
-🚧 Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
-🖥️ Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base.
-☢️ A range of capabilities including port-scanning, privilege escalation, asynchronous command execution, file download, and shellcode injection, all controlled from the comfort of a Notion page!
-📜 Document as you go! The agent identifies special syntax to run commands, so feel free to use the rest of the Notion page to document your operation.
-🕵️‍♀️ Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
+* 📡 A full-featured C2 platform built on the Notion notetaking app.
+* 🚧 Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
+* 🖥️ Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base.
+* ☢️ A range of capabilities including port-scanning, privilege escalation, asynchronous command execution, file download, and shellcode injection, all controlled from the comfort of a Notion page!
+* 📜 Document as you go! The agent identifies special syntax to run commands, so feel free to use the rest of the Notion page to document your operation.
+* 🕵️‍♀️ Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
 
 ## Setup
 To use Notion as a platform for offensive operations, you need a few things:
