@@ -91,7 +91,7 @@ async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) 
 }
 
 async fn scan_target(target: IpAddr, port: u16, timeout: u64) -> Result<String, Box<dyn Error>> {
-    let timeout = Duration::from_secs(timeout);
+    let timeout = Duration::from_millis(timeout);
     
     let socket_address = SocketAddr::new(target.clone(), port);
 
