@@ -26,25 +26,15 @@ Yes.
 What started as a meme grew into a full project. Just roll with it.
 
 ## Features
-* A full-featured C2 platform built on the [Notion notetaking app](https://www.notion.so).
-* Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
-* Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base.
-* A range of capabilities including port-scanning, privilege escalation, asynchronous command execution, file download, and shellcode injection, all controlled from the comfort of a Notion page!
-* Document as you go! The agent identifies special syntax to run commands, so feel free to use the rest of the Notion page to document your operation.
-* Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
-
-## Setup
-To use Notion as a platform for offensive operations, you need a few things:
-
-- A Notion account, available [here](https://www.notion.so/signup)
-- A Notion Developers API account, available [here](https://developers.notion.com/)
-- (if installing from source) 🦀 **Rust** 🦀. Head to [rustup](https://rustup.rs/) and run:
-```
-$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+* 📡 A full-featured C2 platform built on the Notion notetaking app.
+* 🚧 Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
+* 🖥️ Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base.
+* ☢️ A range of capabilities including port-scanning, privilege escalation, asynchronous command execution, file download, and shellcode injection, all controlled from the comfort of a Notion page!
+* 📜 Document as you go! The agent identifies special syntax to run commands, so feel free to use the rest of the Notion page to document your operation.
+* 🕵️‍♀️ Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
 
 ## Quickstart
-TODO
+See the [Quickstart guide](https://github.com/HuskyHacks/OffensiveNotion/wiki/2.-Quickstart) on how to get going right away!
 
 ## Documentation
 Please see the [Wiki][wiki] for setup, usage, commands, and more!
@@ -135,16 +125,23 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 
 </details>
 
-
-## For Next Release
-
+<details>
+<summary> For Next Release </summary>
 - [ ] Linux `persist rc.local`
 - [ ] Linux `inject` (more of a shellcode runner than injection)
 - [ ] Windows `runas` (SCshell)
 - [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
 - [ ] (Bonus) Windows `persist comhijack`
 - [ ] (Bonus) Windows `persist xll`
+</details>
+  
+## Thanks & Acknowledgements
 
+
+## Disclaimer
+There is no way to make an offensive security relevant research tool and release it open source without the possibility of it falling into the wrong hands. This tool is only to be used for legal, ethical purposes including, but not limited to, research, security assessment, education. The dev team is not responsible for the misuse of this tool by anyone if used for illegal/unethical purposes. No animals were harmed in the making of this code base (although Cosmo keeps climbing on my keyboard and I have to put him over on the couch, which I'm sure must feel like torture to him).
+
+See the LICENSE for more details.
 
 <!--
 Links

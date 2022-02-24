@@ -91,7 +91,7 @@ async fn scan(target: ScanTarget, full: bool, concurrency: usize, timeout: u64) 
 }
 
 async fn scan_target(target: IpAddr, port: u16, timeout: u64) -> Result<String, Box<dyn Error>> {
-    let timeout = Duration::from_secs(timeout);
+    let timeout = Duration::from_millis(timeout);
     
     let socket_address = SocketAddr::new(target.clone(), port);
 
@@ -133,9 +133,16 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
 
         let target: ScanTarget = eval_target(args[0].to_string()).await;
         
-        let full: bool = args[1].parse::<bool>().unwrap();
-        let concurrent: usize = args[2].parse::<usize>().unwrap();
-        let timeout: u64 = args[3].parse::<u64>().unwrap();
+        let full: bool = args[1].parse::<bool>().unwrap_or_default();
+        
+        let concurrent: usize = args[2].parse::<usize>().unwrap_or_else(|_| 5);
+
+        // Safety check for concurrency
+        if concurrent <= 0 {
+            return Ok("Concurrency value must be greater than 0!".to_string());
+        }
+        
+        let timeout: u64 = args[3].parse::<u64>().unwrap_or_else(|_| 1000);
     
         let scan_handle = tokio::spawn( async move {
             return scan(target, full,concurrent, timeout)
