@@ -133,9 +133,16 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
 
         let target: ScanTarget = eval_target(args[0].to_string()).await;
         
-        let full: bool = args[1].parse::<bool>().unwrap();
-        let concurrent: usize = args[2].parse::<usize>().unwrap();
-        let timeout: u64 = args[3].parse::<u64>().unwrap();
+        let full: bool = args[1].parse::<bool>().unwrap_or_default();
+        
+        let concurrent: usize = args[2].parse::<usize>().unwrap_or_else(|_| 5);
+
+        // Safety check for concurrency
+        if concurrent <= 0 {
+            return Ok("Concurrency value must be greater than 0!".to_string());
+        }
+        
+        let timeout: u64 = args[3].parse::<u64>().unwrap_or_else(|_| 1000);
     
         let scan_handle = tokio::spawn( async move {
             return scan(target, full,concurrent, timeout)
