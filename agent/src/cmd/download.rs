@@ -12,7 +12,7 @@ use crate::logger::Logger;
 pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
     let client = Client::new();
     // Get args
-    let mut args = s.split(" ");
+    let mut args = s.trim().split(" ");
     // Get URL as the first arg
     let url = args.nth(0).unwrap_or_else(|| "");
     // Get path as the 2nd arg or the last part of the URL

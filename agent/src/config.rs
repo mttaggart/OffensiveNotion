@@ -142,7 +142,11 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
     Ok(config_options)
 }
 
-/// Ingests config from a saved JSON file.
+/// Ingests config from a saved JSON file—or tries to.
+/// 
+/// If `None` is passed as the path, the `CONFIG_FILE_PATH` is attempted.
+/// 
+/// If no config file can be parsed, defaults are used.
 pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, ConfigError> {
 
     let config_file_path = match c {
@@ -154,9 +158,10 @@ pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, Confi
         if let Ok(cfg) = serde_json::from_str(c.as_str()) {
             Ok(ConfigOptions::from_json(cfg))
         } else {
-            Err(ConfigError("Could not convert config file to JSON".to_string()))
+            println!("[!] Could not convert {c} to JSON");
+            get_config_options().await
         }
     } else {
-        Err(ConfigError("Could not load config file".to_string()))
+        get_config_options().await
     }
 }
