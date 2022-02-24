@@ -336,7 +336,7 @@ def main():
             docker_build()
             docker_run()
             docker_copy()
-            docker_kill()
+            #docker_kill()
         except Exception as e:
             print(printError + str(e))
 
