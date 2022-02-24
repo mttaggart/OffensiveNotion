@@ -127,12 +127,14 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 
 <details>
 <summary> For Next Release </summary>
-- [ ] Linux `persist rc.local`
-- [ ] Linux `inject` (more of a shellcode runner than injection)
-- [ ] Windows `runas` (SCshell)
-- [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
-- [ ] (Bonus) Windows `persist comhijack`
-- [ ] (Bonus) Windows `persist xll`
+  
+  - [ ] Linux `persist rc.local`
+  - [ ] Linux `inject` (more of a shellcode runner than injection)
+  - [ ] Windows `runas` (SCshell)
+  - [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
+  - [ ] (Bonus) Windows `persist comhijack`
+  - [ ] (Bonus) Windows `persist xll`
+
 </details>
   
 ## Thanks & Acknowledgements
