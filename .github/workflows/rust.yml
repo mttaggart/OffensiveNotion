@@ -17,6 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build 
+      working-directory: ./agent
       run: cargo build --verbose --release
       
   build_windows:
@@ -26,4 +27,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build 
+      working-directory: ./agent
       run: cargo build --verbose --release
