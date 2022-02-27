@@ -13,7 +13,7 @@ A collaboration by:
 
 [Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests][pr]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues][issues]
 
-![GitHub last commit][lastcommit] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
+![Release][release] ![GitHub last commit][lastcommit] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
 
 </div>
 
@@ -164,6 +164,7 @@ Links
 [repo]:https://github.com/mttaggart/OffensiveNotion "OffensiveNotion Repository ➶"
 [pr]:https://github.com/mttaggart/OffensiveNotion/pulls "OffensiveNotion Pull Requests ➶"
 [license]:https://github.com/mttaggart/OffensiveNotion/blob/main/LICENSE "OffensiveNotion License File ➶"
+[release]:https://img.shields.io/github/v/release/mttaggart/OffensiveNotion?label=RELEASE%3A%20IRON%20AGE&style=for-the-badge
 
 <!--
 Badges
