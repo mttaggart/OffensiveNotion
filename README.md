@@ -42,8 +42,8 @@ See the [Quickstart guide](https://github.com/HuskyHacks/OffensiveNotion/wiki/2.
 ## Documentation
 Please see the [Wiki][wiki] for setup, usage, commands, and more!
 
-# v1.0.0 Release Criteria - "Iron Age"
-## MUST
+## v1.0.0  - "Iron Age"
+### MUST
 
 <details>
 <summary> Done </summary>
@@ -56,14 +56,14 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
   - [x] Linux commands
   - [x] Windows commands
 
-### Misc
+#### Misc
 - [x] YARA Rules
-### Setup
+#### Setup
 - [x] Python Setup Script for config options
 - [x] Dynamic Docker container spin up/tear down for agent generation
 - [x] Parse args for Docker build options
 
-### Agent
+#### Agent
 - Commands:
   - [x] `shell`
   - [x] `cd`
@@ -76,12 +76,12 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 
 </details>
 
-## SHOULD
+### SHOULD
 
 <details>
 <summary> Done </summary>
 
-### Agent
+#### Agent
 - [x] Jitter interval for callback time
 - Commands:
   - [x] `getprivs`
@@ -102,14 +102,7 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
   
 </details>
 
-## COULD
-<details>
-<summary> TODO </summary>
-
-- [ ] Template Notion page for setup (Operation SNEAKYSLOTH)
-
-</details>
-
+### COULD
 
 <details>
 <summary> Done </summary>
