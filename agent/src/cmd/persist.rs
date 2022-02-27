@@ -186,13 +186,16 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
         match s.trim() {
             "cron"    => {
                 // Copy the app to a new folder
-                create_dir(&app_dir)?;
+                match create_dir(&app_dir) {
+                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Err(e) => { logger.err(e.to_string()); }
+                };
                 if let Ok(_) = copy(&app_path, dest_path) {
                     // Save config for relaunch
                     save::handle(&format!("{app_dir}/cfg.json"), config_options).await?;
                     // Write a cronjob to the user's crontab with the given minutes as an interval.
                     let cron_string = format!("0 * * * * {app_dir}/notion");
-                    if let Ok(_) = shell::handle(&format!("echo '{cron_string}' | crontab - ")).await {
+                    if let Ok(_) = shell::handle(&format!("(crontab -l 2>/dev/null; echo '{cron_string}') | crontab - ")).await {
                         Ok("Cronjob added!".to_string())
                     } else {
                         Ok("Could not make cronjob".to_string())
@@ -203,7 +206,10 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
             }
             "bashrc"  => {
                 // Copy the app to a new folder
-                create_dir(&app_dir)?;
+                match create_dir(&app_dir) {
+                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Err(e) => { logger.err(e.to_string()); }
+                };
                 if let Ok(_) = copy(&app_path, dest_path) {
                     // Save config for relaunch
                     save::handle(&format!("{app_dir}/cfg.json"), config_options).await?;
@@ -219,7 +225,10 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
             },
             "service" => {
                 if is_root() {
-                    create_dir(&app_dir)?;    
+                    match create_dir(&app_dir) {
+                        Ok(_) => { logger.info("Notion directory created".to_string()); },
+                        Err(e) => { logger.err(e.to_string()); }
+                    };    
                     if let Ok(_) = copy(&app_path, &dest_path) {
                         let b64_config = config_options.to_base64();
                         let svc_path = "/lib/systemd/system/notion.service";
