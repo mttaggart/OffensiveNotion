@@ -28,6 +28,9 @@ Yes.
 ### But Why?
 What started as a meme grew into a full project. Just roll with it.
 
+### Read more!
+Here's our blog post about it: [We Put A C2 In Your Notetaking App: OffensiveNotion](https://medium.com/@huskyhacks.mk/we-put-a-c2-in-your-notetaking-app-offensivenotion-3e933bace332)
+
 ## Features
 * 📡 A full-featured C2 platform built on the Notion notetaking app.
 * 🚧 Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
