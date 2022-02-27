@@ -21,6 +21,9 @@ jobs:
     - name: Build 
       working-directory: ./agent
       run: cargo build --verbose --release
+      with:
+        name: offensive_notion_linux_amd64 
+        path: target/release/offensive_notion
       
   build_windows:
 
@@ -33,3 +36,6 @@ jobs:
     - name: Build 
       working-directory: ./agent
       run: cargo build --verbose --release
+      with:
+        name: offensive_notion_win_64.exe
+        path: target/release/offensive_notion.exe
