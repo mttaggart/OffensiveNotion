@@ -29,17 +29,21 @@ jobs:
       
   build_windows:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
     - name: Update Rust
       run: rustup update stable
+    - name: Install MingW
+      run: apt install -y mingw-w64
+    - name: Add Windows Triple
+      run: rustup target add x86_64-pc-windows-gnu 
     - name: Build 
       working-directory: ./agent
-      run: cargo build --release
+      run: cargo build --release --target x86_64-pc-windows-gnu
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: offensive_notion_win_64.exe
-        path: target/release/offensive_notion.exe
+        path: agent/target/x86_64-pc-windows-gnu/release/offensive_notion.exe
