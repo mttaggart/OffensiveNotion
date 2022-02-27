@@ -105,7 +105,8 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
                     // We need to get each one until a proper u8.
                     shellcode = shellcode_string
                         .split(",")
-                        .map(|s| s.replace("0x", ""))                    
+                        .map(|s| s.replace("0x", ""))
+                        .map(|s| s.replace(" ", ""))                    
                         .map(|s|{ 
                             match u8::from_str_radix(&s, 16) {
                                 Ok(b) => b,
