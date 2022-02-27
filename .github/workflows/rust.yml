@@ -16,9 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Update Rust
+      name: Update Rust
       run: rustup update stable
-    - name: Build 
+    - uses: actions/checkout@v2
+      name: Build 
       working-directory: ./agent
       run: cargo build --verbose --release
       
@@ -28,9 +29,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - name: Update Rust
+      name: Update Rust
       run: rustup update stable
-    - name: Build 
+    - uses: actions/checkout@v2
+      name: Build 
       working-directory: ./agent
-      run: rustup update stable
       run: cargo build --verbose --release
