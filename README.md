@@ -131,6 +131,7 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 </details>
   
 ## Thanks & Acknowledgements
+
 > This project has been a blast for me! I learned a ton about Rust and how the mechanics of a C2 work. So thank you to my co-creator @mttaggart for helping me along the way. None of this would have been possible without your technical acumen and creativity.
 >
 >Thank you to Joe Helle (@joehelle) for the POC steps for the fodhelper UAC bypass.
@@ -139,6 +140,13 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 >
 >-Husky
 >
+
+> As a fairly new security person, I had no idea I'd end up working with such a fantastically talented, kind, and reliable partner and hacker as @HuskyHacks. It's been a true privilege to build this alongside him. 
+>
+> I want to thank the [Taggart Tech](https://twitch.tv/mttaggart) community for supporting us along the way and always offering helpful feedback. This would not be possible without you all.
+>
+>-Taggart
+
 
 
 
