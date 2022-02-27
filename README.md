@@ -19,6 +19,9 @@ mttaggart | HuskyHacks
 
 ---
 
+![on](https://user-images.githubusercontent.com/57866415/155594981-1ae9212e-a0f9-4ff3-8a81-8946546dc0a3.gif)
+
+
 ### Wait, What?
 Yes.
 
@@ -127,12 +130,14 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 
 <details>
 <summary> For Next Release </summary>
-- [ ] Linux `persist rc.local`
-- [ ] Linux `inject` (more of a shellcode runner than injection)
-- [ ] Windows `runas` (SCshell)
-- [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
-- [ ] (Bonus) Windows `persist comhijack`
-- [ ] (Bonus) Windows `persist xll`
+  
+  - [ ] Linux `persist rc.local`
+  - [ ] Linux `inject` (more of a shellcode runner than injection)
+  - [ ] Windows `runas` (SCshell)
+  - [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
+  - [ ] (Bonus) Windows `persist comhijack`
+  - [ ] (Bonus) Windows `persist xll`
+
 </details>
   
 ## Thanks & Acknowledgements
