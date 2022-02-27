@@ -40,7 +40,6 @@ jobs:
       run: cargo build --release
     - name: Upload artifact
       uses: actions/upload-artifact@v2
-      working-directory: ./agent
       with:
         name: offensive_notion_win_64.exe
-        path: agent/target/release/offensive_notion.exe
+        path: target/release/offensive_notion.exe
