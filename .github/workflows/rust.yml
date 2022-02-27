@@ -36,7 +36,7 @@ jobs:
     - name: Update Rust
       run: rustup update stable
     - name: Install MingW
-      run: apt install -y mingw-w64
+      run: sudo apt install -y mingw-w64
     - name: Add Windows Triple
       run: rustup target add x86_64-pc-windows-gnu 
     - name: Build 
