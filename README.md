@@ -6,9 +6,9 @@ OffensiveNotion
 
 ---
 A collaboration by:
-
-mttaggart | HuskyHacks
-
+  
+  [![Mttaggart](https://img.shields.io/static/v1?label=%20&message=MTTAGGART&color=blueviolet&style=for-the-badge)](https://twitter.com/mttaggart)  [![HuskyHacks](https://img.shields.io/static/v1?label=%20&message=HUSKYHACKS&color=008080&style=for-the-badge)](https://twitter.com/huskyhacksmk)
+  
 ---
 
 [Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests][pr]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues][issues]
