@@ -46,24 +46,18 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 ## MUST
 
 <details>
-<summary> TODO </summary>
-
-### Documentation
-- [ ] Quickstart
-- [ ] Install
-- [ ] Agent interaction
-  - [ ] Commands
-  - [ ] Linux commands
-  - [ ] Windows commands
-
-### Misc
-- [ ] YARA Rules
-
-</details>
-
-<details>
 <summary> Done </summary>
 
+  ### Documentation
+- [x] Quickstart
+- [x] Install
+- [x] Agent interaction
+  - [x] Commands
+  - [x] Linux commands
+  - [x] Windows commands
+
+### Misc
+- [x] YARA Rules
 ### Setup
 - [x] Python Setup Script for config options
 - [x] Dynamic Docker container spin up/tear down for agent generation
@@ -141,6 +135,15 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 </details>
   
 ## Thanks & Acknowledgements
+> This project has been a blast for me! I learned a ton about Rust and how the mechanics of a C2 work. So thank you to my co-creator @mttaggart for helping me along the way. None of this would have been possible without your technical acumen and creativity.
+>
+>Thank you to Joe Helle (@joehelle) for the POC steps for the fodhelper UAC bypass.
+>
+>Thank you to all of the great red team devs who came before me, too numerous to list them all, who have created some of my favorite tools. I’m continually inspired by the red dev innovation in our field.
+>
+>-Husky
+>
+
 
 
 ## Disclaimer
