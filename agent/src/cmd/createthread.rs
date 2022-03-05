@@ -1,17 +1,17 @@
 use std::error::Error;
 use crate::logger::Logger;
 #[cfg(windows)] use base64::decode as b64_decode;
-extern crate kernel32;
-use winapi::um::winnt::{PVOID, PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE, PAGE_READWRITE, PAGE_EXECUTE_READ};
-use std::ptr;
-use std::io;
-use std::io::prelude::*;
-use std::io::{stdin, stdout, Read, Write};
-use winapi::um::errhandlingapi;
-use winapi::um::processthreadsapi;
-use winapi::um::winbase;
-use winapi::um::synchapi::WaitForSingleObject;
-use std::process;
+#[cfg(windows)]extern crate kernel32;
+#[cfg(windows)]use winapi::um::winnt::{PVOID, PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE, PAGE_READWRITE, PAGE_EXECUTE_READ};
+#[cfg(windows)]use std::ptr;
+#[cfg(windows)]use std::io;
+#[cfg(windows)]use std::io::prelude::*;
+#[cfg(windows)]use std::io::{stdin, stdout, Read, Write};
+#[cfg(windows)]use winapi::um::errhandlingapi;
+#[cfg(windows)]use winapi::um::processthreadsapi;
+#[cfg(windows)]use winapi::um::winbase;
+#[cfg(windows)]use winapi::um::synchapi::WaitForSingleObject;
+#[cfg(windows)]use std::process;
 #[cfg(windows)] use reqwest::Client;
 
 type DWORD = u32;
