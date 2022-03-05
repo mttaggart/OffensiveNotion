@@ -26,7 +26,7 @@ embed-resource = "1.6"
 
 [target.'cfg(windows)'.dependencies]
 kernel32-sys = "0.2.2"
-winapi = { version = "0.3", features = ["winnt","winuser", "handleapi", "processthreadsapi", "securitybaseapi"] }
+winapi = { version = "0.3.8", features = ["winnt","winuser", "handleapi", "processthreadsapi", "securitybaseapi"] }
 winreg = "0.10"
 
 [profile.dev]
