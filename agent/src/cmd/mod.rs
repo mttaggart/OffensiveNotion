@@ -104,7 +104,7 @@ impl Iterator for CommandArgs {
             None
         }
     }
-};
+}
 
 
 /// The command itself, containing the `CommandType` enum
