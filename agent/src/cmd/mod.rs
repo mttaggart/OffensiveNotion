@@ -1,6 +1,8 @@
 // Standard Library Imports
 use std::error::Error;
+use std::iter::Iterator;
 use std::result::Result;
+use core::str::Split;
 use std::fmt;
 // Local imports
 use crate::config::ConfigOptions;
@@ -49,6 +51,7 @@ pub enum CommandType {
 /// Returned if construction fails.
 #[derive(Debug)]
 pub struct CommandError(String);
+impl Error for CommandError {}
 
 impl fmt::Display for CommandError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -56,12 +59,57 @@ impl fmt::Display for CommandError {
     }
 }
 
-impl Error for CommandError {}
+/// A custom struct for our command arguments
+/// This allow easier passing and safety for them.
+/// 
+/// As an `Iterator`, `CommandArgs` and be unwrapped with default
+/// values as a safety for missing or malformed args.
+pub struct CommandArgs {
+    items: Vec<String>,
+    count: usize
+}
+
+
+impl CommandArgs {
+
+    /// Default constructor for `CommandArgs`.
+    /// 
+    /// We're not actually using this yet, but it's good to have. 
+    pub fn new(args: Vec<String> ) -> CommandArgs {
+        CommandArgs { items: args, count: 0 }
+    }
+
+    /// This is the constructor we use to build `CommandArgs` from
+    /// the incoming `Split<&str>`. It might seem goofy, but 
+    /// it's a clean way to get the first arg and then build our 
+    /// `CommandArgs`.
+    pub fn from_split(args_split: Split<&str> ) -> CommandArgs {
+        let items: Vec<String> = args_split
+            .map(|a| a.trim().to_string())
+            .collect();
+        CommandArgs { items: items, count: 0 }
+    }
+}
+
+impl Iterator for CommandArgs {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+
+        if self.items.len() > self.count {
+            self.count += 1;
+            Some(self.items[self.count - 1])
+        } else {
+            None
+        }
+    }
+};
+
 
 /// The command itself, containing the `CommandType` enum
 pub struct NotionCommand {
     pub command_type: CommandType,
-    pub args: Vec<String>
+    pub args: CommandArgs
 }
 
 impl NotionCommand {
@@ -74,9 +122,7 @@ impl NotionCommand {
         // TODO: Maybe do that here?
         if let Some(t) = command_words.nth(0) {
 
-            let command_args: Vec<String> = command_words
-            .map(|a| a.trim().to_string())
-            .collect();
+            let command_args  = CommandArgs::from_split(command_words);
 
             let command_type: CommandType = match t {
                 "cd"       => CommandType::Cd,
