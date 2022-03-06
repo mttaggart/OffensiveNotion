@@ -75,7 +75,8 @@ impl CommandArgs {
 
     /// Default constructor for `CommandArgs`.
     /// 
-    /// We're not actually using this yet, but it's good to have. 
+    /// Handy to have in modules that use other modules as 
+    /// part of their operation.
     pub fn new(args: Vec<String> ) -> CommandArgs {
         CommandArgs { items: args, count: 0 }
     }
