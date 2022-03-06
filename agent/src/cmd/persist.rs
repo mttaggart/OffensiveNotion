@@ -127,7 +127,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                 if elevated {
                     if let Ok(v) = var("LOCALAPPDATA") {
                         let cfg_path = format!("{v}\\cfg.json");
-                        save::handle(&cfg_path, config_options).await?;
+                        let mut cfg_path_args = CommandArgs::from_string(cfg_path.to_owned());
+                        save::handle(&mut cfg_path_args, config_options).await?;
                         let mut persist_path: String = v;
                         persist_path.push_str(r"\notion.exe");
                         

