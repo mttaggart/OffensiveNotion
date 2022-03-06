@@ -9,18 +9,17 @@ use crate::cmd::CommandArgs;
 /// On Linux, calls out to `/bin/bash`.
 /// 
 /// Usage: `shell [command]`
-pub async fn handle(cmd_args: CommandArgs) -> Result<String, Box<dyn Error>> {
-    let args_vec: Vec<String> = cmd_args.collect();
+pub async fn handle(cmd_args: &mut CommandArgs) -> Result<String, Box<dyn Error>> {
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .arg("/c")
-            .args(args_vec)
+            .arg(cmd_args.to_string())
             .output()
             .expect("failed to execute process")
     } else {
         Command::new("/bin/bash")
             .arg("-c")
-            .args(args_vec)
+            .arg(cmd_args.to_string())
             .output()
             .expect("failed to execute process")
     };

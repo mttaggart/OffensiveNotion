@@ -46,7 +46,7 @@ pub fn can_elevate() -> bool {
 /// 
 /// Because we can't wait for the output of the child process, 
 /// we toss the handle.
-pub async fn handle(mut cmd_args: CommandArgs, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
     if can_elevate() {
         #[cfg(not(windows))] {
             match cmd_args.nth(0).unwrap().as_str() {

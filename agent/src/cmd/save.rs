@@ -7,7 +7,7 @@ use crate::cmd::{CommandArgs, ConfigOptions};
 /// Saves the agent to the given path.
 /// 
 /// Usage: `save [path]`
-pub async fn handle(mut cmd_args: CommandArgs, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
     let save_path = cmd_args.nth(0).unwrap_or_else(|| config_options.config_file_path.to_owned());
     config_options.config_file_path = save_path.to_owned();
     // let write_path = RelativePath::new(config_options.config_file_path.as_str());

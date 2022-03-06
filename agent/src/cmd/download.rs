@@ -10,7 +10,7 @@ use crate::logger::Logger;
 /// Usage: `download [url] [path]`.
 /// 
 /// Defaults the the end of the URL without path option
-pub async fn handle(mut cmd_args: CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
     let client = Client::new();
     // Get URL as the first arg
     let url: String  = cmd_args.nth(0).unwrap_or_else(|| "".to_string());
