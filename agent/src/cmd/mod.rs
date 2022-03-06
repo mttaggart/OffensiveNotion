@@ -64,6 +64,7 @@ impl fmt::Display for CommandError {
 /// 
 /// As an `Iterator`, `CommandArgs` and be unwrapped with default
 /// values as a safety for missing or malformed args.
+#[derive(Debug)]
 pub struct CommandArgs {
     items: Vec<String>,
     count: usize
