@@ -1,5 +1,6 @@
 use std::process::Command;
 use std::error::Error;
+use crate::cmd::CommandArgs;
 
 /// Executes the given shell command.
 /// 
@@ -8,17 +9,18 @@ use std::error::Error;
 /// On Linux, calls out to `/bin/bash`.
 /// 
 /// Usage: `shell [command]`
-pub async fn handle(s: &String) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: CommandArgs) -> Result<String, Box<dyn Error>> {
+    let args_vec: Vec<String> = cmd_args.collect();
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .arg("/c")
-            .arg(s)
+            .args(args_vec)
             .output()
             .expect("failed to execute process")
     } else {
         Command::new("/bin/bash")
             .arg("-c")
-            .arg(s)
+            .args(args_vec)
             .output()
             .expect("failed to execute process")
     };
