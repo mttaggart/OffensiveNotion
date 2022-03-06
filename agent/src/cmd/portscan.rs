@@ -7,6 +7,7 @@ use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
 use crate::logger::Logger;
+use crate::cmd::CommandArgs;
 
 
 /// Common ports to scan.
@@ -120,9 +121,9 @@ fn get_ports(full: bool) -> Vec<u16> {
 /// ```bash
 /// portscan 102.168.35.5. false 10 10 🎯
 /// ```
-pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    let args: Vec<&str> = s.split(" ").collect();
-    logger.debug(format!("Portscan args: {:?}", s));
+pub async fn handle(cmd_args: CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    logger.debug(format!("Portscan args: {:?}", cmd_args));
+    let args: Vec<String> = cmd_args.collect();
 
     if args.len() <= 4 {
         Ok(format!("[-] Improper args.
