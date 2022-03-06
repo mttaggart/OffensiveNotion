@@ -91,6 +91,15 @@ impl CommandArgs {
             .collect();
         CommandArgs { items: items, count: 0 }
     }
+
+    pub fn from_string(args_string: String) -> CommandArgs {
+        let items: Vec<String> = args_string
+            .split(" ")
+            .map(|s| s.trim().to_string())
+            .collect();
+
+        CommandArgs { items: items, count: 0 }
+    }
 }
 
 impl Iterator for CommandArgs {
