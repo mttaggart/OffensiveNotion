@@ -26,6 +26,23 @@ jobs:
       with:
         name: offensive_notion_linux_amd64 
         path: agent/target/release/offensive_notion
+  
+  build_mac:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update Rust
+      run: rustup update stable
+    - name: Build 
+      working-directory: ./agent
+      run: cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: offensive_notion_linux_amd64 
+        path: agent/target/release/offensive_notion
       
   build_windows:
 
