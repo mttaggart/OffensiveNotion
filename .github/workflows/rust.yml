@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,6 +13,23 @@ jobs:
   build_linux:
 
     runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update Rust
+      run: rustup update stable
+    - name: Build 
+      working-directory: ./agent
+      run: cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: offensive_notion_linux_amd64 
+        path: agent/target/release/offensive_notion
+  
+  build_mac:
+
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2

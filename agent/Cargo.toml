@@ -23,9 +23,6 @@ cidr-utils = "0.5.5"
 [build-dependencies]
 embed-resource = "1.6"
 
-[target.'cfg(not(windows))'.dependencies]
-memmap2 = "0.5.3"
-
 [target.'cfg(windows)'.dependencies]
 kernel32-sys = "0.2.2"
 winapi = { version = "0.3.8", features = ["winnt","winuser", "handleapi", "processthreadsapi", "securitybaseapi"] }
