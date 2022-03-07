@@ -4,7 +4,6 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
-extern crate memmap2;
 
 use std::{thread, time};
 use std::env::args;
