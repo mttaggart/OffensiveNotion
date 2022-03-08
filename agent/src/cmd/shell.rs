@@ -10,19 +10,32 @@ use crate::cmd::CommandArgs;
 /// 
 /// Usage: `shell [command]`
 pub async fn handle(cmd_args: &mut CommandArgs) -> Result<String, Box<dyn Error>> {
-    let output = if cfg!(target_os = "windows") {
-        Command::new("cmd")
+
+    let output: std::process::Output;
+    #[cfg(windows)] {
+        output = Command::new("cmd")
             .arg("/c")
             .arg(cmd_args.to_string())
             .output()
-            .expect("failed to execute process")
-    } else {
-        Command::new("/bin/bash")
+            .expect("failed to execute process");
+    }
+
+    #[cfg(unix)] {
+        output = Command::new("/bin/bash")
             .arg("-c")
             .arg(cmd_args.to_string())
             .output()
-            .expect("failed to execute process")
-    };
+            .expect("failed to execute process");
+    }
+
+    #[cfg(macos)] {
+        output = Command::new("/bin/zsh")
+            .arg("-c")
+            .arg(cmd_args.to_string())
+            .output()
+            .expect("failed to execute process");
+    }
+
     let output_string: String;
     if output.stderr.len() > 0 {
         output_string = String::from_utf8(output.stderr).unwrap();

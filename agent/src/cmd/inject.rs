@@ -300,7 +300,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
          
 }
 
-#[cfg(not(windows))]
+#[cfg(unix)]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
     
     if let Some(inject_type) = cmd_args.nth(0) {
@@ -370,4 +370,9 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     } else {
         return Ok("No injection type provided!".to_string());
     }
+}
+
+#[cfg(macos)]
+pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    Ok("Inject not available on macOS!".to_string())
 }
