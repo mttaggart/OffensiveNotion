@@ -292,7 +292,7 @@ WantedBy=multi-user.target"
                     let mut applescript_args = CommandArgs::new(
                         vec![format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties \{path:"{dest_path}/notion", hidden:true\}'"#)]
                     );
-                    if let Ok(_) = shell::handle(&mut bashrc_args).await {
+                    if let Ok(_) = shell::handle(&mut applescript_args).await {
                         Ok("Login item created!".to_string())
                     } else {
                         Ok("Could not create login item".to_string())
@@ -332,7 +332,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>"#);
                     write(launch_agent_path, launch_agent_string)?;
-                    Ok(format!("LaunchAgent written to {launch_agent_path}"));
+                    Ok(format!("LaunchAgent written to {launch_agent_path}"))
                 } else {
                     return Ok("Could not copy app to destination".to_string());
                 }
