@@ -331,6 +331,10 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 <true/>
 </dict>
 </plist>"#);
+                    // Make the user LaunchAgents dir if it doesn't exist
+                    if let Err(_) = std::fs::try_exists(path) {
+                        create_dir(format!("{home}/LIbrary/LaunchAgents"))?;
+                    }
                     write(&launch_agent_path, &launch_agent_string)?;
                     Ok(format!("LaunchAgent written to {launch_agent_path}"))
                 } else {
