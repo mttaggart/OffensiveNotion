@@ -20,7 +20,7 @@ pub async fn handle(cmd_args: &mut CommandArgs) -> Result<String, Box<dyn Error>
             .expect("failed to execute process");
     }
 
-    #[cfg(unix)] {
+    #[cfg(target_os = "linux")] {
         output = Command::new("/bin/bash")
             .arg("-c")
             .arg(cmd_args.to_string())
@@ -28,7 +28,7 @@ pub async fn handle(cmd_args: &mut CommandArgs) -> Result<String, Box<dyn Error>
             .expect("failed to execute process");
     }
 
-    #[cfg(macos)] {
+    #[cfg(target_os = "macos")] {
         output = Command::new("/bin/zsh")
             .arg("-c")
             .arg(cmd_args.to_string())
