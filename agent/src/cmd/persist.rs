@@ -331,7 +331,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 <true/>
 </dict>
 </plist>"#);
-                    write(launch_agent_path, launch_agent_string)?;
+                    write(&launch_agent_path, &launch_agent_string)?;
                     Ok(format!("LaunchAgent written to {launch_agent_path}"))
                 } else {
                     return Ok("Could not copy app to destination".to_string());
