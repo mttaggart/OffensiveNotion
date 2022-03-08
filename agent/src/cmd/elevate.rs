@@ -17,6 +17,8 @@ use std::process::Command;
 /// 
 /// Ain't perfect, but it's a start.
 pub fn can_elevate() -> bool {
+    // Get username and match it against list of users that has data
+    // Uses group membership to determine elevation capabilities
     let s = System::new_all();
     let username = username();
     let user = s.users()
@@ -24,12 +26,13 @@ pub fn can_elevate() -> bool {
         .filter(|&u| u.name() == username )
         .nth(0)
         .unwrap();
-    #[cfg(not(windows))] {
-        // Get username and match it against list of users that has data
-        // Uses group membership to determine elevation capabilities
+
+    #[cfg(unix)] {
         return user.groups().contains(&"sudo".to_string());
     }
-
+    #[cfg(macos)] {
+        return user.groups().contains(&"admin".to_string());
+    }
     #[cfg(windows)] {
         user.groups()
             .into_iter()
