@@ -285,7 +285,7 @@ WantedBy=multi-user.target"
                     Ok(_) => { logger.info("Notion directory created".to_string()); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
-                if let Ok(_) = copy(&app_path, dest_path) {
+                if let Ok(_) = copy(&app_path, &dest_path) {
                     // Save config for relaunch
                     let b64_config = config_options.to_base64();
                     // Write a line to the user's bashrc that starts the agent.
