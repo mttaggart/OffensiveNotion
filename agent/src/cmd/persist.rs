@@ -177,7 +177,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
         }
     }
 
-    #[cfg(unix)] {
+    #[cfg(target_os = "linux")] {
 
         let app_path = args().nth(0).unwrap();
         let home = var("HOME")?;
@@ -272,7 +272,7 @@ WantedBy=multi-user.target"
         }
     }
 
-    #[cfg(macos)] {
+    #[cfg(target_os = "macos")] {
         let app_path = args().nth(0).unwrap();
         let home = var("HOME")?;
         let app_dir = format!("{home}/.notion");
