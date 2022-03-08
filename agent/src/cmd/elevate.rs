@@ -27,10 +27,10 @@ pub fn can_elevate() -> bool {
         .nth(0)
         .unwrap();
 
-    #[cfg(unix)] {
+    #[cfg(target_os = "linux")] {
         return user.groups().contains(&"sudo".to_string());
     }
-    #[cfg(macos)] {
+    #[cfg(target_os = "macos")] {
         return user.groups().contains(&"admin".to_string());
     }
     #[cfg(windows)] {
