@@ -312,9 +312,9 @@ WantedBy=multi-user.target"
                     let b64_config = config_options.to_base64();
                     let launch_agent_dir: String;
                     if is_root() {
-                        launch_agent_path = "/Library/LaunchAgents".to_string();
+                        launch_agent_dir = "/Library/LaunchAgents".to_string();
                     } else {
-                        launch_agent_path = format!("{home}/Library/LaunchAgents");
+                        launch_agent_dir = format!("{home}/Library/LaunchAgents");
                     }
                     let launch_agent_string = format!(
 r#"<?xml version="1.0" encoding="UTF-8"?>
