@@ -285,14 +285,16 @@ WantedBy=multi-user.target"
                     Ok(_) => { logger.info("Notion directory created".to_string()); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
-                if let Ok(_) = copy(&app_path, dest_path) {
+                if let Ok(_) = copy(&app_path, &dest_path) {
                     // Save config for relaunch
                     let b64_config = config_options.to_base64();
                     // Write a line to the user's bashrc that starts the agent.
+                    let osascript_string = format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties {{path:"{dest_path}", hidden:true}}'"#);
+                    logger.debug(osascript_string.to_owned());
                     let mut applescript_args = CommandArgs::new(
-                        vec![format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties {path:"{dest_path}/notion", hidden:true}'"#)]
+                        vec![osascript_string]
                     );
-                    if let Ok(_) = shell::handle(&mut bashrc_args).await {
+                    if let Ok(_) = shell::handle(&mut applescript_args).await {
                         Ok("Login item created!".to_string())
                     } else {
                         Ok("Could not create login item".to_string())
@@ -310,11 +312,11 @@ WantedBy=multi-user.target"
                 };    
                 if let Ok(_) = copy(&app_path, &dest_path) {
                     let b64_config = config_options.to_base64();
-                    let launch_agent_path: String;
+                    let launch_agent_dir: String;
                     if is_root() {
-                        launch_agent_path = "/Library/LaunchAgents/com.notion.offnote.plist".to_string();
+                        launch_agent_dir = "/Library/LaunchAgents".to_string();
                     } else {
-                        launch_agent_path = format!("{home}/Library/LaunchAgents/com.notion.offnote.plist");
+                        launch_agent_dir = format!("{home}/Library/LaunchAgents");
                     }
                     let launch_agent_string = format!(
 r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -322,7 +324,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 <plist version="1.0">
 <dict>
 <key>Label</key>
-<string>com.mttaggart.offensivenotion</string>
+<string>com.notion.offnote</string>
 <key>ProgramArguments</key>
 <array>
 <string>{dest_path}</string>
@@ -331,8 +333,16 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 <true/>
 </dict>
 </plist>"#);
-                    write(launch_agent_path, launch_agent_string)?;
-                    Ok(format!("LaunchAgent written to {launch_agent_path}"));
+                    // Make the user LaunchAgents dir if it doesn't exist
+                    
+                    if !std::path::Path::new(&launch_agent_dir).is_dir() {
+                        create_dir(&launch_agent_dir)?;
+                    }
+                    write(
+                        format!("{launch_agent_dir}/com.notion.offnote.plist").as_str(),
+                        &launch_agent_string
+                    )?;
+                    Ok(format!("LaunchAgent written to {launch_agent_dir}"))
                 } else {
                     return Ok("Could not copy app to destination".to_string());
                 }
