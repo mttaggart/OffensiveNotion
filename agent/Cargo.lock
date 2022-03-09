@@ -283,6 +283,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "houdini"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a21c047df31ebe5936e1a8f8a1fd1020933fca89909625c481b651273b97eef"
+dependencies = [
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "http"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -583,6 +592,7 @@ dependencies = [
  "base64",
  "cidr-utils",
  "embed-resource",
+ "houdini",
  "is-root",
  "kernel32-sys",
  "libc",
