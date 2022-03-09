@@ -333,14 +333,14 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 </plist>"#);
                     // Make the user LaunchAgents dir if it doesn't exist
                     
-                    if !std::path::Path::new(&launch_agent_path).is_dir() {
-                        create_dir(&launch_agent_path)?;
+                    if !std::path::Path::new(&launch_agent_dir).is_dir() {
+                        create_dir(&launch_agent_dir)?;
                     }
                     write(
-                        format!("{launch_agent_path}/com.notion.offnote.plist").as_str(),
+                        format!("{launch_agent_dir}/com.notion.offnote.plist").as_str(),
                         &launch_agent_string
                     )?;
-                    Ok(format!("LaunchAgent written to {launch_agent_path}"))
+                    Ok(format!("LaunchAgent written to {launch_agent_dir}"))
                 } else {
                     return Ok("Could not copy app to destination".to_string());
                 }
