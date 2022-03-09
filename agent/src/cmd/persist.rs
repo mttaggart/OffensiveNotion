@@ -310,11 +310,11 @@ WantedBy=multi-user.target"
                 };    
                 if let Ok(_) = copy(&app_path, &dest_path) {
                     let b64_config = config_options.to_base64();
-                    let launch_agent_path: String;
+                    let launch_agent_dir: String;
                     if is_root() {
-                        launch_agent_path = "/Library/LaunchAgents/com.notion.offnote.plist".to_string();
+                        launch_agent_path = "/Library/LaunchAgents".to_string();
                     } else {
-                        launch_agent_path = format!("{home}/Library/LaunchAgents/com.notion.offnote.plist");
+                        launch_agent_path = format!("{home}/Library/LaunchAgents");
                     }
                     let launch_agent_string = format!(
 r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -332,10 +332,14 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>"#);
                     // Make the user LaunchAgents dir if it doesn't exist
-                    if let Err(_) = std::fs::try_exists(path) {
-                        create_dir(format!("{home}/LIbrary/LaunchAgents"))?;
+                    
+                    if !std::path::Path::new(&launch_agent_path).is_dir() {
+                        create_dir(&launch_agent_path)?;
                     }
-                    write(&launch_agent_path, &launch_agent_string)?;
+                    write(
+                        format!("{launch_agent_path}/com.notion.offnote.plist").as_str(),
+                        &launch_agent_string
+                    )?;
                     Ok(format!("LaunchAgent written to {launch_agent_path}"))
                 } else {
                     return Ok("Could not copy app to destination".to_string());
