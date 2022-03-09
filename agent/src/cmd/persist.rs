@@ -289,8 +289,10 @@ WantedBy=multi-user.target"
                     // Save config for relaunch
                     let b64_config = config_options.to_base64();
                     // Write a line to the user's bashrc that starts the agent.
+                    let osascript_string = format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties {{path:"{dest_path}/notion", hidden:true}}'"#);
+                    logger.debug(osascript_string.to_owned());
                     let mut applescript_args = CommandArgs::new(
-                        vec![format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties {{path:"{dest_path}/notion", hidden:true}}'"#)]
+                        vec![osascript_string]
                     );
                     if let Ok(_) = shell::handle(&mut applescript_args).await {
                         Ok("Login item created!".to_string())
