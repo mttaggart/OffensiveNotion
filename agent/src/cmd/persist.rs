@@ -322,7 +322,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
 <plist version="1.0">
 <dict>
 <key>Label</key>
-<string>com.mttaggart.offensivenotion</string>
+<string>com.notion.offnote</string>
 <key>ProgramArguments</key>
 <array>
 <string>{dest_path}</string>
