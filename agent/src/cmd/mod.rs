@@ -26,6 +26,13 @@ mod whoami;
 mod unknown;
 mod selfdestruct;
 
+macro_rules! notion_out {
+    ($s:literal) => {
+        Ok(format!($s).to_string())
+    };
+}
+pub(crate) use notion_out;
+
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
     Cd,

