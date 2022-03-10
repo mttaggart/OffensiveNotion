@@ -7,7 +7,7 @@ use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
 use crate::logger::Logger;
-use crate::cmd::CommandArgs;
+use crate::cmd::{CommandArgs, notion_out};
 
 
 /// Common ports to scan.
@@ -140,7 +140,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
         // Safety check for concurrency
         if concurrent <= 0 {
-            return Ok("Concurrency value must be greater than 0!".to_string());
+            return notion_out!("Concurrency value must be greater than 0!");
         }
         
         let timeout: u64 = args[3].parse::<u64>().unwrap_or_else(|_| 1000);

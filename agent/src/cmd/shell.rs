@@ -42,5 +42,5 @@ pub async fn handle(cmd_args: &mut CommandArgs) -> Result<String, Box<dyn Error>
     } else {
         output_string = String::from_utf8(output.stdout).unwrap();
     }
-    return Ok(output_string);
+    Ok(output_string)
 }

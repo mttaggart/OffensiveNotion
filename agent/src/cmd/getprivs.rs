@@ -1,5 +1,6 @@
 use std::error::Error;
 use is_root::is_root;
+use crate::cmd::notion_out;
 
 #[cfg(windows)] use std::ptr::null_mut;
 #[cfg(windows)] use winapi::um::handleapi::CloseHandle;
@@ -53,6 +54,6 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
     // TODO: Implement Linux check
     let is_admin = is_elevated();  
     println!("{}", is_admin);
-    Ok(String::from(format!("Admin Context: {is_admin}").to_string()))
+    notion_out!("Admin Context: {is_admin}")
     
 }

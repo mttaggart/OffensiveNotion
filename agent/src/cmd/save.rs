@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::write;
 use serde_json::to_string as json_to_string;
 // use relative_path::RelativePath;
-use crate::cmd::{CommandArgs, ConfigOptions};
+use crate::cmd::{CommandArgs, ConfigOptions, notion_out};
 
 /// Saves the agent to the given path.
 /// 
@@ -12,7 +12,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
     config_options.config_file_path = save_path.to_owned();
     // let write_path = RelativePath::new(config_options.config_file_path.as_str());
     match write(&config_options.config_file_path, json_to_string(config_options)?) {
-        Ok(_) => Ok(format!("Config file saved to {save_path}").to_string()),
-        Err(e) => Ok(format!("{e}"))
+        Ok(_) => notion_out!("Config file saved to {save_path}"),
+        Err(e) => notion_out!("{e}")
     }
 }

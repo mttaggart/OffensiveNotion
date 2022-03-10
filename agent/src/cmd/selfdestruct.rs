@@ -4,6 +4,7 @@ use std::fs::remove_file;
 #[cfg(windows)] use houdini;
 #[cfg(windows)] use rand::{thread_rng, Rng};
 #[cfg(windows)] use rand::distributions::Alphanumeric;
+use crate::cmd::notion_out;
 
 
 pub async fn handle() -> Result<String, Box<dyn Error>> {
@@ -34,5 +35,5 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
 
         // Shutdown agent
         // In main.rs, shutdown::handle exits the current running process
-        Ok("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!".to_string())
+        notion_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!")
 }
