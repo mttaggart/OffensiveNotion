@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io::copy;
 use reqwest::Client;
 use std::fs::File;
-use crate::cmd::CommandArgs;
+use crate::cmd::{CommandArgs, notion_out};
 use crate::logger::Logger;
 
 /// Downloads a file to the local system.
@@ -21,11 +21,11 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     if r.status().is_success() {
         if let Ok(mut out_file) = File::create(&path) {
             match copy(&mut r.bytes().await?.as_ref(), &mut out_file) {
-                Ok(b)  => { return Ok(format!("{b} bytes written to {path}").to_string());},
-                Err(_) => { return Ok("Could not write file".to_string()); }
+                Ok(b)  => { return notion_out!("{b} bytes written to {path}");},
+                Err(_) => { return notion_out!("Could not write file"); }
             }
         } else {
-            return Ok("Could not write file".to_string());
+            return notion_out!("Could not write file");
         }
     }
     Ok(r.text().await?)
