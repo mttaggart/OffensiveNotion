@@ -34,9 +34,11 @@ Here's our blog post about it: [We Put A C2 In Your Notetaking App: OffensiveNot
 ## Features
 * 📡 A full-featured C2 platform built on the Notion notetaking app.
 * 🚧 Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
-* 🖥️ Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base.
+* 🖥️ Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base. Includes a Python setup/controller script to simplify the process.
 * ☢️ A range of capabilities including port-scanning, privilege escalation, asynchronous command execution, file download, and shellcode injection, all controlled from the comfort of a Notion page!
 * 📜 Document as you go! The agent identifies special syntax to run commands, so feel free to use the rest of the Notion page to document your operation.
+* 🤝 Collaborative by design! Notion allows for multiple people to edit and view your notes. Your listener page can handle multiple agents and you can invite your red team friends to your page. Congratulations, that's a teamserver!
+* 📱Mobile C2! Use the Notion application from your mobile device to issue commands to your agents from anywhere in the world.
 * 🕵️‍♀️ Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
 
 ## Quickstart
