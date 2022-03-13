@@ -13,7 +13,7 @@ A collaboration by:
 
 [Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests][pr]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues][issues]
 
-![Release][release] ![GitHub last commit][lastcommit] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
+![Release][release] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
 
 </div>
 
