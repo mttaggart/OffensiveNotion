@@ -29,7 +29,6 @@ winapi = { version = "0.3.8", features = ["winnt","winuser", "handleapi", "proce
 winreg = "0.10"
 houdini = "1.0.2"
 
-
 [profile.dev]
 opt-level = 0
 
