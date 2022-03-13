@@ -19,7 +19,7 @@ import sys
 
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
-parser.add_argument('-o', '--os', choices=['linux', 'windows', 'macos'], help='Target OS')
+parser.add_argument('-o', '--os', choices=['linux', 'windows'], help='Target OS')
 parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
 parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config "
                                                                                "by creating a test page on your "
@@ -41,6 +41,29 @@ bin_dir = curr_dir + "/bin"
 agent_dir = curr_dir + "/agent"
 dockerfile = curr_dir + "/Dockerfile"
 
+def print_logo():
+    logo = Fore.CYAN + """
+   ____   __  __               _           _   _       _   _             
+  / __ \ / _|/ _|             (_)         | \ | |     | | (_)            
+ | |  | | |_| |_ ___ _ __  ___ ___   _____|  \| | ___ | |_ _  ___  _ __  
+ | |  | |  _|  _/ _ \ '_ \/ __| \ \ / / _ \ . ` |/ _ \| __| |/ _ \| '_ \ 
+ | |__| | | | ||  __/ | | \__ \ |\ V /  __/ |\  | (_) | |_| | (_) | | | |
+  \____/|_| |_| \___|_| |_|___/_| \_/ \___|_| \_|\___/ \__|_|\___/|_| |_|
+    """
+    centered = int((len(logo)/6)/2)
+    pad = "-"
+    catchphrase = ["But, Why?", "Because reasons!", "I find the very notion offensive.", "KEKW", "The absolute madlads", "NEW. TECH."]
+    tag = random.choice(catchphrase)
+    creators = "mttaggart | HuskyHacks"
+
+    len_tag = len(tag)
+    padding = (pad * (centered - int((len_tag)/2)))
+    space = " "
+    spaces = (space * (centered - int((len(creators))/2)))
+
+    print(logo)
+    print(padding + tag + padding)
+    print(spaces + creators + "\n" + Fore.RESET)
 
 # Are you root?
 def is_root():
@@ -293,6 +316,7 @@ def run_web_delivery():
 
 
 def main():
+    print_logo()
     is_root()
     check_docker()
 
