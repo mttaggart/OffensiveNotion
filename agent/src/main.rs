@@ -93,6 +93,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     let mut hn = hostname();
 
+    let username = whoami::username();
+    hn.push_str(" | ");
+    hn.push_str(&username);
     let is_admin = cmd::getprivs::is_elevated();  
     logger.info(format!("Admin context: {}", is_admin));
     if is_admin {
