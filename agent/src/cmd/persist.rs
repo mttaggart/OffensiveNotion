@@ -283,7 +283,7 @@ WantedBy=multi-user.target"
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
                     Ok(_) => { logger.info(log_out!("Notion directory created")); },
-                    Err(e) => { logger.err(log_out!(e.to_string())); }
+                    Err(e) => { logger.err(e.to_string()); }
                 };
                 if let Ok(_) = copy(&app_path, &dest_path) {
                     // Save config for relaunch
@@ -307,8 +307,8 @@ WantedBy=multi-user.target"
             "launchagent" => {
                 
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info(log_out!("Notion directory created").to_string()); },
-                    Err(e) => { logger.err(log_out!(e.to_string())); }
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
+                    Err(e) => { logger.err(e.to_string()); }
                 };    
                 if let Ok(_) = copy(&app_path, &dest_path) {
                     let b64_config = config_options.to_base64();
