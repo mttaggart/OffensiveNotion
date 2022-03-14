@@ -10,7 +10,7 @@ pub fn handle(cmd_args: &mut CommandArgs) -> Result<String, Box<dyn Error>> {
     let new_path = Path::new(&path_arg);
     match set_current_dir(new_path) {
         Ok(_) => notion_out!("Changed to {path_arg}"),
-        Err(e) => notion_out!("{e}")
+        Err(e) => Ok(format!("{e}"))
     }
 }
 

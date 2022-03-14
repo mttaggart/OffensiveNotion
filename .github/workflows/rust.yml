@@ -21,6 +21,8 @@ jobs:
     - name: Build 
       working-directory: ./agent
       run: cargo build --release
+      env:
+        LITCRYPT_ENCRYPT_KEY: offensivenotion
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -37,9 +39,13 @@ jobs:
       run: rustup update stable
     - name: Add macOS Triple
       run: rustup target add x86_64-pc-windows-gnu 
+    - name: Set LitCrypt Key
+      run: export LITCRYPT_ENCRYPT_KEY="offensivenotion"
     - name: Build 
       working-directory: ./agent
       run: cargo build --release --target x86_64-apple-darwin
+      env:
+        LITCRYPT_ENCRYPT_KEY: offensivenotion
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -61,6 +67,8 @@ jobs:
     - name: Build 
       working-directory: ./agent
       run: cargo build --release --target x86_64-pc-windows-gnu
+      env:
+        LITCRYPT_ENCRYPT_KEY: offensivenotion
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:

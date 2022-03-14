@@ -6,7 +6,7 @@ use std::{
 use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
-use crate::logger::Logger;
+use crate::logger::{Logger};
 use crate::cmd::{CommandArgs, notion_out};
 
 

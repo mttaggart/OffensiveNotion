@@ -19,6 +19,7 @@ rand = "0.8.0"
 is-root = "0.1.2"
 base64 = "0.13.0"
 cidr-utils = "0.5.5"
+litcrypt = "0.3"
 
 [build-dependencies]
 embed-resource = "1.6"
@@ -28,7 +29,6 @@ kernel32-sys = "0.2.2"
 winapi = { version = "0.3.8", features = ["winnt","winuser", "handleapi", "processthreadsapi", "securitybaseapi"] }
 winreg = "0.10"
 houdini = "1.0.2"
-
 
 [profile.dev]
 opt-level = 0

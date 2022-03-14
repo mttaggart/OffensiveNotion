@@ -54,6 +54,6 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
     // TODO: Implement Linux check
     let is_admin = is_elevated();  
     println!("{}", is_admin);
-    notion_out!("Admin Context: {is_admin}")
+    Ok(format!("Admin Context: {is_admin}"))
     
 }
