@@ -26,9 +26,10 @@ mod whoami;
 mod unknown;
 mod selfdestruct;
 
+
 macro_rules! notion_out {
     ($s:literal) => {
-        Ok(format!($s).to_string())
+        Ok(lc!(format!($s).to_string()))
     };
 }
 pub(crate) use notion_out;

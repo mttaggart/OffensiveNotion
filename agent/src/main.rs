@@ -4,6 +4,8 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
+#[macro_use]
+extern crate litcrypt;
 
 use std::{thread, time};
 use std::env::args;
@@ -31,6 +33,8 @@ mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
 
+// Used to encrypt strings
+use_litcrypt!();
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
