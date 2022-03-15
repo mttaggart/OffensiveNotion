@@ -57,7 +57,7 @@ def print_logo():
     creators = "mttaggart | HuskyHacks"
 
     len_tag = len(tag)
-    padding = (pad * (centered - int((len_tag)/2)))
+    padding = (pad * (centered - int((len_tag)/2)-1))
     space = " "
     spaces = (space * (centered - int((len(creators))/2)))
 
@@ -130,6 +130,9 @@ def take_in_vars():
     # Log Level
     log_level = ask_for_input(
         important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", 2)
+    # Litcrypt Key
+    litcrypt_key = ask_for_input(important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
+    print(good + "Encryption key: {}".format(litcrypt_key))
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
     print(good + "Got your API key!")
@@ -145,6 +148,7 @@ def take_in_vars():
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
+        "LITCRYPT_ENCRYPT_KEY": litcrypt_key,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level)
@@ -193,6 +197,14 @@ def sed_source_code():
     data = json.load(f)
     for k, v in data.items():
         utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
+
+def set_env_vars():
+    print(info+ "Setting env vars...")
+    f = open("config.json")
+    data = json.load(f)
+    for k, v in data.items():
+        os.environ["{}".format(k)] = "{}".format(v)
+        print(os.getenv('{}'.format(k)))
 
 
 def copy_dockerfile():
@@ -345,6 +357,7 @@ def main():
 
     try:
         try:
+            set_env_vars()
             copy_source_file()
             sed_source_code()
         except Exception as e:
