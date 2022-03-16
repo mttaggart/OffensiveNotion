@@ -204,7 +204,7 @@ def set_env_vars():
     data = json.load(f)
     for k, v in data.items():
         os.environ["{}".format(k)] = "{}".format(v)
-        print(os.getenv('{}'.format(k)))
+        print(info+ "{}".format(k) + ": " + os.getenv('{}'.format(k)))
 
 
 def copy_dockerfile():
@@ -240,7 +240,7 @@ def docker_build():
 def docker_run():
     try:
         print(info + "Starting build container...")
-        sub.call(['docker run -e API_KEY -e LITCRYPT_KEY --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
+        sub.call(['docker run -e SLEEP -e JITTER -e LITCRYPT_KEY -e API_KEY -e PARENT_PAGE_ID -e LOG_LEVEL --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
     except Exception as e:
         print(printError + str(e))
         exit(1)
