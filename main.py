@@ -148,7 +148,7 @@ def take_in_vars():
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
-        "LITCRYPT_ENCRYPT_KEY": litcrypt_key,
+        "LITCRYPT_KEY": litcrypt_key,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level)
@@ -240,7 +240,7 @@ def docker_build():
 def docker_run():
     try:
         print(info + "Starting build container...")
-        sub.call(['docker run --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
+        sub.call(['docker run -e API_KEY -e LITCRYPT_KEY --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
     except Exception as e:
         print(printError + str(e))
         exit(1)
@@ -358,8 +358,8 @@ def main():
     try:
         try:
             set_env_vars()
-            copy_source_file()
-            sed_source_code()
+            #copy_source_file()
+            #sed_source_code()
         except Exception as e:
             print(printError + str(e))
 
@@ -378,7 +378,7 @@ def main():
             print(printError + str(e))
 
         try:
-            recover_config_source()
+            #recover_config_source()
             recover_dockerfile()
         except Exception as e:
             print(printError + str(e))
@@ -393,7 +393,7 @@ def main():
             print(good + "Done! Happy hacking!")
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
-        recover_config_source()
+        #recover_config_source()
         recover_dockerfile()
         print(recc + "Goodbye!" + Fore.RESET)
         sys.exit(0)
