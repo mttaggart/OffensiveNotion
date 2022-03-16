@@ -8,7 +8,8 @@ RUN apt install -y \
     mingw-w64 \ 
     gcc-multilib \ 
     python3-pip
-RUN rustup update stable
+RUN rustup toolchain install nightly
+RUN rustup default nightly
 RUN rustup target add x86_64-pc-windows-gnu
 
 

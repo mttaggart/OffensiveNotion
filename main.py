@@ -364,7 +364,14 @@ def main():
             print(printError + str(e))
 
         os.chdir("agent")
-        sub.run(["cargo", "build", "--out-dir", "/out"])
+
+        new_env = os.environ.copy()
+        new_env["LITCRYPT_ENCRYPT_KEY"] = json_vars["LITCRYPT_KEY"]
+
+        sub.run(
+            ["cargo", "build", "-Z", "unstable-options", "--out-dir", "/out"],
+            env=new_env
+        )
         # try:
         #     copy_dockerfile()
         #     sed_dockerfile()
