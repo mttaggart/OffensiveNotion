@@ -3,8 +3,7 @@ import os
 import argparse
 
 import subprocess as sub
-from shutil import copyfile
-from shutil import move
+from shutil import copyfile, move, rmtree
 
 import utils
 from utils.colors import *
@@ -365,13 +364,21 @@ def main():
 
         os.chdir("agent")
 
+        # The subprocess needs the env var, so we'll set it, along with the
+        # rest of the env here
         new_env = os.environ.copy()
         new_env["LITCRYPT_ENCRYPT_KEY"] = json_vars["LITCRYPT_KEY"]
 
+        # Run cargo. The unstable options allows --out-dir, meaning the user
+        # Can mount a folder they select as the destination for the compiled result
         sub.run(
             ["cargo", "build", "-Z", "unstable-options", "--out-dir", "/out"],
             env=new_env
         )
+
+        # This will make an additional target folder, so blow it away
+        # in the event it was on the mounted drive
+        rmtree("target")
         # try:
         #     copy_dockerfile()
         #     sed_dockerfile()
