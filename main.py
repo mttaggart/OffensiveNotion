@@ -120,15 +120,15 @@ def take_in_vars():
     """
     # Sleep
     sleep_interval = ask_for_input(
-        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
+        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", "30")
     print(good + "Sleep interval: {}".format(sleep_interval))
     # Jitter Time
     jitter_time = ask_for_input(
-        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", 10)
-    print(good + "Jitter range: {}".format(sleep_interval))
+        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", "10")
+    print(good + "Jitter range: {}".format(jitter_time))
     # Log Level
     log_level = ask_for_input(
-        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", 2)
+        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
     # Litcrypt Key
     litcrypt_key = ask_for_input(important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
     print(good + "Encryption key: {}".format(litcrypt_key))
