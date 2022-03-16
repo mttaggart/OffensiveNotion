@@ -330,7 +330,7 @@ def run_web_delivery():
 def main():
     print_logo()
     is_root()
-    check_docker()
+    # check_docker()
 
     # Config file checks
     configs = does_config_exist()
@@ -358,30 +358,33 @@ def main():
     try:
         try:
             set_env_vars()
-            #copy_source_file()
-            #sed_source_code()
+            # copy_source_file()
+            sed_source_code()
         except Exception as e:
             print(printError + str(e))
 
-        try:
-            copy_dockerfile()
-            sed_dockerfile()
-        except Exception as e:
-            print(printError + str(e))
+        os.chdir("agent")
+        sub.run(["cargo", "build", "--out-dir", "/out"])
+        # try:
+        #     copy_dockerfile()
+        #     sed_dockerfile()
+        #     pass
+        # except Exception as e:
+        #     print(printError + str(e))
 
-        try:
-            docker_build()
-            docker_run()
-            docker_copy()
-            #docker_kill()
-        except Exception as e:
-            print(printError + str(e))
+        # try:
+        #     docker_build()
+        #     docker_run()
+        #     docker_copy()
+        #     #docker_kill()
+        # except Exception as e:
+        #     print(printError + str(e))
 
-        try:
-            #recover_config_source()
-            recover_dockerfile()
-        except Exception as e:
-            print(printError + str(e))
+        # try:
+        #     recover_config_source()
+        #     recover_dockerfile()
+        # except Exception as e:
+        #     print(printError + str(e))
 
         if args.webdelivery:
             try:
@@ -394,7 +397,7 @@ def main():
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
         #recover_config_source()
-        recover_dockerfile()
+        # recover_dockerfile()
         print(recc + "Goodbye!" + Fore.RESET)
         sys.exit(0)
 
