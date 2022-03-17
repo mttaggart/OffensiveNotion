@@ -28,9 +28,10 @@ mod selfdestruct;
 
 
 macro_rules! notion_out {
-    ($s:literal) => {
-        Ok(lc!(format!($s).to_string()))
+    ($s:tt) => {
+        Ok(format!($s))
     };
+    
 }
 pub(crate) use notion_out;
 
