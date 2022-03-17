@@ -72,8 +72,8 @@ impl Logger {
 }
 
 macro_rules! log_out {
-    ($s:literal) => {
-        lc!(format!($s).to_string())
+    ($s:tt) => {
+        format!($s)
     };
 }
 pub(crate) use log_out;
