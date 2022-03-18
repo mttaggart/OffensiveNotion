@@ -3,8 +3,7 @@ import os
 import argparse
 
 import subprocess as sub
-from shutil import copyfile
-from shutil import move
+from shutil import copyfile, move, rmtree
 
 import utils
 from utils.colors import *
@@ -121,18 +120,15 @@ def take_in_vars():
     """
     # Sleep
     sleep_interval = ask_for_input(
-        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
+        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", "30")
     print(good + "Sleep interval: {}".format(sleep_interval))
     # Jitter Time
     jitter_time = ask_for_input(
-        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", 10)
-    print(good + "Jitter range: {}".format(sleep_interval))
+        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", "10")
+    print(good + "Jitter range: {}".format(jitter_time))
     # Log Level
     log_level = ask_for_input(
-        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", 2)
-    # Litcrypt Key
-    litcrypt_key = ask_for_input(important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
-    print(good + "Encryption key: {}".format(litcrypt_key))
+        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
     print(good + "Got your API key!")
@@ -148,7 +144,6 @@ def take_in_vars():
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
-        "LITCRYPT_KEY": litcrypt_key,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level)
@@ -204,7 +199,7 @@ def set_env_vars():
     data = json.load(f)
     for k, v in data.items():
         os.environ["{}".format(k)] = "{}".format(v)
-        print(os.getenv('{}'.format(k)))
+        print(info+ "{}".format(k) + ": " + os.getenv('{}'.format(k)))
 
 
 def copy_dockerfile():
@@ -240,7 +235,7 @@ def docker_build():
 def docker_run():
     try:
         print(info + "Starting build container...")
-        sub.call(['docker run -e API_KEY -e LITCRYPT_KEY --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
+        sub.call(['docker run -e SLEEP -e JITTER -e API_KEY -e PARENT_PAGE_ID -e LOG_LEVEL --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
     except Exception as e:
         print(printError + str(e))
         exit(1)
@@ -330,7 +325,7 @@ def run_web_delivery():
 def main():
     print_logo()
     is_root()
-    check_docker()
+    # check_docker()
 
     # Config file checks
     configs = does_config_exist()
@@ -358,30 +353,47 @@ def main():
     try:
         try:
             set_env_vars()
-            #copy_source_file()
-            #sed_source_code()
+            # copy_source_file()
+            sed_source_code()
         except Exception as e:
             print(printError + str(e))
 
-        try:
-            copy_dockerfile()
-            sed_dockerfile()
-        except Exception as e:
-            print(printError + str(e))
+        os.chdir("agent")
 
-        try:
-            docker_build()
-            docker_run()
-            docker_copy()
-            #docker_kill()
-        except Exception as e:
-            print(printError + str(e))
+        # The subprocess needs the env var, so we'll set it, along with the
+        # rest of the env here
+        new_env = os.environ.copy()
 
-        try:
-            #recover_config_source()
-            recover_dockerfile()
-        except Exception as e:
-            print(printError + str(e))
+        # Run cargo. The unstable options allows --out-dir, meaning the user
+        # Can mount a folder they select as the destination for the compiled result
+        sub.run(
+            ["cargo", "build", "-Z", "unstable-options", "--out-dir", "/out"],
+            env=new_env
+        )
+
+        # This will make an additional target folder, so blow it away
+        # in the event it was on the mounted drive
+        rmtree("target")
+        # try:
+        #     copy_dockerfile()
+        #     sed_dockerfile()
+        #     pass
+        # except Exception as e:
+        #     print(printError + str(e))
+
+        # try:
+        #     docker_build()
+        #     docker_run()
+        #     docker_copy()
+        #     #docker_kill()
+        # except Exception as e:
+        #     print(printError + str(e))
+
+        # try:
+        #     recover_config_source()
+        #     recover_dockerfile()
+        # except Exception as e:
+        #     print(printError + str(e))
 
         if args.webdelivery:
             try:
@@ -393,8 +405,8 @@ def main():
             print(good + "Done! Happy hacking!")
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
-        #recover_config_source()
-        recover_dockerfile()
+        recover_config_source()
+        # recover_dockerfile()
         print(recc + "Goodbye!" + Fore.RESET)
         sys.exit(0)
 
