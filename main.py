@@ -199,7 +199,6 @@ def set_env_vars():
     data = json.load(f)
     for k, v in data.items():
         os.environ["{}".format(k)] = "{}".format(v)
-        print(info+ "{}".format(k) + ": " + os.getenv('{}'.format(k)))
 
 
 def copy_dockerfile():
@@ -207,86 +206,6 @@ def copy_dockerfile():
     src = dockerfile
     dst = "Dockerfile.bak"
     copyfile(src, dst)
-
-
-def sed_dockerfile():
-    print(info + "Setting dockerfile variables...")
-    if args.os == "windows":
-        utils.file_utils.sed_inplace(dockerfile, "{OS}", "--target x86_64-pc-windows-gnu")
-    else:
-        utils.file_utils.sed_inplace(dockerfile, "{OS}", "")
-    if args.build == "release":
-        utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "--release")
-    else:
-        utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "")
-
-
-# Start Docker container, Dockerfile handles compilation
-def docker_build():
-    try:
-        print(info + "Creating temporary build environment container...")
-        sub.call(['docker rm offensivenotion -f 1>/dev/null 2>/dev/null && docker build -t offensivenotion .'],
-                 shell=True)
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
-
-
-def docker_run():
-    try:
-        print(info + "Starting build container...")
-        sub.call(['docker run -e SLEEP -e JITTER -e API_KEY -e PARENT_PAGE_ID -e LOG_LEVEL --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
-
-
-# Copy agent out to physical system
-def docker_copy():
-    print(info + "Copying payload binary to host...")
-
-    # All possible outcomes are:
-    #  Linux DEBUG: bin/target/debug/offensive_notion
-    #  Linux RELEASE: bin/target/release/offensive_notion
-    #  Windows DEBUG = bin/target/x86_64-pc-windows-gnu/debug/offensive_notion.exe
-    #  Windows RELEASE bin/target/x86_64-pc-windows-gnu/release/offensive_notion.exe
-
-    # HuskyHacksTogetherAPythonScript strikes again
-    if args.os == "windows":
-        agent_path = "x86_64-pc-windows-gnu"
-        bin_dir_folder = "windows_" + args.build
-    elif args.os == "linux":
-        agent_path = args.build
-        bin_dir_folder = "linux_" + args.build
-    else:
-        agent_path = ""
-        bin_dir_folder = "linux_debug"
-
-    try:
-        already_there = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
-        if already_there:
-            print(info + "Agents detected. Removing and copying new ones...")
-            shutil.rmtree("bin/{}/{}".format(bin_dir_folder, agent_path), ignore_errors=True)
-        sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/{} bin/{} 1>/dev/null'.format(agent_path,
-                                                                                                       bin_dir_folder)],
-                 shell=True)
-        exists = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
-        if exists:
-            print(good + "Success! Agent is located at bin/{} on this host.".format(bin_dir_folder))
-            return True
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
-
-
-# Tear down docker container
-def docker_kill():
-    print(info + "Removing temporary container...")
-    try:
-        sub.call(['docker rm offensivenotion -f 1>/dev/null'], shell=True)
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
 
 
 def recover_config_source():
@@ -352,6 +271,7 @@ def main():
 
     try:
         try:
+            shutil.copyfile("config.json", "/out/config.json")
             set_env_vars()
             # copy_source_file()
             sed_source_code()
@@ -366,34 +286,32 @@ def main():
 
         # Run cargo. The unstable options allows --out-dir, meaning the user
         # Can mount a folder they select as the destination for the compiled result
-        sub.run(
-            ["cargo", "build", "-Z", "unstable-options", "--out-dir", "/out"],
+        # Parametarizing the cargo build command
+
+        if args.os == "windows":
+            os_arg = "--target x86_64-pc-windows-gnu"
+        else:
+            os_arg = ""
+        if args.build == "release":
+            build_arg = "--release"
+        else:
+            build_arg = ""
+
+
+        sub.call(
+            ["cargo build -Z unstable-options --out-dir /out {} {}".format(os_arg, build_arg)], shell=True,
             env=new_env
         )
 
         # This will make an additional target folder, so blow it away
         # in the event it was on the mounted drive
         rmtree("target")
-        # try:
-        #     copy_dockerfile()
-        #     sed_dockerfile()
-        #     pass
-        # except Exception as e:
-        #     print(printError + str(e))
 
-        # try:
-        #     docker_build()
-        #     docker_run()
-        #     docker_copy()
-        #     #docker_kill()
-        # except Exception as e:
-        #     print(printError + str(e))
-
-        # try:
-        #     recover_config_source()
+        try:
+            recover_config_source()
         #     recover_dockerfile()
-        # except Exception as e:
-        #     print(printError + str(e))
+        except Exception as e:
+            print(printError + str(e))
 
         if args.webdelivery:
             try:
