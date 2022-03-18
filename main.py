@@ -129,9 +129,6 @@ def take_in_vars():
     # Log Level
     log_level = ask_for_input(
         important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
-    # Litcrypt Key
-    litcrypt_key = ask_for_input(important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
-    print(good + "Encryption key: {}".format(litcrypt_key))
     # API Key
     api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
     print(good + "Got your API key!")
@@ -147,7 +144,6 @@ def take_in_vars():
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
-        "LITCRYPT_KEY": litcrypt_key,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level)
@@ -239,7 +235,7 @@ def docker_build():
 def docker_run():
     try:
         print(info + "Starting build container...")
-        sub.call(['docker run -e SLEEP -e JITTER -e LITCRYPT_KEY -e API_KEY -e PARENT_PAGE_ID -e LOG_LEVEL --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
+        sub.call(['docker run -e SLEEP -e JITTER -e API_KEY -e PARENT_PAGE_ID -e LOG_LEVEL --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
     except Exception as e:
         print(printError + str(e))
         exit(1)
@@ -367,7 +363,6 @@ def main():
         # The subprocess needs the env var, so we'll set it, along with the
         # rest of the env here
         new_env = os.environ.copy()
-        new_env["LITCRYPT_ENCRYPT_KEY"] = json_vars["LITCRYPT_KEY"]
 
         # Run cargo. The unstable options allows --out-dir, meaning the user
         # Can mount a folder they select as the destination for the compiled result
@@ -410,7 +405,7 @@ def main():
             print(good + "Done! Happy hacking!")
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
-        #recover_config_source()
+        recover_config_source()
         # recover_dockerfile()
         print(recc + "Goodbye!" + Fore.RESET)
         sys.exit(0)
