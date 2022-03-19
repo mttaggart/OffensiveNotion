@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import os
 import argparse
-
 import subprocess as sub
 from shutil import copyfile, move, rmtree
-
 import utils
 from utils.colors import *
 from utils.inputs import *
@@ -18,7 +16,7 @@ import sys
 
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
-parser.add_argument('-o', '--os', choices=['linux', 'windows'], help='Target OS')
+parser.add_argument('-o', '--os', choices=['linux', 'windows', 'macos'], help='Target OS')
 parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
 parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config "
                                                                                "by creating a test page on your "
@@ -63,41 +61,6 @@ def print_logo():
     print(logo)
     print(padding + tag + padding)
     print(spaces + creators + "\n" + Fore.RESET)
-
-# Are you root?
-def is_root():
-    """
-    Checks if the user is running the script with root privs. Exits if this is not the case. Root privs are needed to
-    set up the Docker container used for compiling the agent.
-    """
-    if os.geteuid() == 0:
-        return
-    else:
-        print(important + "You need to run this script as root!")
-        parser.print_help()
-        exit()
-
-
-# Is docker installed?
-def check_docker():
-    """
-    Checks if Docker is installed, exits if it is not.
-    """
-    print(info + "Checking Docker...")
-    try:
-        p = sub.Popen(['docker --version'], shell=True, stdin=sub.PIPE, stdout=sub.PIPE, stderr=sub.PIPE)
-        out, err = p.communicate()
-        if p.returncode == 0:
-            print(good + "Docker is installed!")
-        elif p.returncode > 0:
-            print(
-                important + "Docker is not installed. Make sure to install Docker first (on Kali/Ubuntu, run: sudo apt-get "
-                            "install docker.io -y)")
-            exit(1)
-    except Exception as e:
-        print(str(e))
-        exit(1)
-
 
 # Is there a config file?
 def does_config_exist() -> bool:
@@ -230,7 +193,6 @@ def run_web_delivery():
 
 def main():
     print_logo()
-    is_root()
 
     # Config file checks
     configs = does_config_exist()
@@ -246,7 +208,6 @@ def main():
     looks_good = are_configs_good()
 
     while not looks_good:
-        # This could definitely use some work, seems sloppy
         json_vars = take_in_vars()
         write_config(json_vars)
         json_vars = read_config()
@@ -276,6 +237,8 @@ def main():
 
         if args.os == "windows":
             os_arg = "--target x86_64-pc-windows-gnu"
+        elif args.os == "macos":
+            os_arg = "--target x86_64-apple-darwin"
         else:
             os_arg = ""
         if args.build == "release":
@@ -283,6 +246,7 @@ def main():
         else:
             build_arg = ""
 
+        os.environ["PATH"] += os.pathsep + os.pathsep.join("/OffensiveNotion/osxcross/target/bin")
 
         sub.call(
             ["cargo build -Z unstable-options --out-dir /out {} {}".format(os_arg, build_arg)], shell=True,
