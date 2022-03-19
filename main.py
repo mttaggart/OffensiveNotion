@@ -130,7 +130,7 @@ def take_in_vars():
     log_level = ask_for_input(
         important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
     # API Key
-    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
+    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
     print(good + "Got your API key!")
     # Parent Page ID
     print(
@@ -193,19 +193,13 @@ def sed_source_code():
     for k, v in data.items():
         utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
+
 def set_env_vars():
     print(info+ "Setting env vars...")
     f = open("config.json")
     data = json.load(f)
     for k, v in data.items():
         os.environ["{}".format(k)] = "{}".format(v)
-
-
-def copy_dockerfile():
-    print(info + "Creating Dockerfile...")
-    src = dockerfile
-    dst = "Dockerfile.bak"
-    copyfile(src, dst)
 
 
 def recover_config_source():
@@ -219,13 +213,6 @@ def recover_config_source():
             move(old_conf, curr_conf)
         except Exception as e:
             print(printError + str(e))
-
-
-def recover_dockerfile():
-    print(info + "Recovering original Dockerfile...")
-    orig = dockerfile + ".bak"
-    new = "Dockerfile"
-    move(orig, new)
 
 
 def c2_lint(json_string):
@@ -244,7 +231,6 @@ def run_web_delivery():
 def main():
     print_logo()
     is_root()
-    # check_docker()
 
     # Config file checks
     configs = does_config_exist()
@@ -286,7 +272,7 @@ def main():
 
         # Run cargo. The unstable options allows --out-dir, meaning the user
         # Can mount a folder they select as the destination for the compiled result
-        # Parametarizing the cargo build command
+        # Parameterizing the cargo build command
 
         if args.os == "windows":
             os_arg = "--target x86_64-pc-windows-gnu"
@@ -309,7 +295,6 @@ def main():
 
         try:
             recover_config_source()
-        #     recover_dockerfile()
         except Exception as e:
             print(printError + str(e))
 
@@ -324,7 +309,6 @@ def main():
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
         recover_config_source()
-        # recover_dockerfile()
         print(recc + "Goodbye!" + Fore.RESET)
         sys.exit(0)
 
