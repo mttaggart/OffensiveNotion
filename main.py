@@ -246,9 +246,9 @@ def main():
         else:
             build_arg = ""
 
-        new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
 
         if os_arg == "macos":
+            new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
             new_env["CARGO_TARGET_x86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
             new_env["CARGO_TARGET_x86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
 
