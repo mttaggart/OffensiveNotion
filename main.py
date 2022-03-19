@@ -16,7 +16,11 @@ import sys
 
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
-parser.add_argument('-o', '--os', choices=['linux', 'windows', 'macos'], help='Target OS')
+parser.add_argument('-o', '--os', choices=['linux',
+                                           'windows',
+                                           # Coming soon!
+                                           #'macos'
+                                           ],help='Target OS')
 parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
 parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config "
                                                                                "by creating a test page on your "
