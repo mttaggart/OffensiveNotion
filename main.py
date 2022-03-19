@@ -249,8 +249,8 @@ def main():
 
         if os_arg == "macos":
             new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
-            new_env["CARGO_TARGET_x86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
-            new_env["CARGO_TARGET_x86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
+            new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
+            new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
 
         sub.call(
             ["cargo build -Z unstable-options --out-dir /out {} {}".format(os_arg, build_arg)], shell=True,
