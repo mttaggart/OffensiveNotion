@@ -32,7 +32,7 @@ COPY ./ /OffensiveNotion
 WORKDIR /OffensiveNotion
 
 # MacOS install. If not building a macOS agent, feel free to comment this RUN command out.
-RUN git clone https://github.com/tpoechtrager/osxcross && cd osxcross && wget -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz && mv MacOSX10.10.sdk.tar.xz tarballs/ && echo "[*] Building osxcross. This may take a while..." &&UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh > /dev/null 2>&1 && echo "[+] Done!"
+#RUN git clone https://github.com/tpoechtrager/osxcross && cd osxcross && wget -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz && mv MacOSX10.10.sdk.tar.xz tarballs/ && echo "[*] Building osxcross. This may take a while..." &&UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh > /dev/null 2>&1 && echo "[+] Done!"
 
 RUN pip3 install -r requirements.txt
 ENTRYPOINT ["/usr/bin/python3", "main.py"]
