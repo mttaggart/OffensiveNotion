@@ -246,7 +246,7 @@ def main():
         else:
             build_arg = ""
 
-        os.environ["PATH"] += os.pathsep + os.pathsep.join("/OffensiveNotion/osxcross/target/bin")
+        new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
 
         sub.call(
             ["cargo build -Z unstable-options --out-dir /out {} {}".format(os_arg, build_arg)], shell=True,
