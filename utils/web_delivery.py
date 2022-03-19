@@ -27,7 +27,7 @@ def copy_agent(os, build, uri):
     else:
         agent_name = "offensive_notion"
     try:
-        shutil.move("/out/{}".format(agent_name), web_dir)
+        shutil.copyfile("/out/{}".format(agent_name), web_dir)
     except Exception as e:
         print(printError + str(e))
         exit(1)
