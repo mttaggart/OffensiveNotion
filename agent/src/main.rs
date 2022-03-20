@@ -5,6 +5,7 @@ extern crate serde_json;
 extern crate whoami;
 extern crate base64;
 
+
 use std::{thread, time};
 use std::env::args;
 use std::process::exit;
@@ -30,6 +31,7 @@ use notion::{get_blocks, complete_command, create_page, send_result};
 mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
