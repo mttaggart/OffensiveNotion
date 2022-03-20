@@ -18,8 +18,7 @@ parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run
                                              'OffensiveNotion agent in a container.')
 parser.add_argument('-o', '--os', choices=['linux',
                                            'windows',
-                                           # Coming soon!
-                                           #'macos'
+                                           'macos'
                                            ],help='Target OS')
 parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
 parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config "
@@ -231,9 +230,6 @@ def main():
 
         os.chdir("agent")
 
-        # The subprocess needs the env var, so we'll set it, along with the
-        # rest of the env here
-        new_env = os.environ.copy()
 
         # Run cargo. The unstable options allows --out-dir, meaning the user
         # Can mount a folder they select as the destination for the compiled result
@@ -250,15 +246,22 @@ def main():
         else:
             build_arg = ""
 
+        # The subprocess needs the env var, so we'll set it, along with the
+        # rest of the env here
+        new_env = os.environ.copy()
 
-        if os_arg == "macos":
+        # Set extra env vars for macOS build
+        if args.os == "macos":
+            print("Building for macOS; setting env vars")
             new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
+        
+        # print(new_env.)
 
         sub.call(
-            ["cargo build -Z unstable-options --out-dir /out {} {}".format(os_arg, build_arg)], shell=True,
-            env=new_env
+            [f"cargo build -Z unstable-options --out-dir /out {os_arg} {build_arg}"], shell=True,
+            env=new_env,
         )
 
         # This will make an additional target folder, so blow it away
