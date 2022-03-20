@@ -257,7 +257,7 @@ def main():
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
 
         sub.call(
-            ["cargo build -Z unstable-options --out-dir /out {} {}".format(os_arg, build_arg)], shell=True,
+            [f"cargo build -Z unstable-options --out-dir /out {os_arg} {build_arg}"], shell=True,
             env=new_env
         )
 
