@@ -230,7 +230,6 @@ def main():
 
         os.chdir("agent")
 
-
         # Run cargo. The unstable options allows --out-dir, meaning the user
         # Can mount a folder they select as the destination for the compiled result
         # Parameterizing the cargo build command
