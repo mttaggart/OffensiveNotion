@@ -14,7 +14,8 @@ use base64::decode as b64_decode;
     PAGE_READWRITE,
     PVOID
 };
-#[cfg(windows)] use winapi::um::    //errhandlingapi,
+#[cfg(windows)] use winapi::um::{
+    //errhandlingapi,
     processthreadsapi,
     winbase, 
     synchapi::WaitForSingleObject
