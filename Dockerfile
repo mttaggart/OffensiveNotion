@@ -33,7 +33,7 @@ RUN mkdir /OffensiveNotion/agent/target
 RUN mkdir /out
 # We're going to be more explicit about this copy over to save space in the image
 # Also, a fun hack to get the config.json if it exists, but copy the rest regardless
-COPY ./main.py ./requirements.txt config.json* /OffensiveNotion/
+COPY ./main.py ./requirements.txt config.jso[n] /OffensiveNotion/
 COPY ./utils /OffensiveNotion/utils
 COPY ./agent/Cargo.toml ./agent/build.rs ./agent/offensive_notion.rc ./agent/notion.ico /OffensiveNotion/agent/
 COPY ./agent/src/ /OffensiveNotion/agent/src/
