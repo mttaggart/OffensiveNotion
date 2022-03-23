@@ -33,12 +33,12 @@ async fn eval_target(target: String) -> ScanTarget {
 
     // CIDR
     if IpCidr::is_ip_cidr(&target) {
-        println!("[*] Looks like a CIDR range.");
+        //println!("[*] Looks like a CIDR range.");
         ScanTarget::Cidr(IpCidr::from_str(target.as_str()).unwrap())
     
     // IP
     } else if let Ok(ip) = IpAddr::from_str(target.as_str()) {
-        println!("[*] Looks like an IP address.");
+        //println!("[*] Looks like an IP address.");
         ScanTarget::Address(ip)
 
     // Hostname? Maybe someday

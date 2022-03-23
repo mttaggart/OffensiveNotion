@@ -229,8 +229,6 @@ def main():
             print(printError + str(e))
 
         os.chdir("agent")
-
-
         # Run cargo. The unstable options allows --out-dir, meaning the user
         # Can mount a folder they select as the destination for the compiled result
         # Parameterizing the cargo build command
@@ -252,7 +250,7 @@ def main():
 
         # Set extra env vars for macOS build
         if args.os == "macos":
-            print("Building for macOS; setting env vars")
+            print(info + "Building for macOS; setting env vars")
             new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
