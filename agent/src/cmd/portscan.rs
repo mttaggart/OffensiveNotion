@@ -6,7 +6,8 @@ use std::{
 use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
-use crate::logger::Logger;
+use crate::logger::{Logger};
+use crate::cmd::{CommandArgs, notion_out};
 
 
 /// Common ports to scan.
@@ -32,12 +33,12 @@ async fn eval_target(target: String) -> ScanTarget {
 
     // CIDR
     if IpCidr::is_ip_cidr(&target) {
-        println!("[*] Looks like a CIDR range.");
+        //println!("[*] Looks like a CIDR range.");
         ScanTarget::Cidr(IpCidr::from_str(target.as_str()).unwrap())
     
     // IP
     } else if let Ok(ip) = IpAddr::from_str(target.as_str()) {
-        println!("[*] Looks like an IP address.");
+        //println!("[*] Looks like an IP address.");
         ScanTarget::Address(ip)
 
     // Hostname? Maybe someday
@@ -120,9 +121,9 @@ fn get_ports(full: bool) -> Vec<u16> {
 /// ```bash
 /// portscan 102.168.35.5. false 10 10 🎯
 /// ```
-pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    let args: Vec<&str> = s.split(" ").collect();
-    logger.debug(format!("Portscan args: {:?}", s));
+pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    logger.debug(format!("Portscan args: {:?}", cmd_args));
+    let args: Vec<String> = cmd_args.collect();
 
     if args.len() <= 4 {
         Ok(format!("[-] Improper args.
@@ -139,7 +140,7 @@ pub async fn handle(s: &String, logger: &Logger) -> Result<String, Box<dyn Error
 
         // Safety check for concurrency
         if concurrent <= 0 {
-            return Ok("Concurrency value must be greater than 0!".to_string());
+            return notion_out!("Concurrency value must be greater than 0!");
         }
         
         let timeout: u64 = args[3].parse::<u64>().unwrap_or_else(|_| 1000);

@@ -70,3 +70,11 @@ impl Logger {
     } 
 
 }
+
+macro_rules! log_out {
+    ($s:literal) => {
+        format!($s)
+    };
+    
+}
+pub(crate) use log_out;

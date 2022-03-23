@@ -1,6 +1,7 @@
 use std::error::Error;
+use crate::cmd::notion_out;
 
 /// Kills the agent.
 pub async fn handle() -> Result<String, Box<dyn Error>> {
-    Ok("Shutting down".to_string())
+    notion_out!("Shutting down")
 }

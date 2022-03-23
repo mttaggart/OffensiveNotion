@@ -13,7 +13,7 @@ A collaboration by:
 
 [Documentation][wiki]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Pull Requests][pr]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Issues][issues]
 
-![Release][release] ![GitHub last commit][lastcommit] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
+![Release][release] [![Pull Requests][img-pr-badge]][pr] [![License][img-license-badge]][license]
 
 </div>
 
@@ -34,9 +34,11 @@ Here's our blog post about it: [We Put A C2 In Your Notetaking App: OffensiveNot
 ## Features
 * 📡 A full-featured C2 platform built on the Notion notetaking app.
 * 🚧 Easy setup: set up your Notion developer API account, drop the Agent to the target, run and enjoy!
-* 🖥️ Cross-platform agent built in Rust that compiles for Linux and Windows with the same code base.
+* 🖥️ Cross-platform agent built in Rust that compiles for Linux, Windows, and macOS with the same code base. Includes a Python setup/controller script to simplify the process.
 * ☢️ A range of capabilities including port-scanning, privilege escalation, asynchronous command execution, file download, and shellcode injection, all controlled from the comfort of a Notion page!
 * 📜 Document as you go! The agent identifies special syntax to run commands, so feel free to use the rest of the Notion page to document your operation.
+* 🤝 Collaborative by design! Notion allows for multiple people to edit and view your notes. Your listener page can handle multiple agents and you can invite your red team friends to your page. Congratulations, that's a teamserver!
+* 📱Mobile C2! Use the Notion application from your mobile device to issue commands to your agents from anywhere in the world.
 * 🕵️‍♀️ Stealth! C2 comms ride over the Notion API natively. Your C2 traffic looks like someone is using Notion for its intended purpose.
 
 ## Quickstart
@@ -44,91 +46,6 @@ See the [Quickstart guide](https://github.com/mttaggart/OffensiveNotion/wiki/2.-
 
 ## Documentation
 Please see the [Wiki][wiki] for setup, usage, commands, and more!
-
-## v1.0.0  - "Iron Age"
-### MUST
-
-<details>
-<summary> Done </summary>
-
-  ### Documentation
-- [x] Quickstart
-- [x] Install
-- [x] Agent interaction
-  - [x] Commands
-  - [x] Linux commands
-  - [x] Windows commands
-
-#### Misc
-- [x] YARA Rules
-#### Setup
-- [x] Python Setup Script for config options
-- [x] Dynamic Docker container spin up/tear down for agent generation
-- [x] Parse args for Docker build options
-
-#### Agent
-- Commands:
-  - [x] `shell`
-  - [x] `cd`
-  - [x] `download`
-  - [x] `ps`
-  - [x] `pwd`
-  - [x] `save`
-  - [x] `shutdown`
-  - [x] `sleep [#]` to adjust callback
-
-</details>
-
-### SHOULD
-
-<details>
-<summary> Done </summary>
-
-#### Agent
-- [x] Jitter interval for callback time
-- Commands:
-  - [x] `getprivs`
-  - [x] `sleep [#][%]` to adjust callback and jitter
-  - [x] `portscan`
-- [x] Linux `elevate sudo`
-- [x] Windows `elevate fodhelper`
-- [x] Linux `persist bashrc`
-- [x] Linux `persist cron`
-- [x] Linux `persist service`
-- [x] Windows `inject`
-- [x] Windows `persist startup`
-- [x] Windows `persist registry`
-
-- Persist:
-  - [x] Windows `persist schtasks`
-  - [x] (Bonus) `wmic`
-  
-</details>
-
-### COULD
-
-<details>
-<summary> Done </summary>
-
-- [x] Compiles with Notion icon
-- [x] Mirror the notion.ico file 😈 (slightly red tint to logo)
-- [x] "Web delivery" via Flask and one-liner for remote download/exec (https://www.offensive-security.com/metasploit-unleashed/web-delivery/)
-- [x] Agent checks in by POSTing hostname and username to page title with asterisk if in an admin context (getprivs at checkin)
-- [x] Agent can spawn in kiosk mode Notion.so page at startup
-
-</details>
-
-<details>
-<summary> For Next Release </summary>
-  
-  - [ ] Linux `persist rc.local`
-  - [ ] Linux `inject` (more of a shellcode runner than injection)
-  - [ ] Windows `runas` (SCshell)
-  - [ ] Windows `inject-assembly` (⚠️ large lift ⚠️)
-  - [ ] (Bonus) Windows `persist comhijack`
-  - [ ] (Bonus) Windows `persist xll`
-
-</details>
   
 ## Thanks & Acknowledgements
 

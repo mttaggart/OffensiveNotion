@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import os
 import argparse
-
 import subprocess as sub
-from shutil import copyfile
-from shutil import move
-
+from shutil import copyfile, move, rmtree
 import utils
 from utils.colors import *
 from utils.inputs import *
@@ -19,7 +16,10 @@ import sys
 
 parser = argparse.ArgumentParser(description='OffensiveNotion Setup. Must be run as root. Generates the '
                                              'OffensiveNotion agent in a container.')
-parser.add_argument('-o', '--os', choices=['linux', 'windows'], help='Target OS')
+parser.add_argument('-o', '--os', choices=['linux',
+                                           'windows',
+                                           'macos'
+                                           ],help='Target OS')
 parser.add_argument('-b', '--build', choices=['debug', 'release'], help='Binary build')
 parser.add_argument('-c', '--c2lint', default=False, action="store_true", help="C2 linter. Checks your C2 config "
                                                                                "by creating a test page on your "
@@ -41,41 +41,29 @@ bin_dir = curr_dir + "/bin"
 agent_dir = curr_dir + "/agent"
 dockerfile = curr_dir + "/Dockerfile"
 
-
-# Are you root?
-def is_root():
+def print_logo():
+    logo = Fore.CYAN + """
+   ____   __  __               _           _   _       _   _             
+  / __ \ / _|/ _|             (_)         | \ | |     | | (_)            
+ | |  | | |_| |_ ___ _ __  ___ ___   _____|  \| | ___ | |_ _  ___  _ __  
+ | |  | |  _|  _/ _ \ '_ \/ __| \ \ / / _ \ . ` |/ _ \| __| |/ _ \| '_ \ 
+ | |__| | | | ||  __/ | | \__ \ |\ V /  __/ |\  | (_) | |_| | (_) | | | |
+  \____/|_| |_| \___|_| |_|___/_| \_/ \___|_| \_|\___/ \__|_|\___/|_| |_|
     """
-    Checks if the user is running the script with root privs. Exits if this is not the case. Root privs are needed to
-    set up the Docker container used for compiling the agent.
-    """
-    if os.geteuid() == 0:
-        return
-    else:
-        print(important + "You need to run this script as root!")
-        parser.print_help()
-        exit()
+    centered = int((len(logo)/6)/2)
+    pad = "-"
+    catchphrase = ["But, Why?", "Because reasons!", "I find the very notion offensive.", "KEKW", "The absolute madlads", "NEW. TECH."]
+    tag = random.choice(catchphrase)
+    creators = "mttaggart | HuskyHacks"
 
+    len_tag = len(tag)
+    padding = (pad * (centered - int((len_tag)/2)-1))
+    space = " "
+    spaces = (space * (centered - int((len(creators))/2)))
 
-# Is docker installed?
-def check_docker():
-    """
-    Checks if Docker is installed, exits if it is not.
-    """
-    print(info + "Checking Docker...")
-    try:
-        p = sub.Popen(['docker --version'], shell=True, stdin=sub.PIPE, stdout=sub.PIPE, stderr=sub.PIPE)
-        out, err = p.communicate()
-        if p.returncode == 0:
-            print(good + "Docker is installed!")
-        elif p.returncode > 0:
-            print(
-                important + "Docker is not installed. Make sure to install Docker first (on Kali/Ubuntu, run: sudo apt-get "
-                            "install docker.io -y)")
-            exit(1)
-    except Exception as e:
-        print(str(e))
-        exit(1)
-
+    print(logo)
+    print(padding + tag + padding)
+    print(spaces + creators + "\n" + Fore.RESET)
 
 # Is there a config file?
 def does_config_exist() -> bool:
@@ -98,17 +86,17 @@ def take_in_vars():
     """
     # Sleep
     sleep_interval = ask_for_input(
-        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", 30)
+        important + "Enter the number of seconds for the agent's sleep interval [default is 30][format: #]", "30")
     print(good + "Sleep interval: {}".format(sleep_interval))
     # Jitter Time
     jitter_time = ask_for_input(
-        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", 10)
-    print(good + "Jitter range: {}".format(sleep_interval))
+        important + "Enter the number of seconds for the agent's jitter range [default is 10][format: #]", "10")
+    print(good + "Jitter range: {}".format(jitter_time))
     # Log Level
     log_level = ask_for_input(
-        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", 2)
+        important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
     # API Key
-    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key > ")
+    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
     print(good + "Got your API key!")
     # Parent Page ID
     print(
@@ -172,91 +160,12 @@ def sed_source_code():
         utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
 
-def copy_dockerfile():
-    print(info + "Creating Dockerfile...")
-    src = dockerfile
-    dst = "Dockerfile.bak"
-    copyfile(src, dst)
-
-
-def sed_dockerfile():
-    print(info + "Setting dockerfile variables...")
-    if args.os == "windows":
-        utils.file_utils.sed_inplace(dockerfile, "{OS}", "--target x86_64-pc-windows-gnu")
-    else:
-        utils.file_utils.sed_inplace(dockerfile, "{OS}", "")
-    if args.build == "release":
-        utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "--release")
-    else:
-        utils.file_utils.sed_inplace(dockerfile, "{RELEASE}", "")
-
-
-# Start Docker container, Dockerfile handles compilation
-def docker_build():
-    try:
-        print(info + "Creating temporary build environment container...")
-        sub.call(['docker rm offensivenotion -f 1>/dev/null 2>/dev/null && docker build -t offensivenotion .'],
-                 shell=True)
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
-
-
-def docker_run():
-    try:
-        print(info + "Starting build container...")
-        sub.call(['docker run --name offensivenotion -dt offensivenotion 1>/dev/null'], shell=True)
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
-
-
-# Copy agent out to physical system
-def docker_copy():
-    print(info + "Copying payload binary to host...")
-
-    # All possible outcomes are:
-    #  Linux DEBUG: bin/target/debug/offensive_notion
-    #  Linux RELEASE: bin/target/release/offensive_notion
-    #  Windows DEBUG = bin/target/x86_64-pc-windows-gnu/debug/offensive_notion.exe
-    #  Windows RELEASE bin/target/x86_64-pc-windows-gnu/release/offensive_notion.exe
-
-    # HuskyHacksTogetherAPythonScript strikes again
-    if args.os == "windows":
-        agent_path = "x86_64-pc-windows-gnu"
-        bin_dir_folder = "windows_" + args.build
-    elif args.os == "linux":
-        agent_path = args.build
-        bin_dir_folder = "linux_" + args.build
-    else:
-        agent_path = ""
-        bin_dir_folder = "linux_debug"
-
-    try:
-        already_there = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
-        if already_there:
-            print(info + "Agents detected. Removing and copying new ones...")
-            shutil.rmtree("bin/{}/{}".format(bin_dir_folder, agent_path), ignore_errors=True)
-        sub.call(['docker cp offensivenotion:/opt/OffensiveNotion/target/{} bin/{} 1>/dev/null'.format(agent_path,
-                                                                                                       bin_dir_folder)],
-                 shell=True)
-        exists = os.path.isdir("bin/{}/{}".format(bin_dir_folder, agent_path))
-        if exists:
-            print(good + "Success! Agent is located at bin/{} on this host.".format(bin_dir_folder))
-            return True
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
-
-
-# Tear down docker container
-def docker_kill():
-    print(info + "Removing temporary container...")
-    try:
-        sub.call(['docker rm offensivenotion -f 1>/dev/null'], shell=True)
-    except Exception as e:
-        print(printError + str(e))
-        exit(1)
+def set_env_vars():
+    print(info+ "Setting env vars...")
+    f = open("config.json")
+    data = json.load(f)
+    for k, v in data.items():
+        os.environ["{}".format(k)] = "{}".format(v)
 
 
 def recover_config_source():
@@ -270,13 +179,6 @@ def recover_config_source():
             move(old_conf, curr_conf)
         except Exception as e:
             print(printError + str(e))
-
-
-def recover_dockerfile():
-    print(info + "Recovering original Dockerfile...")
-    orig = dockerfile + ".bak"
-    new = "Dockerfile"
-    move(orig, new)
 
 
 def c2_lint(json_string):
@@ -293,8 +195,7 @@ def run_web_delivery():
 
 
 def main():
-    is_root()
-    check_docker()
+    print_logo()
 
     # Config file checks
     configs = does_config_exist()
@@ -310,7 +211,6 @@ def main():
     looks_good = are_configs_good()
 
     while not looks_good:
-        # This could definitely use some work, seems sloppy
         json_vars = take_in_vars()
         write_config(json_vars)
         json_vars = read_config()
@@ -321,28 +221,53 @@ def main():
 
     try:
         try:
-            copy_source_file()
+            shutil.copyfile("config.json", "/out/config.json")
+            set_env_vars()
+            # copy_source_file()
             sed_source_code()
         except Exception as e:
             print(printError + str(e))
 
-        try:
-            copy_dockerfile()
-            sed_dockerfile()
-        except Exception as e:
-            print(printError + str(e))
+        os.chdir("agent")
+        # Run cargo. The unstable options allows --out-dir, meaning the user
+        # Can mount a folder they select as the destination for the compiled result
+        # Parameterizing the cargo build command
 
-        try:
-            docker_build()
-            docker_run()
-            docker_copy()
-            #docker_kill()
-        except Exception as e:
-            print(printError + str(e))
+        if args.os == "windows":
+            os_arg = "--target x86_64-pc-windows-gnu"
+        elif args.os == "macos":
+            os_arg = "--target x86_64-apple-darwin"
+        else:
+            os_arg = ""
+        if args.build == "release":
+            build_arg = "--release"
+        else:
+            build_arg = ""
+
+        # The subprocess needs the env var, so we'll set it, along with the
+        # rest of the env here
+        new_env = os.environ.copy()
+
+        # Set extra env vars for macOS build
+        if args.os == "macos":
+            print(info + "Building for macOS; setting env vars")
+            new_env["PATH"] = "/OffensiveNotion/osxcross/target/bin" +  os.pathsep + os.environ["PATH"]
+            new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
+            new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
+        
+        # print(new_env.)
+
+        sub.call(
+            [f"cargo build -Z unstable-options --out-dir /out {os_arg} {build_arg}"], shell=True,
+            env=new_env,
+        )
+
+        # This will make an additional target folder, so blow it away
+        # in the event it was on the mounted drive
+        rmtree("target")
 
         try:
             recover_config_source()
-            recover_dockerfile()
         except Exception as e:
             print(printError + str(e))
 
@@ -357,7 +282,6 @@ def main():
     except KeyboardInterrupt:
         print(recc + 'Cleaning up and exiting...')
         recover_config_source()
-        recover_dockerfile()
         print(recc + "Goodbye!" + Fore.RESET)
         sys.exit(0)
 

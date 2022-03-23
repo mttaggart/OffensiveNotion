@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,11 +21,36 @@ jobs:
     - name: Build 
       working-directory: ./agent
       run: cargo build --release
+      env:
+        LITCRYPT_ENCRYPT_KEY: offensivenotion
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: offensive_notion_linux_amd64 
         path: agent/target/release/offensive_notion
+  
+  build_mac:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update Rust
+      run: rustup update stable
+    - name: Add macOS Triple
+      run: rustup target add x86_64-pc-windows-gnu 
+    - name: Set LitCrypt Key
+      run: export LITCRYPT_ENCRYPT_KEY="offensivenotion"
+    - name: Build 
+      working-directory: ./agent
+      run: cargo build --release --target x86_64-apple-darwin
+      env:
+        LITCRYPT_ENCRYPT_KEY: offensivenotion
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: offensive_notion_darwin_amd64 
+        path: agent/target/x86_64-apple-darwin/release/offensive_notion
       
   build_windows:
 
@@ -42,6 +67,8 @@ jobs:
     - name: Build 
       working-directory: ./agent
       run: cargo build --release --target x86_64-pc-windows-gnu
+      env:
+        LITCRYPT_ENCRYPT_KEY: offensivenotion
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:

