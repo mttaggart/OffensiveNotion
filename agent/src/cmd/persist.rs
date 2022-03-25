@@ -235,7 +235,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
             "service" => {
                 if is_root() {
                     match create_dir(&app_dir) {
-                        Ok(_) => { logger.info(format!("Notion directory created")); },
+                        Ok(_) => { logger.info(log_out!("Notion directory created")); },
                         Err(e) => { logger.err(e.to_string()); }
                     };    
                     if let Ok(_) = copy(&app_path, &dest_path) {
