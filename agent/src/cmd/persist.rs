@@ -1,3 +1,4 @@
+use litcrypt::lc;
 use std::error::Error;
 use std::env::{var, args};
 use is_root::is_root;
@@ -258,7 +259,7 @@ WantedBy=multi-user.target"
 );
                         write(svc_path, svc_string)?;
                         let mut systemd_args = CommandArgs::from_string(
-                            "systemctl enable notion.service".to_string()
+                            lc!("systemctl enable notion.service")
                         );
                         return shell::handle(&mut systemd_args).await;
                     } else {
@@ -314,7 +315,7 @@ WantedBy=multi-user.target"
                     let b64_config = config_options.to_base64();
                     let launch_agent_dir: String;
                     if is_root() {
-                        launch_agent_dir = "/Library/LaunchAgents".to_string();
+                        launch_agent_dir = lc!("/Library/LaunchAgents");
                     } else {
                         launch_agent_dir = format!("{home}/Library/LaunchAgents");
                     }

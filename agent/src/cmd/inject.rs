@@ -1,3 +1,4 @@
+use litcrypt::lc;
 use std::error::Error;
 use crate::logger::Logger;
 use crate::cmd::{CommandArgs, notion_out};

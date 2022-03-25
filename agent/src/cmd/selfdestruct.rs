@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::env::args;
 use std::fs::remove_file;
+use litcrypt::lc;
 #[cfg(windows)] use houdini;
 #[cfg(windows)] use rand::{thread_rng, Rng};
 #[cfg(windows)] use rand::distributions::Alphanumeric;

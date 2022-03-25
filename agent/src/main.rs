@@ -4,7 +4,6 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
-#[macro_use]
 extern crate litcrypt;
 
 use std::{thread, time};
