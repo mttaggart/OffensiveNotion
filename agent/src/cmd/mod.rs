@@ -33,9 +33,12 @@ macro_rules! notion_out {
     ($s:tt) => {{
         Ok(lc!($s))
     }};
-    ($s:tt, $e:expr) => {{
+    ($s:tt, $($e:expr),*) => {{
         let mut res = lc!($s);
-        res.push_str($e);
+        $(
+            res.push(' ');
+            res.push_str($e);
+        )*
         Ok(res)
     }}
     
