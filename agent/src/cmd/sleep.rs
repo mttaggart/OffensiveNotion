@@ -1,4 +1,5 @@
 use std::error::Error;
+use litcrypt::lc;
 use crate::cmd::{CommandArgs, ConfigOptions, notion_out};
 
 /// Modifies the sleep and jitter times
@@ -17,5 +18,5 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
         .unwrap_or_else(|_| config_options.jitter_time);
     config_options.sleep_interval = sleep_interval;
     config_options.jitter_time = jitter_time;
-    notion_out!("[+] Sleep time: {sleep_interval}, Jitter time: {jitter_time}")
+    notion_out!("[+] Sleep time / Jitter time: ", &format!("{sleep_interval} / {jitter_time}"))
 }

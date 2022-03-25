@@ -5,6 +5,7 @@ use crate::config::ConfigOptions;
 use crate::cmd::{CommandArgs, notion_out};
 use std::env::args;
 use std::process::Command;
+use litcrypt::lc;
 #[cfg(windows)] use std::env::{var};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use crate::cmd::getprivs::is_elevated;

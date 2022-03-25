@@ -1,5 +1,6 @@
 use std::error::Error;
 use is_root::is_root;
+use litcrypt::lc;
 use crate::cmd::notion_out;
 
 #[cfg(windows)] use std::ptr::null_mut;
@@ -53,7 +54,5 @@ pub fn is_elevated() -> bool {
 pub async fn handle() -> Result<String, Box<dyn Error>> {
     // TODO: Implement Linux check
     let is_admin = is_elevated();  
-    println!("{}", is_admin);
-    Ok(format!("Admin Context: {is_admin}"))
-    
+    notion_out!("Admin Context: ", &is_admin.to_string())  
 }

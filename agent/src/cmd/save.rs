@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs::write;
 use serde_json::to_string as json_to_string;
+use litcrypt::lc;
 // use relative_path::RelativePath;
 use crate::cmd::{CommandArgs, ConfigOptions, notion_out};
 

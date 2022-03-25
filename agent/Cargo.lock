@@ -452,6 +452,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eef78b64d87775463c549fbd80e19249ef436ea3bf1de2a1eb7e717ec7fab1e9"
 
 [[package]]
+name = "litcrypt"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f82f92066d9d41b3a569b459b7874e67feb835507a83b7bd142ea9f56c620c7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -596,6 +606,7 @@ dependencies = [
  "is-root",
  "kernel32-sys",
  "libc",
+ "litcrypt",
  "rand",
  "reqwest",
  "serde",

@@ -4,7 +4,7 @@ use std::iter::Iterator;
 use std::result::Result;
 use core::str::Split;
 use std::fmt;
-// Local imports
+// External imports
 use crate::config::ConfigOptions;
 use crate::logger::Logger;
 // Command modules
@@ -27,13 +27,20 @@ mod unknown;
 mod selfdestruct;
 
 
+/// Uses litcrypt to encrypt output strings
+/// and create `Ok(String)` output
 macro_rules! notion_out {
-    ($s:literal) => {
-        Ok(format!($s))
-    };
-    ($s:literal, $e:ident) => {
-        Ok(format!($s, $e))
-    }
+    ($s:tt) => {{
+        Ok(lc!($s))
+    }};
+    ($s:tt, $($e:expr),*) => {{
+        let mut res = lc!($s);
+        $(
+            res.push(' ');
+            res.push_str($e);
+        )*
+        Ok(res)
+    }}
     
 }
 pub(crate) use notion_out;
