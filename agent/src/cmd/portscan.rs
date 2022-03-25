@@ -98,7 +98,7 @@ async fn scan_target(target: IpAddr, port: u16, timeout: u64) -> Result<String, 
     let socket_address = SocketAddr::new(target.clone(), port);
 
     match tokio::time::timeout(timeout, TcpStream::connect(&socket_address)).await {
-        Ok(Ok(_)) => Ok(format!("[+] {port} is open on host {target}")),
+        Ok(Ok(_)) => Ok(format!("{port} is open on host {target}")),
         _ => Ok("".to_string())
     }
 }
