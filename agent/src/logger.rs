@@ -73,9 +73,17 @@ impl Logger {
 }
 
 macro_rules! log_out {
-    ($s:literal) => {
-        format!($s)
+    ($s:tt) => {
+        lc!($s)
     };
+    ($s:tt, $($e:expr),*) => {{
+        let mut res = lc!($s);
+        $(
+            res.push(' ');
+            res.push_str($e);
+        )*
+        res
+    }}
     
 }
 pub(crate) use log_out;
