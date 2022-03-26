@@ -96,7 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(target_os = "macos")] {
             // For Mac, since we can't launch Chrome, we're gonna have to 
             // Hope Chrome is there for us to abuse.
-            browser_cmd = lc!("/Applications/Chrome/Contents/");
+            browser_cmd = lc!("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
             match Command::new(browser_cmd)
             .arg("--app=https://notion.so")
             .spawn() {
