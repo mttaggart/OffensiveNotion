@@ -107,12 +107,20 @@ def take_in_vars():
                            "11223344556677889900112233445566\n")
     parent_page_id = input(important + "Enter your listener's parent page ID > ")
     print(good + "Parent page ID: {}".format(parent_page_id))
+
+    # Litcrypt Key
+    # Litcrypt Key
+    litcrypt_key = ask_for_input(
+        important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
+    print(good + "Encryption key: {}".format(litcrypt_key))
+
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
-        "LOG_LEVEL": str(log_level)
+        "LOG_LEVEL": str(log_level),
+        "LITCRYPT_KEY": litcrypt_key
     }
     json_string = json.dumps(json_vars)
     return json_string
@@ -248,6 +256,10 @@ def main():
         # rest of the env here
         new_env = os.environ.copy()
 
+        # Ensure Litcrypt Key is set for the proper name
+        new_env["LITCRYPT_ENCRYPT_KEY"] = json_vars["LITCRYPT_KEY"]
+        print(info + "Litcrypt env var set to: {}".format(new_env["LITCRYPT_ENCRYPT_KEY"]))
+
         # Set extra env vars for macOS build
         if args.os == "macos":
             print(info + "Building for macOS; setting env vars")
@@ -255,7 +267,7 @@ def main():
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
         
-        # print(new_env.)
+        # print(new_env)
 
         sub.call(
             [f"cargo build -Z unstable-options --out-dir /out {os_arg} {build_arg}"], shell=True,

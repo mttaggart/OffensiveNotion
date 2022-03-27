@@ -6,6 +6,7 @@ use std::{
 use cidr_utils::cidr::IpCidr;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
+use litcrypt::lc;
 use crate::logger::{Logger};
 use crate::cmd::{CommandArgs, notion_out};
 
@@ -97,7 +98,7 @@ async fn scan_target(target: IpAddr, port: u16, timeout: u64) -> Result<String, 
     let socket_address = SocketAddr::new(target.clone(), port);
 
     match tokio::time::timeout(timeout, TcpStream::connect(&socket_address)).await {
-        Ok(Ok(_)) => Ok(format!("[+] {port} is open on host {target}")),
+        Ok(Ok(_)) => Ok(format!("{port} is open on host {target}")),
         _ => Ok("".to_string())
     }
 }
@@ -126,10 +127,10 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     let args: Vec<String> = cmd_args.collect();
 
     if args.len() <= 4 {
-        Ok(format!("[-] Improper args.
+        notion_out!("[-] Improper args.
         [*] Usage: portscan [ip] [true/false] [concurrency] [timeout]
         [*] Example: portscan 192.168.35.5 false 10 0 🎯"
-        ))
+        )
     } else {
 
         let target: ScanTarget = eval_target(args[0].to_string()).await;

@@ -1,3 +1,5 @@
+use litcrypt::lc;
+
 pub const LOG_DEBUG: u64 = 5;
 pub const LOG_INFO: u64  = 4;
 pub const LOG_WARN: u64  = 3;
@@ -25,17 +27,16 @@ impl Logger {
 
     /// The actual function that logs to stdout
     pub fn log(&self, log_level: LogLevel, msg: String) {
-        let log_glyph = match log_level {
-            LOG_DEBUG => "[?]",
-            LOG_INFO  => "[+]",
-            LOG_WARN  => "[-]",
-            LOG_ERR   => "[*]",
-            LOG_CRIT  => "[!]",
-            _        => ""
+        let mut log_msg: String = match log_level {
+            LOG_DEBUG => lc!("[?] "),
+            LOG_INFO  => lc!("[+] "),
+            LOG_WARN  => lc!("[-] "),
+            LOG_ERR   => lc!("[*] "),
+            LOG_CRIT  => lc!("[!] "),
+            _        => "".to_string(),
         };
-        let mut log_msg = String::from(log_glyph);
         log_msg.push_str(msg.as_str());
-        println!("{log_glyph} {msg}");
+        println!("{log_msg}");
         
     }
 
@@ -72,9 +73,17 @@ impl Logger {
 }
 
 macro_rules! log_out {
-    ($s:literal) => {
-        format!($s)
+    ($s:tt) => {
+        lc!($s)
     };
+    ($s:tt, $($e:expr),*) => {{
+        let mut res = lc!($s);
+        $(
+            res.push(' ');
+            res.push_str($e);
+        )*
+        res
+    }}
     
 }
 pub(crate) use log_out;

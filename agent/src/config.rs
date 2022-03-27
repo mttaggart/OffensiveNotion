@@ -5,6 +5,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, to_string, to_value};
 use base64::encode;
+use litcrypt::lc;
 
 // Config consts
 pub const URL_BASE: &str = "https://api.notion.com/v1";
@@ -158,7 +159,13 @@ pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, Confi
         if let Ok(cfg) = serde_json::from_str(c.as_str()) {
             Ok(ConfigOptions::from_json(cfg))
         } else {
-            println!("[!] Could not convert {c} to JSON");
+
+            // Create ad-hoc encryption since we don't have a logger
+            #[cfg(debug_assertions)] {
+                let mut err_msg = lc!("[!] Could not convert to JSON: ");
+                err_msg.push_str(c.as_str());
+                println!("{err_msg}");
+            }
             get_config_options().await
         }
     } else {
