@@ -17,6 +17,20 @@ pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 pub const DEFAULT_KEY_USERNAME: &str = "<<KEY_USERNAME>>";
 
+/// Enum for ConfigOptions, useful for parsing configs from 
+/// arbitrary data.
+pub enum ConfigOption {
+    ApiKey(String),
+    ParentPage(String),
+    Sleep(u64),
+    Jitter(u64),
+    LaunchApp(bool),
+    ConfigPath(String),
+    LogLevel(u64),
+    KeyUsername(String)
+}
+
+
 /// Storing Config Options as a struct for ergonomics.
 ///
 /// * `sleep_interval`: u64 for use with `std::thread::sleep()`
@@ -27,15 +41,16 @@ pub const DEFAULT_KEY_USERNAME: &str = "<<KEY_USERNAME>>";
 /// 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
+    pub api_key: String,
+    pub parent_page_id: String,
     pub sleep_interval: u64,
     pub jitter_time: u64,
-    pub parent_page_id: String,
-    pub api_key: String,
-    pub config_file_path: String,
     pub launch_app: bool,
     pub log_level: u64,
-    pub key_username: String
+    pub key_username: String,
+    pub config_file_path: String,
 }
+
 
 #[derive(Debug)]
 pub struct ConfigError(String);
