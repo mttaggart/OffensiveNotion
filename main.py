@@ -96,7 +96,15 @@ def take_in_vars():
     log_level = ask_for_input(
         important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
     # API Key
-    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
+    
+    api_key = ""
+    while "secret_" not in api_key:
+        api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
+        if "secret_" not in api_key:
+            print(important + "Hmm, that doesn't look like an API key")
+        else:
+            continue
+    
     print(good + "Got your API key!")
     # Parent Page ID
     print(
@@ -107,12 +115,13 @@ def take_in_vars():
                            "11223344556677889900112233445566\n")
     parent_page_id = input(important + "Enter your listener's parent page ID > ")
     print(good + "Parent page ID: {}".format(parent_page_id))
-
-    # Litcrypt Key
     # Litcrypt Key
     litcrypt_key = ask_for_input(
         important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
     print(good + "Encryption key: {}".format(litcrypt_key))
+
+    print(important + "Guardrails!")
+    key_username = ask_for_input(important + "Enter a username to key off. [Leave blank for no keying to username]", "")
 
     json_vars = {
         "SLEEP": sleep_interval,
@@ -120,7 +129,8 @@ def take_in_vars():
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level),
-        "LITCRYPT_KEY": litcrypt_key
+        "LITCRYPT_KEY": litcrypt_key,
+        "KEY_USERNAME": key_username
     }
     json_string = json.dumps(json_vars)
     return json_string
@@ -133,7 +143,8 @@ def read_config():
     print(recc + "Your configs are: ")
     for k, v in data.items():
         if k == "API_KEY":
-            print(r"    [*] {}: [REDACTED]".format(k))
+            redacted_key = v[:10] + "***" + v[-5:]
+            print(r"    [*] {}: {}".format(k, redacted_key))
         else:
             print(r"    [*] {}: {}".format(k, v))
     return data

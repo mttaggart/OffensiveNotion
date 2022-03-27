@@ -15,6 +15,7 @@ pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
+pub const DEFAULT_KEY_USERNAME: &str = "<<KEY_USERNAME>>";
 
 /// Storing Config Options as a struct for ergonomics.
 ///
@@ -32,7 +33,8 @@ pub struct ConfigOptions {
     pub api_key: String,
     pub config_file_path: String,
     pub launch_app: bool,
-    pub log_level: u64
+    pub log_level: u64,
+    pub key_username: String
 }
 
 #[derive(Debug)]
@@ -58,7 +60,8 @@ impl ConfigOptions {
             api_key: j["api_key"].to_string().replace('"', ""),
             config_file_path: j["config_file_path"].to_string().replace('"', ""),
             launch_app: j["launch_app"].as_bool().unwrap_or_default(),
-            log_level: j["log_level"].as_u64().unwrap_or_else(|| 4) // Info as default log level
+            log_level: j["log_level"].as_u64().unwrap_or_else(|| 4), // Info as default log level
+            key_username: j["key_username"].to_string().replace('"', ""),
         }
     }
 
@@ -82,7 +85,7 @@ impl ConfigOptions {
 /// it's invoked with a tokio::spawn to encapsulate the work in an async thread.
 pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
 
-    println!("Getting config options!");
+    println!("[*] Getting config options!");
     let stdin = std::io::stdin();
 
     let mut sleep_interval = String::new();
@@ -111,9 +114,14 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
     stdin.read_line(&mut config_file_path)?;
 
     let mut log_level = String::new();
-    println!("[*] Enter Log Level (1-4) > ");
+    println!("[*] Enter Log Level (0 [lowest] to 5 [highest]) > ");
     io::stdout().flush()?;
     stdin.read_line(&mut log_level)?;
+
+    let mut key_username = String::new();
+    println!("[*] Enter username to key off > ");
+    io::stdout().flush()?;
+    stdin.read_line(&mut key_username)?;
 
     Ok(
         ConfigOptions {
@@ -124,6 +132,7 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             config_file_path: config_file_path.trim().to_string(),
             launch_app: false,
             log_level: log_level.trim().parse().unwrap(),
+            key_username: key_username.trim().to_string()
         }
     )
 }
@@ -138,6 +147,7 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         config_file_path: CONFIG_FILE_PATH.to_string(),
         launch_app: true,
         log_level: DEFAULT_LOG_LEVEL.parse().unwrap_or_else(|_| 2),
+        key_username: DEFAULT_KEY_USERNAME.to_string()
     };
     
     Ok(config_options)
