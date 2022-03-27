@@ -16,6 +16,19 @@ pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 
+/// Enum for ConfigOptions, useful for parsing configs from 
+/// arbitrary data.
+pub enum ConfigOption {
+    ApiKey(String),
+    ParentPage(String),
+    Sleep(u64),
+    Jitter(u64),
+    LaunchApp(bool),
+    ConfigPath(String),
+    LogLevel(u64)
+}
+
+
 /// Storing Config Options as a struct for ergonomics.
 ///
 /// * `sleep_interval`: u64 for use with `std::thread::sleep()`
@@ -26,14 +39,15 @@ pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 /// 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
+    pub api_key: String,
+    pub parent_page_id: String,
     pub sleep_interval: u64,
     pub jitter_time: u64,
-    pub parent_page_id: String,
-    pub api_key: String,
-    pub config_file_path: String,
     pub launch_app: bool,
+    pub config_file_path: String,
     pub log_level: u64
 }
+
 
 #[derive(Debug)]
 pub struct ConfigError(String);
