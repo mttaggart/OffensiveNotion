@@ -11,7 +11,6 @@ use std::env::args;
 use std::process::exit;
 use std::process::Command;
 use rand::prelude::*;
-mod env_key;
 
 use whoami::hostname;
 use reqwest::Client;
@@ -34,6 +33,7 @@ mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
 use logger::log_out;
+mod env_check;
 
 use_litcrypt!();
 
@@ -109,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Before anything else happens, we key to the env if the config has been set.
     // match the keyed results. This is boiled down to a bool to account for any type of keying (by username, domain, etc)
-    if env_key::check_env_keys(&mut config_options).await {
+    if env_check::check_env_keys(&config_options).await {
         logger.info(log_out!("Key matches, continuing..."))
     } else {
         logger.crit(log_out!("No key match. Shutting down..."));
