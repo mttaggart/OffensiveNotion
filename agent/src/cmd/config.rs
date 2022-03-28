@@ -29,6 +29,10 @@ async fn update_config(config_key: &str, config_val: &str, config_options: &mut 
             Err(_) => Err(())
         },
         "config_file_path" => Ok(ConfigOption::ConfigPath(config_val.to_string())),
+        "env_checks" => match serde_json::from_str(config_val) {
+            Ok(v) => Ok(ConfigOption::EnvChecks(v)),
+            Err(_) => Err(())
+        },
         _ => Err(())
     } {
         match v {
@@ -39,6 +43,7 @@ async fn update_config(config_key: &str, config_val: &str, config_options: &mut 
             ConfigOption::LaunchApp(v) => { config_options.launch_app = v;},
             ConfigOption::LogLevel(v) => { config_options.log_level = v;},
             ConfigOption::ConfigPath(v) => { config_options.config_file_path = v;},
+            ConfigOption::EnvChecks(v) => { config_options.env_checks = v },
         };
         Ok(lc!("Updated!"))
     } else {

