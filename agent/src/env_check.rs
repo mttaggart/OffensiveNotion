@@ -1,61 +1,49 @@
-use std::error::Error;
 use crate::config::ConfigOptions;
 use serde::{Serialize, Deserialize};
-use serde_json::{Value,};
 use whoami::username;
 
 /// Categorizes environment checks
 #[derive(Debug, Serialize, Deserialize)]
-pub enum EnvCheckType {
-    Username,
-    Domain,
-    Processors
+pub enum EnvCheck {
+    Username(String),
+    Domain(String),
+    DomainJoined(bool)
 }
 
-/// Union Type for check values
-#[derive(Debug, Serialize, Deserialize)]
-pub enum EnvCheckValue {
-    String(String),
-    Number(u64)
-}
-
-impl PartialEq<String> for EnvCheckValue {
+impl PartialEq<String> for EnvCheck {
     fn eq(&self, other: &String) -> bool {
         match self {
-            EnvCheckValue::String(s) => s == other,
+            EnvCheck::Username(s) => s == other,
+            EnvCheck::Domain(s) => s == other,
             _ => false
         }
     }
 }
 
-impl PartialEq<u64> for EnvCheckValue {
-    fn eq(&self, other: &u64) -> bool {
+impl PartialEq<bool> for EnvCheck {
+    fn eq(&self, other: &bool) -> bool {
         match self {
-            EnvCheckValue::Number(n) => n == other,
+            EnvCheck::DomainJoined(b) => b == other,
             _ => false
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct EnvCheck {
-    check_type: EnvCheckType,
-    value: EnvCheckValue
-}
-
+/// Validates each kind of `EnvCheck`.
 pub fn validate_env(e: &EnvCheck) -> bool {
-    match e.check_type {
-        EnvCheckType::Username => {
+    match e {
+        EnvCheck::Username(u) => {
             let session_username: String = username().to_lowercase();
             #[cfg(target_os = "windows")] {
                 // true back in the main method continues the program
-                e.value == session_username || session_username ==  "SYSTEM"
+                u == session_username.as_str() || session_username ==  "SYSTEM"
             }
             #[cfg(not(windows))] {
                 // true back in the main method continues the program
-                e.value == session_username || session_username ==  "root"
+                u == session_username.as_str() || session_username ==  "root"
             }
         },
+        // TODO: Implement review for additional EnvChecks.
         _ => true
     }
 }

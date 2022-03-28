@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{to_string, from_str};
 use base64::encode;
 use litcrypt::lc;
-use crate::env_check::{EnvCheck, EnvCheckType, EnvCheckValue};
+use crate::env_check::EnvCheck;
 
 // Config consts
 pub const URL_BASE: &str = "https://api.notion.com/v1";
