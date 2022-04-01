@@ -16,7 +16,7 @@ pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const CONFIG_FILE_PATH: &str = "./cfg.json";
-pub const DEFAULT_ENV_CHECKS: &str = "<<DEFAULT_ENV_CHECKS>>";
+pub const DEFAULT_ENV_CHECKS: &str = "<<ENV_CHECKS>>";
 
 /// Enum for ConfigOptions, useful for parsing configs from 
 /// arbitrary data.
