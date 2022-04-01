@@ -187,9 +187,7 @@ def sed_source_code():
     
     for k, v in data.items():
         if k == "ENV_CHECKS":
-            print("[*] Setting env check vars...")
             key_var = json.dumps(v).replace("\"","\\\"")
-            print(key_var)
             utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), key_var)
         else:
             utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
