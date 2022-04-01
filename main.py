@@ -120,20 +120,8 @@ def take_in_vars():
         important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
     print(good + "Encryption key: {}".format(litcrypt_key))
 
-    
-    
-    
-    
-    
-    
     print(important + "Guardrails!")
-    
-    # Do you want to enable guardrails?
-
-    # for the possible entries in guardrails, read in each value
-
     env_checks = []
-
     key_username = ask_for_input(important + "Enter a username to key off. [Leave blank for no keying to username]", "")
     if key_username != "":
         env_checks.append({"Username": key_username})
