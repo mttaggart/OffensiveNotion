@@ -101,7 +101,7 @@ def take_in_vars():
     while "secret_" not in api_key:
         api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
         if "secret_" not in api_key:
-            print(important + "Hmm, that doesn't look like an API key")
+            print(important + "Hmm, that doesn't look like an API key. Try again!")
         else:
             continue
     
