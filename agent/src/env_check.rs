@@ -1,11 +1,13 @@
 use crate::config::ConfigOptions;
 use serde::{Serialize, Deserialize};
 use whoami::username;
+use whoami::hostname;
 
 /// Categorizes environment checks
 #[derive(Debug, Serialize, Deserialize)]
 pub enum EnvCheck {
     Username(String),
+    Hostname(String),
     Domain(String),
     DomainJoined(bool)
 }
@@ -14,6 +16,7 @@ impl PartialEq<String> for EnvCheck {
     fn eq(&self, other: &String) -> bool {
         match self {
             EnvCheck::Username(s) => s == other,
+            EnvCheck::Hostname(s) => s == other,
             EnvCheck::Domain(s) => s == other,
             _ => false
         }
@@ -43,6 +46,11 @@ pub fn validate_env(e: &EnvCheck) -> bool {
                 u == session_username.as_str() || session_username ==  "root"
             }
         },
+        EnvCheck::Hostname(h) => {
+            let session_hostname: String = hostname().to_lowercase();
+            h == session_hostname.as_str()
+        }
+
         // TODO: Implement review for additional EnvChecks.
         _ => true
     }

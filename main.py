@@ -101,7 +101,7 @@ def take_in_vars():
     while "secret_" not in api_key:
         api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
         if "secret_" not in api_key:
-            print(important + "Hmm, that doesn't look like an API key")
+            print(important + "Hmm, that doesn't look like an API key. Try again!")
         else:
             continue
     
@@ -121,7 +121,14 @@ def take_in_vars():
     print(good + "Encryption key: {}".format(litcrypt_key))
 
     print(important + "Guardrails!")
+    env_checks = []
     key_username = ask_for_input(important + "Enter a username to key off. [Leave blank for no keying to username]", "")
+    if key_username != "":
+        env_checks.append({"Username": key_username})
+
+    key_hostname = ask_for_input(important + "Enter a hostname to key off. [Leave blank for no keying to hostname]", "")
+    if key_hostname != "":
+        env_checks.append({"Hostname": key_hostname})
 
     json_vars = {
         "SLEEP": sleep_interval,
@@ -129,8 +136,9 @@ def take_in_vars():
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level),
-        "LITCRYPT_KEY": litcrypt_key,
-        "KEY_USERNAME": key_username
+        "LITCRYPT_KEY": litcrypt_key,\
+        # "[{\"Username\": \"husky\"}]"
+        "ENV_CHECKS": env_checks
     }
     json_string = json.dumps(json_vars)
     return json_string
@@ -175,8 +183,16 @@ def sed_source_code():
     source_file = agent_dir + "/src/config.rs"
     f = open("config.json")
     data = json.load(f)
+    
+    
     for k, v in data.items():
-        utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
+        if k == "ENV_CHECKS":
+            print("[*] Setting env check vars...")
+            key_var = json.dumps(v).replace("\"","\\\"")
+            print(key_var)
+            utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), key_var)
+        else:
+            utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
 
 def set_env_vars():
