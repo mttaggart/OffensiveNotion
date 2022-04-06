@@ -66,7 +66,7 @@ fn get_domain_name() -> Option<String> {
     unsafe { GetComputerNameExA(ComputerNameDnsDomain, PSTR(domain_name.as_mut_ptr()), &mut domain_name_len) }.ok().ok()?;
 
     let str_domain: String = std::str::from_utf8(&domain_name).ok()?.to_string();
-    //println!("[*] Domain name: {}", &str_domain.to_string());
+    println!("[*] Domain name: {}", &str_domain.to_string());
 
     Some(str_domain)
 }
@@ -91,15 +91,16 @@ fn is_domain_joined() -> bool {
     join_status == NetSetupDomainName
 }
 
-#[cfg(target_os = "linux")]
+
 /// Get the joined domain name
 // Sure there are ways linux hosts can be domain joined, but let's focus on the 80% solution here ;)
+#[cfg(not(windows))]
 fn get_domain_name() -> Option<String> {
     None
 }
-
-#[cfg(target_os = "linux")]
+#[cfg(not(windows))]
 /// Get the joined domain name
+#[cfg(not(windows))]
 fn is_domain_joined() -> bool {
     false
 }
@@ -127,7 +128,7 @@ pub fn validate_env(e: &EnvCheck) -> bool {
                 //println!("[*] Keying domain: {}", &d.to_string());
                 //println!("[*] Domain name: {}", &domain_name.to_string());
                 
-                // This means that a substring match for this check will pass
+                // This means that a substring match for this check will pass 
                 if domain_name.to_lowercase().trim().contains (d.to_lowercase().trim()) {
                     true
                 } else {
