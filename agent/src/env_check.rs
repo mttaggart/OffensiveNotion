@@ -66,7 +66,7 @@ fn get_domain_name() -> Option<String> {
     unsafe { GetComputerNameExA(ComputerNameDnsDomain, PSTR(domain_name.as_mut_ptr()), &mut domain_name_len) }.ok().ok()?;
 
     let str_domain: String = std::str::from_utf8(&domain_name).ok()?.to_string();
-    println!("[*] Domain name: {}", &str_domain.to_string());
+    //println!("[*] Domain name: {}", &str_domain.to_string());
 
     Some(str_domain)
 }
