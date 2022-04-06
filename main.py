@@ -130,6 +130,10 @@ def take_in_vars():
     if key_hostname != "":
         env_checks.append({"Hostname": key_hostname})
 
+    key_domain = ask_for_input(important + "Enter the domain name to key off. [Leave blank for no keying to domain name]", "")
+    if key_domain != "":
+        env_checks.append({"Domain": key_domain})
+
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
