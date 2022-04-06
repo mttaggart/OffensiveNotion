@@ -65,7 +65,10 @@ fn get_domain_name() -> Option<String> {
     let mut domain_name = vec![0u8; domain_name_len.try_into().ok()?];
     unsafe { GetComputerNameExA(ComputerNameDnsDomain, PSTR(domain_name.as_mut_ptr()), &mut domain_name_len) }.ok().ok()?;
 
-    Some(std::str::from_utf8(&domain_name).ok()?.to_string())
+    let str_domain: String = std::str::from_utf8(&domain_name).ok()?.to_string();
+    println!("[*] Domain name: {}", &str_domain.to_string());
+
+    Some(str_domain)
 }
 
 #[cfg(target_os = "windows")]
@@ -90,8 +93,15 @@ fn is_domain_joined() -> bool {
 
 #[cfg(target_os = "linux")]
 /// Get the joined domain name
+// Sure there are ways linux hosts can be domain joined, but let's focus on the 80% solution here ;)
 fn get_domain_name() -> Option<String> {
     None
+}
+
+#[cfg(target_os = "linux")]
+/// Get the joined domain name
+fn is_domain_joined() -> bool {
+    false
 }
 
 /// Validates each kind of `EnvCheck`.
@@ -114,14 +124,24 @@ pub fn validate_env(e: &EnvCheck) -> bool {
         },
         EnvCheck::Domain(d) => {
             if let Some(ref domain_name) = get_domain_name() {
-                d == domain_name
+                //println!("[*] Keying domain: {}", &d.to_string());
+                //println!("[*] Domain name: {}", &domain_name.to_string());
+                
+                // This means that a substring match for this check will pass
+                if domain_name.to_lowercase().trim().contains (d.to_lowercase().trim()) {
+                    true
+                } else {
+                    false
+                } 
+            
             } else {
                 false
             }
         },
+        
         EnvCheck::DomainJoined(j) => {
             j == &is_domain_joined()
-        },
+    },
 
         // TODO: Implement review for additional EnvChecks.
         _ => true
