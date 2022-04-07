@@ -71,6 +71,15 @@ The dev team would like to thank the following contributors for their work on Of
 | -----------                                 | ------------ |
 | [@MEhrn00](https://github.com/MEhrn00)      | Execution guardrails for domain name/joined status 🚀    |
 
+---
+
+| Legend |
+| ------ |
+| 🚀 - Issue/PR submitted and code landed |
+|💡 - Cool ideas |
+|🤔 - Consultation/Inspiration |
+| 🐛- Bug submission/fix |
+
 
 ## Disclaimer
 There is no way to make an offensive security relevant research tool and release it open source without the possibility of it falling into the wrong hands. This tool is only to be used for legal, ethical purposes including, but not limited to, research, security assessment, education. The dev team is not responsible for the misuse of this tool by anyone if used for illegal/unethical purposes. No animals were harmed in the making of this code base (although Cosmo keeps climbing on my keyboard and I have to put him over on the couch, which I'm sure must feel like torture to him).
