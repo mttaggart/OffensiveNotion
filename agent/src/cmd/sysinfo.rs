@@ -7,13 +7,13 @@ use crate::cmd::notion_out;
 /// Returns a whole bunch of info about the current session, leans heavily on the whoami crate and organizes the info
 pub async fn handle() -> Result<String, Box<dyn Error>> {
     
-    let mut return_string: String = "================= SYSINFO =================\n".to_string();
+    let mut return_string: String = lc!("================= SYSINFO =================");
 
 
-    let mut str_username: String  = "\n❓ Username: ".to_string();
-    let mut str_hostname: String  = "\n🏡 Hostname: ".to_string();
-    let mut str_distro: String = "\n📀 Distro: ".to_string();
-    let mut str_platform: String = "\n🖥️ Platform: ".to_string();
+    let mut str_username: String  = lc!("❓ Username: ");
+    let mut str_hostname: String  = lc!("🏡 Hostname: ");
+    let mut str_distro: String = lc!("📀 Distro: ");
+    let mut str_platform: String = lc!("🖥️ Platform: ");
 
     let session_username: String = username();
     let session_hostname: String = hostname();
@@ -27,10 +27,15 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
     str_distro.push_str(&session_distro);
     str_platform.push_str(&session_platform);
 
+    return_string.push_str("\n");
     return_string.push_str(&str_username);
+    return_string.push_str("\n");
     return_string.push_str(&str_hostname);
+    return_string.push_str("\n");
     return_string.push_str(&str_distro);
+    return_string.push_str("\n");
     return_string.push_str(&str_platform);
+
 
     Ok(return_string)
 }
