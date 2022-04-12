@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use whoami::username;
 use whoami::hostname;
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 use windows::{
     core::{PSTR, PWSTR, PCWSTR},
     Win32::{
