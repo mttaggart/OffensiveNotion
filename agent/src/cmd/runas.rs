@@ -1,4 +1,5 @@
 use std::error::Error;
+use litcrypt::lc;
 use crate::cmd::{CommandArgs, notion_out};
 
 /// Runs given command as another user. Requires admin privs.

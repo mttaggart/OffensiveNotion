@@ -96,7 +96,15 @@ def take_in_vars():
     log_level = ask_for_input(
         important + "Enter the logging level for the agent (0-5) [default is 2][format: #]", "2")
     # API Key
-    api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
+    
+    api_key = ""
+    while "secret_" not in api_key:
+        api_key = getpass.getpass(important + "Enter your Notion Developer Account API key [will be concealed from terminal]> ")
+        if "secret_" not in api_key:
+            print(important + "Hmm, that doesn't look like an API key. Try again!")
+        else:
+            continue
+    
     print(good + "Got your API key!")
     # Parent Page ID
     print(
@@ -107,12 +115,34 @@ def take_in_vars():
                            "11223344556677889900112233445566\n")
     parent_page_id = input(important + "Enter your listener's parent page ID > ")
     print(good + "Parent page ID: {}".format(parent_page_id))
+    # Litcrypt Key
+    litcrypt_key = ask_for_input(
+        important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
+    print(good + "Encryption key: {}".format(litcrypt_key))
+
+    print(important + "Guardrails!")
+    env_checks = []
+    key_username = ask_for_input(important + "Enter a username to key off. [Leave blank for no keying to username]", "")
+    if key_username != "":
+        env_checks.append({"Username": key_username})
+
+    key_hostname = ask_for_input(important + "Enter a hostname to key off. [Leave blank for no keying to hostname]", "")
+    if key_hostname != "":
+        env_checks.append({"Hostname": key_hostname})
+
+    key_domain = ask_for_input(important + "Enter the domain name to key off. [Leave blank for no keying to domain name]", "")
+    if key_domain != "":
+        env_checks.append({"Domain": key_domain})
+
     json_vars = {
         "SLEEP": sleep_interval,
         "JITTER": jitter_time,
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
-        "LOG_LEVEL": str(log_level)
+        "LOG_LEVEL": str(log_level),
+        "LITCRYPT_KEY": litcrypt_key,\
+        # "[{\"Username\": \"husky\"}]"
+        "ENV_CHECKS": env_checks
     }
     json_string = json.dumps(json_vars)
     return json_string
@@ -125,7 +155,8 @@ def read_config():
     print(recc + "Your configs are: ")
     for k, v in data.items():
         if k == "API_KEY":
-            print(r"    [*] {}: [REDACTED]".format(k))
+            redacted_key = v[:10] + "***" + v[-5:]
+            print(r"    [*] {}: {}".format(k, redacted_key))
         else:
             print(r"    [*] {}: {}".format(k, v))
     return data
@@ -156,8 +187,14 @@ def sed_source_code():
     source_file = agent_dir + "/src/config.rs"
     f = open("config.json")
     data = json.load(f)
+    
+    
     for k, v in data.items():
-        utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
+        if k == "ENV_CHECKS":
+            key_var = json.dumps(v).replace("\"","\\\"")
+            utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), key_var)
+        else:
+            utils.file_utils.sed_inplace(source_file, "<<{}>>".format(k), v)
 
 
 def set_env_vars():
@@ -248,6 +285,10 @@ def main():
         # rest of the env here
         new_env = os.environ.copy()
 
+        # Ensure Litcrypt Key is set for the proper name
+        new_env["LITCRYPT_ENCRYPT_KEY"] = json_vars["LITCRYPT_KEY"]
+        print(info + "Litcrypt env var set to: {}".format(new_env["LITCRYPT_ENCRYPT_KEY"]))
+
         # Set extra env vars for macOS build
         if args.os == "macos":
             print(info + "Building for macOS; setting env vars")
@@ -255,7 +296,7 @@ def main():
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"] = "x86_64-apple-darwin14-clang"
             new_env["CARGO_TARGET_X86_64_APPLE_DARWIN_AR"] = "x86_64-apple-darwin14-ar"
         
-        # print(new_env.)
+        # print(new_env)
 
         sub.call(
             [f"cargo build -Z unstable-options --out-dir /out {os_arg} {build_arg}"], shell=True,

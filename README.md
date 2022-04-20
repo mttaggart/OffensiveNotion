@@ -64,7 +64,21 @@ Please see the [Wiki][wiki] for setup, usage, commands, and more!
 >
 >-Taggart
 
+## Contributors
+The dev team would like to thank the following contributors for their work on OffensiveNotion:
 
+| Contributor                                 | Contribution |
+| -----------                                 | ------------ |
+| [@MEhrn00](https://github.com/MEhrn00)      | Execution guardrails for domain name/joined status 🚀    |
+
+---
+
+| Legend |
+| ------ |
+| 🚀 - Issue/PR submitted and code landed |
+|💡 - Cool ideas |
+|🤔 - Consultation/Inspiration |
+| 🐛- Bug submission/fix |
 
 
 ## Disclaimer

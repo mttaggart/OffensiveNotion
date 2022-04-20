@@ -1,4 +1,5 @@
 use std::error::Error;
+use litcrypt::lc;
 use crate::cmd::notion_out;
 
 /// Kills the agent.
