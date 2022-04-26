@@ -122,7 +122,7 @@ def take_in_vars():
 
     # Launch App
     launch_app = ask_for_input(
-        important + "Launch fake Notion app (Windows/Linux only) (y/N)?", "false")
+        important + "Launch fake Notion app (Windows/Linux only) (y/N)?", "n")
     launch_app = "true" if launch_app == "y" else "false"
     print(good + "Launch App: {}".format(launch_app))
 
