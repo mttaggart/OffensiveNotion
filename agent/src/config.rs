@@ -14,10 +14,10 @@ pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
 pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
+pub const DEFAULT_LAUNCH_APP: &str = "<<LAUNCH_APP>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const DEFAULT_CONFIG_FILE_PATH: &str = "./cfg.json";
 pub const DEFAULT_ENV_CHECKS: &str = "<<ENV_CHECKS>>";
-pub const DEFAULT_LAUNCH_APP: &str = "<<LAUNCH_APP>>";
 
 /// Enum for ConfigOptions, useful for parsing configs from 
 /// arbitrary data.
