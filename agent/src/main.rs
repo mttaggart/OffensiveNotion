@@ -87,24 +87,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         #[cfg(target_os = "linux")] {
             browser_cmd = lc!("/usr/local/bin/google-chrome");
-            match Command::new(browser_cmd)
-            .arg("--app=https://notion.so")
-            .spawn() {
-                Ok(_) => {logger.info(lc!("Launching browser"));},
-                Err(e) => {logger.err(e.to_string());}
-            };
         }
         #[cfg(target_os = "macos")] {
             // For Mac, since we can't launch Chrome, we're gonna have to 
             // Hope Chrome is there for us to abuse.
             browser_cmd = lc!("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
-            match Command::new(browser_cmd)
-            .arg("--app=https://notion.so")
-            .spawn() {
-                Ok(_) => {logger.info(lc!("Launching browser"));},
-                Err(e) => {logger.err(e.to_string());}
-            };
         }
+        match Command::new(browser_cmd)
+        .arg("--app=https://notion.so")
+        .spawn() {
+            Ok(_) => {logger.info(lc!("Launching browser"));},
+            Err(e) => {logger.err(e.to_string());}
+        };
     }
 
     // Before anything else happens, we key to the env if the config has been set.
