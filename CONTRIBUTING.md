@@ -20,7 +20,6 @@ Contributions are very welcome, provided they adhere to the requests outline her
   - [Reporting Bugs](#reporting-bugs)
   - [Suggesting Enhancements](#suggesting-enhancements)
   - [Your First Code Contribution](#your-first-code-contribution)
-- [Attribution](#attribution)
 
 
 ## Code of Conduct
@@ -133,6 +132,6 @@ Updating, improving and correcting the documentation
 <!-- ## Join The Project Team -->
 <!-- TODO -->
 
-omit in toc
+<!-- omit in toc -->
 ## Attribution
 This guide is based on the **contributing-gen**. [Make your own](https://github.com/bttger/contributing-gen)!
