@@ -20,12 +20,15 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
     #[cfg(windows)] {
         let username = whoami::username();
         if username == "SYSTEM" {
-            if RevertToSelf().0 == 1 {
-                notion_out!("Reverted to Self: ", username.as_str())
-            } else {
-                notion_out!("Could not revert");
+            unsafe {
+                if RevertToSelf().0 == 1 {
+                    return notion_out!("Reverted to Self: ", username.as_str());
+                } else {
+                    return notion_out!("Could not revert");
+                }
             }
         }
+        notion_out!("Not SYSTEM, no reason to revert!")
     }
     
     #[cfg(not(windows))] {
