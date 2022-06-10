@@ -28,7 +28,6 @@ mod whoami;
 mod unknown;
 mod selfdestruct;
 mod sysinfo;
-mod exfil;
 
 /// Uses litcrypt to encrypt output strings
 /// and create `Ok(String)` output
@@ -54,7 +53,6 @@ pub enum CommandType {
     Config,
     Download,
     Elevate,
-    Exfil,
     Getprivs,
     Getsystem,
     Inject,
@@ -175,12 +173,10 @@ impl NotionCommand {
             let command_args  = CommandArgs::from_split(command_words);
 
             let command_type: CommandType = match t {
-
                 "cd"           => CommandType::Cd,
                 "config"       => CommandType::Config,
                 "download"     => CommandType::Download,
                 "elevate"      => CommandType::Elevate,
-                "exfil"    => CommandType::Exfil,
                 "getprivs"     => CommandType::Getprivs,
                 "getsystem"    => CommandType::Getsystem,
                 "inject"       => CommandType::Inject,
@@ -191,7 +187,6 @@ impl NotionCommand {
                 "rev2self"     => CommandType::Rev2Self,
                 "runas"        => CommandType::Runas,
                 "save"         => CommandType::Save,
-
                 "selfdestruct" => CommandType::Selfdestruct,
                 "shell"        => CommandType::Shell,
                 "shutdown"     => CommandType::Shutdown,
@@ -212,7 +207,6 @@ impl NotionCommand {
             CommandType::Config       => config::handle(&mut self.args, config_options, logger).await,
             CommandType::Download     => download::handle( &mut self.args, logger).await,
             CommandType::Elevate      => elevate::handle(&mut self.args, config_options).await,
-            CommandType::Exfil   => exfil::handle(&mut self.args, config_options, logger).await,
             CommandType::Getprivs     => getprivs::handle().await,
             CommandType::Getsystem    => getsystem::handle(logger).await,
             CommandType::Inject       => inject::handle(&mut self.args, logger).await,
