@@ -125,12 +125,16 @@ pub async fn get_blocks(client: &Client, page_id: &String) -> Result<serde_json:
 pub async fn complete_command(client: &Client, mut command_block: serde_json::Value, logger: &Logger) {
     
     // Set completed status
-    command_block["to_do"]["checked"] = serde_json::to_value(true).unwrap();
     let block_id = command_block["id"].as_str().unwrap();
+    let update_data = json!({
+        "to_do": {
+            "checked": true
+        }
+    });
     let url = format!("{URL_BASE}/blocks/{block_id}");
     let r = client
         .patch(url)
-        .json(&command_block)
+        .json(&update_data)
         .send()
         .await
         .unwrap();
