@@ -24,6 +24,10 @@ pub async fn handle()-> Result<String, Box<dyn Error>> {
             return_string.push_str(&file_name);
             return_string.push_str("\n");
         }
-        
-        Ok(return_string)
+
+        if return_string.is_empty() {
+            Ok(lc!("[*] Directory is empty"))
+        } else {
+            Ok(return_string)
+        }
 }
