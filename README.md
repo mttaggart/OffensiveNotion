@@ -96,7 +96,7 @@ Links
 [repo]:https://github.com/mttaggart/OffensiveNotion "OffensiveNotion Repository ➶"
 [pr]:https://github.com/mttaggart/OffensiveNotion/pulls "OffensiveNotion Pull Requests ➶"
 [license]:https://github.com/mttaggart/OffensiveNotion/blob/main/LICENSE "OffensiveNotion License File ➶"
-[release]:https://img.shields.io/github/v/release/mttaggart/OffensiveNotion?label=RELEASE%3A%20DAMASCUS%20STEEL&style=for-the-badge
+[release]:https://img.shields.io/github/v/release/mttaggart/OffensiveNotion?label=RELEASE%3A%20Tamahagane&style=for-the-badge
 
 <!--
 Badges
