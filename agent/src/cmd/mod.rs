@@ -28,6 +28,7 @@ mod whoami;
 mod unknown;
 mod selfdestruct;
 mod sysinfo;
+mod ls;
 
 /// Uses litcrypt to encrypt output strings
 /// and create `Ok(String)` output
@@ -56,6 +57,7 @@ pub enum CommandType {
     Getprivs,
     Getsystem,
     Inject,
+    Ls,
     Portscan,
     Persist,
     Ps,
@@ -180,6 +182,7 @@ impl NotionCommand {
                 "getprivs"     => CommandType::Getprivs,
                 "getsystem"    => CommandType::Getsystem,
                 "inject"       => CommandType::Inject,
+                "ls"           => CommandType::Ls,
                 "persist"      => CommandType::Persist,
                 "portscan"     => CommandType::Portscan,
                 "ps"           => CommandType::Ps,
@@ -210,6 +213,7 @@ impl NotionCommand {
             CommandType::Getprivs     => getprivs::handle().await,
             CommandType::Getsystem    => getsystem::handle(logger).await,
             CommandType::Inject       => inject::handle(&mut self.args, logger).await,
+            CommandType::Ls           => ls::handle().await,    
             CommandType::Persist      => persist::handle(&mut self.args, config_options, logger).await,
             CommandType::Portscan     => portscan::handle(&mut self.args, logger).await,
             CommandType::Ps           => ps::handle().await,
