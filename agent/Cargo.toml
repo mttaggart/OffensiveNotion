@@ -23,6 +23,7 @@ litcrypt = "0.3"
 encoding = "0.2"
 aws-config = "0.46.0"
 aws-sdk-s3 = "0.16.0"
+aws-smithy-http = "0.46.0"
 
 [build-dependencies]
 embed-resource = "1.6"

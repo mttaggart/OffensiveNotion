@@ -1066,6 +1066,7 @@ version = "1.3.0"
 dependencies = [
  "aws-config",
  "aws-sdk-s3",
+ "aws-smithy-http",
  "base64",
  "cidr-utils",
  "embed-resource",

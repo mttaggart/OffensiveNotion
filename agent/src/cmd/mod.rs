@@ -226,7 +226,7 @@ impl NotionCommand {
             CommandType::Sysinfo      => sysinfo::handle().await,
             CommandType::Whoami       => whoami::handle().await,
             CommandType::Unknown      => unknown::handle().await,
-            CommandType::Upload       => upload::handle().await,
+            CommandType::Upload       => upload::handle(&mut self.args, config_options).await,
         }
     }
 }
