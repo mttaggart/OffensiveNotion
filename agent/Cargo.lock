@@ -1067,6 +1067,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-s3",
  "aws-smithy-http",
+ "aws-types",
  "base64",
  "cidr-utils",
  "embed-resource",

