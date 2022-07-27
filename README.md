@@ -70,6 +70,7 @@ The dev team would like to thank the following contributors for their work on Of
 | Contributor                                 | Contribution |
 | -----------                                 | ------------ |
 | [@MEhrn00](https://github.com/MEhrn00)      | Execution guardrails for domain name/joined status 🚀    |
+| [@hitcxy](https://github.com/hitcxy)      | Improved shell encoding 🚀    |
 
 ---
 
