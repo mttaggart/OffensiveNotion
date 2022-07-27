@@ -223,7 +223,7 @@ impl NotionCommand {
             CommandType::Pwd          => pwd::handle().await,
             CommandType::Rev2Self     => rev2self::handle().await,
             CommandType::Runas        => runas::handle(&self.args).await,
-            CommandType::S3Upload     => s3upload::handle(&mut self.args, logger, config_options).await,
+            CommandType::S3Upload     => s3upload::handle(&mut self.args, logger).await,
             CommandType::Save         => save::handle(&mut self.args, config_options).await,
             CommandType::Selfdestruct => selfdestruct::handle().await,
             CommandType::Shell        => shell::handle(&mut self.args).await,

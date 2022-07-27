@@ -15,11 +15,10 @@ use aws_types::region::Region;
 use crate::cmd::notion_out;
 use litcrypt::lc;
 
-
 /// Uploads a file to S3 Storage.
 /// 
 /// Usage: `s3upload aws_access_key_id aws_secret_access_key region bucket_name filename`
-pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger, config_options: &mut ConfigOptions) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
 
     let mut aws_access_key_id = String::from("");
     let mut aws_secret_access_key = String::from("");
