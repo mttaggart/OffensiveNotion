@@ -1,6 +1,6 @@
 use std::error::Error;
 use litcrypt::lc;
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 use crate::logger::{Logger, log_out};
 
 use std::fs;

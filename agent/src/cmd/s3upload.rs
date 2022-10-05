@@ -12,7 +12,7 @@ use aws_sdk_s3::{
     model::ObjectCannedAcl, 
 };
 use aws_types::region::Region;
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 use litcrypt::lc;
 
 /// Uploads a file to S3 Storage.
@@ -39,7 +39,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
             logger.debug(log_out!("Arg:", m, ":", &a));
             *v = a;
         } else {
-            return notion_out!(("Missing ", m));
+            return command_out!(("Missing ", m));
         }
 
     }
@@ -71,8 +71,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     remove_var("AWS_SECRET_ACCESS_KEY");
 
     match res {
-        Ok(_) => notion_out!("File uploaded: ", &format!("https://{}.s3.{}.amazonaws.com/{}", bucket_name, region, upload_file)),
-        _ => notion_out!("Upload Error")
+        Ok(_) => command_out!("File uploaded: ", &format!("https://{}.s3.{}.amazonaws.com/{}", bucket_name, region, upload_file)),
+        _ => command_out!("Upload Error")
     }
 
 }

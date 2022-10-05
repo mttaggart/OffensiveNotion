@@ -12,7 +12,7 @@
 use std::error::Error;
 use litcrypt::lc;
 use crate::logger::{Logger, log_out};
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 
 /// Reverts to self if impersonated
 pub async fn handle() -> Result<String, Box<dyn Error>> {
@@ -22,16 +22,16 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
         if username == "SYSTEM" {
             unsafe {
                 if RevertToSelf().0 == 1 {
-                    return notion_out!("Reverted to Self: ", whoami::username().as_str());
+                    return command_out!("Reverted to Self: ", whoami::username().as_str());
                 } else {
-                    return notion_out!("Could not revert");
+                    return command_out!("Could not revert");
                 }
             }
         }
-        notion_out!("Not SYSTEM, no reason to revert!")
+        command_out!("Not SYSTEM, no reason to revert!")
     }
     
     #[cfg(not(windows))] {
-        notion_out!("This module only works on Windows!")
+        command_out!("This module only works on Windows!")
     }
 }

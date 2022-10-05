@@ -2,7 +2,7 @@ use std::error::Error;
 use litcrypt::lc;
 use serde_json;
 use crate::logger::{Logger, log_out};
-use crate::cmd::{CommandArgs, ConfigOptions, ConfigOption, notion_out};
+use crate::cmd::{CommandArgs, ConfigOptions, ConfigOption, command_out};
 
 /// Does the actual work of updating the config.
 /// 
@@ -61,11 +61,11 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
         Some(arg) => {
             if let Some(val) = cmd_args.nth(0) {
                 match update_config(&arg, &val, config_options).await {
-                    Ok(_) => notion_out!("Config Item Updated:", &arg.to_string(), ", New Value:", &val.to_string()),
+                    Ok(_) => command_out!("Config Item Updated:", &arg.to_string(), ", New Value:", &val.to_string()),
                     Err(e) => Ok(e)
                 }
             } else {
-                notion_out!("No value provided for option", &arg.to_string())
+                command_out!("No value provided for option", &arg.to_string())
             }
         },
         None => {

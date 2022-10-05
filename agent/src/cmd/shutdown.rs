@@ -1,8 +1,8 @@
 use std::error::Error;
 use litcrypt::lc;
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 
 /// Kills the agent.
 pub async fn handle() -> Result<String, Box<dyn Error>> {
-    notion_out!("Shutting down")
+    command_out!("Shutting down")
 }

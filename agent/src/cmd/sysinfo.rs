@@ -1,7 +1,7 @@
 use std::error::Error;
 use litcrypt::lc;
 use whoami::{desktop_env, devicename, distro, username, platform, hostname};
-use crate::cmd::notion_out;
+use crate::cmd::command_out;
 
 
 /// Returns a whole bunch of info about the current session, leans heavily on the whoami crate and organizes the info

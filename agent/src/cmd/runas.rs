@@ -1,6 +1,6 @@
 use std::error::Error;
 use litcrypt::lc;
-use crate::cmd::{CommandArgs, notion_out};
+use crate::cmd::{CommandArgs, command_out};
 
 /// Runs given command as another user. Requires admin privs.
 /// 
@@ -8,9 +8,9 @@ use crate::cmd::{CommandArgs, notion_out};
 pub async fn handle(_cmd_args: &CommandArgs) -> Result<String, Box<dyn Error>> {
     // TODO: Implement
     #[cfg(windows)] {
-        return notion_out!("Under Construction!");
+        return command_out!("Under Construction!");
     }
     #[cfg(not(windows))] {
-        return notion_out!("Runas only works on Windows!");
+        return command_out!("Runas only works on Windows!");
     }
 }

