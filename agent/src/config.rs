@@ -77,67 +77,6 @@ impl ConfigOptions {
 
 }
 
-/// Retrieves config options from the terminal.
-///
-/// This is tricky because the terminal doesn't async in a normal way. That's why
-/// it's invoked with a tokio::spawn to encapsulate the work in an async thread.
-pub fn get_config_options_debug() -> Result<ConfigOptions, Box<dyn Error + Send + Sync>> {
-
-    println!("[*] Getting config options!");
-    let stdin = std::io::stdin();
-
-    let mut sleep_interval = String::new();
-    print!("[*] Enter agent sleep interval > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut sleep_interval)?;
-
-    let mut jitter_time = String::new();
-    print!("[*] Enter agent jitter time > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut jitter_time)?;
-
-    let mut parent_page_id = String::new();
-    print!("[*] Enter parent page id > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut parent_page_id)?;
-
-    let mut api_key = String::new();
-    println!("[*] Enter API Key > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut api_key)?;
-
-    let mut config_file_path = String::new();
-    println!("[*] Enter Config File Path > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut config_file_path)?;
-
-    let mut log_level = String::new();
-    println!("[*] Enter Log Level (0 [lowest] to 5 [highest]) > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut log_level)?;
-
-    let mut launch_app = String::new();
-    println!("[*] Launch App (Windows/Linux only) (y/n)? > ");
-    io::stdout().flush()?;
-    stdin.read_line(&mut launch_app)?;
-
-    Ok(
-        ConfigOptions {
-            sleep_interval: sleep_interval.trim().parse().unwrap(),
-            jitter_time: jitter_time.trim().parse().unwrap(),
-            parent_page_id: parent_page_id.trim().to_string(),
-            api_key: api_key.trim().to_string(),
-            config_file_path: config_file_path.trim().to_string(),
-            launch_app: match launch_app.to_lowercase().as_str() {
-                "y" => true,
-                _   => false
-            },
-            log_level: log_level.trim().parse().unwrap(),
-            env_checks: Vec::new()
-        }
-    )
-}
-
 /// Sets default config options from defined constants.
 pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
     let config_options = ConfigOptions {

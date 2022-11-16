@@ -22,7 +22,6 @@ mod config;
 use config::{
     ConfigOptions,
     get_config_options, 
-    get_config_options_debug,
     load_config_options
 };
 
@@ -51,14 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // -b: ingest base64 decode
     match args().nth(1) {
         Some(a) => {
-            if a == "-d" {
-                // Set up async handle for debug
-                let config_options_handle = tokio::spawn( async {
-                    return get_config_options_debug();
-                });
-                config_options = config_options_handle.await?.unwrap();
-            // Handle alternative config file location
-            } else if a == "-c" {
+            if a == "-c" {
                 let config_file_path = args().nth(2).unwrap();
                 config_options = load_config_options(Some(config_file_path.as_str())).await?;
             } else if a == "-b" { 
