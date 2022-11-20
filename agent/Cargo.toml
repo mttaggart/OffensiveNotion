@@ -28,6 +28,7 @@ aws-types = "0.46.0"
 azure_storage = "0.5.0"
 azure_storage_blobs = "0.5.0"
 regex = "1.5.5"
+async-trait = "0.1.58"
 
 [build-dependencies]
 embed-resource = "1.6"
