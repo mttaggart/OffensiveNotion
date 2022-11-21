@@ -37,11 +37,13 @@ pub enum ConfigOption {
 
 /// Storing Config Options as a struct for ergonomics.
 ///
-/// * `sleep_interval`: u64 for use with `std::thread::sleep()`
-/// * `parent_page_id`: String which eventually can be added at compile
-/// * `api_key`: String also added at compile
-/// * `config_file_path`: String where the json for config will be read/written
+/// * `sleep_interval`: u64 for use with [std::thread::sleep()]
+/// * `jitter_time`: u64 that determines the variance of polling
+/// * `log_level`: u64 for [crate::logger::Logger] instances
 /// * `launch_app`: Whether to launch the Notion web app
+/// * `config_file_path`: String where the json for config will be read/written
+/// * `env_checks`: A [Vec] containing [EnvCheck] structs.
+/// * `channel_type`: [ChannelType] that will contain the [Channel] config.
 /// 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigOptions {
