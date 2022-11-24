@@ -1,4 +1,5 @@
 use litcrypt::lc;
+use serde::{Serialize, Deserialize};
 
 pub const LOG_DEBUG: u64 = 5;
 pub const LOG_INFO: u64  = 4;
@@ -13,6 +14,7 @@ type LogLevel = u64;
 /// 
 /// Logging has 4 levels: `LOG_INFO`, `LOG_WARN`, `LOG_ERR`, and `LOG_CRIT`,
 /// Defined in the named consts. 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Logger {
     log_level: LogLevel
 }
