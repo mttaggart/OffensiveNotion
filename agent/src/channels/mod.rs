@@ -42,16 +42,16 @@ impl Display for ChannelError {
 /// Send it a String and call it a day
 #[async_trait]
 pub trait Channel {
-    async fn init(self) -> Result<String, ChannelError>;
-    async fn send(self, data: String, command_block_id: &str) -> Result<String, ChannelError>;
-    async fn receive(self) -> Result<Vec<AgentCommand>, ChannelError>;
-    async fn complete(self, cmd: AgentCommand) -> ();
+    async fn init(&mut self) -> Result<String, ChannelError>;
+    async fn send(&self, data: String, command_block_id: &str) -> Result<String, ChannelError>;
+    async fn receive(&self) -> Result<Vec<AgentCommand>, ChannelError>;
+    async fn complete(&self, cmd: AgentCommand) -> ();
     fn to_base64(self) -> String;
     fn update(self, options: String) -> Result<String, ChannelError>;
 }
 
 /// Channel 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ChannelType {
     Notion(NotionChannel),
     Unknown

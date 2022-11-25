@@ -19,7 +19,7 @@ use windows::{
 };
 
 /// Categorizes environment checks
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum EnvCheck {
     Username(String),
     Hostname(String),
@@ -150,9 +150,9 @@ pub fn validate_env(e: &EnvCheck) -> bool {
 }
 
 /// Confirms that all environment checks pass
-pub async fn check_env_keys(config_options: &ConfigOptions) -> bool {
+pub async fn check_env_keys(env_checks: &Vec<EnvCheck>) -> bool {
 
-    config_options.env_checks
+    env_checks
     .iter()
     .all(|e| validate_env(e))
 

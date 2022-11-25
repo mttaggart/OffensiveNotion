@@ -45,7 +45,7 @@ pub enum ConfigOption {
 /// * `env_checks`: A [Vec] containing [EnvCheck] structs.
 /// * `channel_type`: [ChannelType] that will contain the [Channel] config.
 /// 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConfigOptions {
     pub sleep_interval: u64,
     pub jitter_time: u64,

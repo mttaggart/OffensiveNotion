@@ -10,8 +10,8 @@ use crate::cmd::{CommandArgs, ConfigOptions, ConfigOption, command_out};
 /// to handle parsing of the commands.
 async fn update_config(config_key: &str, config_val: &str, config_options: &mut ConfigOptions) -> Result<String, String> {
     if let Ok(v) = match config_key {
-        "api_key" => Ok(ConfigOption::ApiKey(config_val.to_string())),
-        "parent_page" => Ok(ConfigOption::ParentPage(config_val.to_string())),
+        // "api_key" => Ok(ConfigOption::ApiKey(config_val.to_string())),
+        // "parent_page" => Ok(ConfigOption::ParentPage(config_val.to_string())),
         "sleep" => match config_val.parse::<u64>() {
             Ok(v) => Ok(ConfigOption::Sleep(v)),
             Err(_) => Err(())
@@ -20,7 +20,7 @@ async fn update_config(config_key: &str, config_val: &str, config_options: &mut 
             Ok(v) => Ok(ConfigOption::Jitter(v)),
             Err(_) => Err(())
         },
-        "launch_app" => match config_val.parse::<bool>() {
+        "launch_app" => match config_val.parse::<String>() {
             Ok(v) => Ok(ConfigOption::LaunchApp(v)),
             Err(_) => Err(())
         },
@@ -36,14 +36,15 @@ async fn update_config(config_key: &str, config_val: &str, config_options: &mut 
         _ => Err(())
     } {
         match v {
-            ConfigOption::ApiKey(v) => { config_options.api_key = v;},
-            ConfigOption::ParentPage(v) => { config_options.parent_page_id = v;},
+            // ConfigOption::ApiKey(v) => { config_options.api_key = v;},
+            // ConfigOption::ParentPage(v) => { config_options.parent_page_id = v;},
             ConfigOption::Sleep(v) => { config_options.sleep_interval = v;},
             ConfigOption::Jitter(v) => { config_options.jitter_time = v;},
             ConfigOption::LaunchApp(v) => { config_options.launch_app = v;},
             ConfigOption::LogLevel(v) => { config_options.log_level = v;},
             ConfigOption::ConfigPath(v) => { config_options.config_file_path = v;},
             ConfigOption::EnvChecks(v) => { config_options.env_checks = v },
+            ConfigOption::ChannelType(v) => { config_options.channel_type = v },
         };
         Ok(lc!("Updated!"))
     } else {

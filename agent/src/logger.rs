@@ -14,7 +14,7 @@ type LogLevel = u64;
 /// 
 /// Logging has 4 levels: `LOG_INFO`, `LOG_WARN`, `LOG_ERR`, and `LOG_CRIT`,
 /// Defined in the named consts. 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Logger {
     log_level: LogLevel
 }
