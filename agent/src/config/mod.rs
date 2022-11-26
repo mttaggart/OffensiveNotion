@@ -107,18 +107,27 @@ pub async fn load_config_options(c: Option<&str>) -> Result<ConfigOptions, Confi
     };
 
     if let Ok(c) = fs::read_to_string(config_file_path) {
-        if let Ok(cfg ) = from_str::<ConfigOptions>(c.as_str()) {
-            Ok(cfg)
-        } else {
 
-            // Create ad-hoc encryption since we don't have a logger
-            #[cfg(debug_assertions)] {
-                let mut err_msg = lc!("[!] Could not convert to JSON: ");
-                err_msg.push_str(c.as_str());
-                println!("{err_msg}");
+        match from_str(c.as_str()) {
+            Ok(cfg) => Ok(cfg),
+            Err(e) => {
+                println!("{e}");
+                get_config_options().await
             }
-            get_config_options().await
         }
+
+        // if let Ok(cfg ) = from_str::<ConfigOptions>(c.as_str()) {
+        //     Ok(cfg)
+        // } else {
+
+        //     // Create ad-hoc encryption since we don't have a logger
+        //     #[cfg(debug_assertions)] {
+        //         let mut err_msg = lc!("[!] Could not convert from JSON: ");
+        //         err_msg.push_str(c.as_str());
+        //         println!("{err_msg}");
+        //     }
+        //     get_config_options().await
+        // }
     } else {
         get_config_options().await
     }

