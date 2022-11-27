@@ -162,7 +162,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let commands: Vec<AgentCommand>  = channel.receive().await.unwrap();
 
         for mut c in commands {
-            println!("{:?}", c);
             let output: String = c.handle(&mut config_options, &logger).await?;
             channel.complete(c.clone()).await;
             match channel.send(output, &c.rel).await {
