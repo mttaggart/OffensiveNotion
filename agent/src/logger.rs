@@ -12,7 +12,7 @@ type LogLevel = u64;
 
 /// Helper struct to manage logging across the tool.
 /// 
-/// Logging has 4 levels: `LOG_INFO`, `LOG_WARN`, `LOG_ERR`, and `LOG_CRIT`,
+/// Logging has 5 levels: `LOG_DEBUG`, `LOG_INFO`, `LOG_WARN`, `LOG_ERR`, and `LOG_CRIT`
 /// Defined in the named consts. 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Logger {
@@ -35,6 +35,7 @@ impl Logger {
             LOG_WARN  => lc!("[-] "),
             LOG_ERR   => lc!("[*] "),
             LOG_CRIT  => lc!("[!] "),
+            LOG_NONE  => "".to_string(),
             _        => "".to_string(),
         };
         log_msg.push_str(msg.as_str());
