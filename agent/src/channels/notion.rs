@@ -314,6 +314,10 @@ impl Channel for NotionChannel {
         encode(to_string(&self.config).unwrap().as_bytes())
     }
 
+    ///
+    /// Updates the config
+    /// TODO: Implement this
+    /// 
     fn update(&self, options: String) -> Result<String, ChannelError> {
 
         command_out!("Config updated")

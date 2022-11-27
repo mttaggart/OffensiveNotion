@@ -1,15 +1,13 @@
 use std::error::Error;
-use std::io::{self, Write};
 use std::fs;
 use std::fmt;
 use serde::{Deserialize, Serialize};
 use serde_json::{to_string, from_str};
 use base64::encode;
-use litcrypt::lc;
 use crate::env_check::EnvCheck;
 
 
-use crate::channels::{Channel, ChannelType};
+use crate::channels::ChannelType;
 
 // Config consts
 pub const DEFAULT_SLEEP_INTERVAL: &str = "<<SLEEP>>";
