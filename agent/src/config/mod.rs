@@ -17,7 +17,6 @@ pub const DEFAULT_LAUNCH_APP: &str = "<<LAUNCH_APP>>";
 pub const DEFAULT_LOG_LEVEL: &str = "<<LOG_LEVEL>>";
 pub const DEFAULT_ENV_CHECKS: &str = "<<ENV_CHECKS>>";
 pub const DEFAULT_CHANNEL_TYPE: &str = "<<CHANNEL_TYPE>>";
-pub const DEFAULT_CHANNEL: &str = "<<CHANNEL>>";
 
 /// Enum for ConfigOptions, useful for parsing configs from 
 /// arbitrary data.
