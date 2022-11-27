@@ -1,15 +1,14 @@
-use std::{fmt::{Display, self}};
-use serde_json::{json, Value};
+use std::fmt::{Display, self};
 use serde::{Deserialize, Serialize};
 pub mod notion;
-use notion::{NotionChannel, NotionConfig};
+use notion::NotionChannel;
 use async_trait::async_trait;
 use crate::cmd::AgentCommand;
 
 
 #[derive(Debug)]
 pub struct ChannelError {
-    msg: String
+    pub msg: String
 }
 
 impl ChannelError {
