@@ -19,7 +19,7 @@ use litcrypt::{lc, use_litcrypt};
 
 mod config;
 pub mod channels;
-use channels::{Channel, ChannelType, ChannelError};
+use channels::{Channel, ChannelType};
 use config::{
     ConfigOptions,
     get_config_options, 
