@@ -4,10 +4,9 @@ use serde::{Serialize, Deserialize};
 use base64::encode;
 use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE};
-use serde_json::{json, from_value, from_str, to_string, Value};
+use serde_json::{json, to_string};
 use async_trait::async_trait;
 use crate::logger::*;
-use crate::env_check::EnvCheck;
 use whoami::hostname;
 use crate::cmd::AgentCommand;
 use crate::cmd::getprivs::is_elevated;
@@ -265,7 +264,7 @@ impl Channel for NotionChannel {
         
         if !r.status().is_success() {
             let result_text = r.text().await.unwrap();
-            self.logger.debug(log_out!(result_text) );
+            self.logger.err(log_out!("Completion error:", &result_text)) ;
         } else {
             self.logger.debug(log_out!("Command completed"));
         }
