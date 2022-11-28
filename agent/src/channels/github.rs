@@ -1,11 +1,9 @@
 use crate::channels::{Channel, ChannelError};
-use crate::cmd::command_out;
-use azure_storage_blobs::blob::BlockWithSizeList;
 use serde::{Serialize, Deserialize};
 use base64::encode;
 use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, USER_AGENT, ACCEPT};
-use serde_json::{json, to_string};
+use serde_json::json;
 use async_trait::async_trait;
 use crate::logger::*;
 use whoami::hostname;
@@ -66,7 +64,7 @@ impl GitHubChannel {
     /// all the way down. When the full config file is loaded from wherever it's loaded,
     /// this struct will already exist and not need to be parsed here.
     /// 
-    async fn new(config: GitHubConfig, is_admin: bool, log_level: u64) -> Result<GitHubChannel, ChannelError> {
+    async fn _new(config: GitHubConfig, log_level: u64) -> Result<GitHubChannel, ChannelError> {
 
         let logger = Logger::new(log_level);
         
@@ -157,13 +155,6 @@ impl Channel for GitHubChannel {
 
         let url = format!("{}{}/{}/issues", URL_BASE, self.config.username, self.config.repo_name);
         
-        let is_admin = is_elevated();
-
-        let check_in_emoji = match is_admin {
-            true  => "#️⃣",
-            false => "💲"
-        };
-
         // Craft JSON Body
         let body: serde_json::Value = json!({
             "title": hn,
@@ -295,7 +286,7 @@ impl Channel for GitHubChannel {
         todo!()
     }
 
-    fn update(&self,options:String) -> Result<String,ChannelError>  {
+    fn update(&self, _options:String) -> Result<String,ChannelError>  {
         todo!()
     }
 }
