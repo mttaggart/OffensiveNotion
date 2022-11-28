@@ -120,7 +120,10 @@ impl Channel for NotionChannel {
     /// Utility function for creating Notion Pages
     /// Used during the build of a new [NotionChannel] in `NotionChannel::init
     /// 
-    async fn init(&mut self) -> Result<String, ChannelError> {
+    async fn init(&mut self, log_level: u64) -> Result<String, ChannelError> {
+
+        // Assign logger
+        self.logger = Logger::new(log_level);
         self.logger.info(format!("Creating page..."));
 
         // Get hostname
@@ -203,6 +206,10 @@ impl Channel for NotionChannel {
     async fn send(&self, data: String, command_block_id: &str) -> Result<String, ChannelError> {
 
         self.logger.debug(format!("{data}"));
+        
+        // This is a requirement of the Notion API.
+        // There is a max block size, so large outputs
+        // will get chunked.
         let chunks:Vec<serde_json::Value> = data
             .as_bytes()
             .chunks(CHUNK_SIZE)
@@ -238,7 +245,6 @@ impl Channel for NotionChannel {
             Ok(result_text)
         } else {
             let msg = r.status().as_str().to_owned();
-            println!("{msg}");
             Err(ChannelError::new(&msg))
         }
     }

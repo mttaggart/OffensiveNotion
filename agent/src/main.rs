@@ -30,7 +30,6 @@ use config::{
 mod cmd;
 use cmd::{AgentCommand, CommandType};
 mod logger;
-use logger::Logger;
 use logger::log_out;
 mod env_check;
 
@@ -98,19 +97,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let channel_type = config_options.channel_type.clone();
 
     // Create channel
-    let mut channel = match channel_type {
-        ChannelType::Notion(nc) => nc,
+    let mut channel: Box<dyn Channel> = match channel_type {
+        ChannelType::Notion(nc) => Box::new(nc),
+        ChannelType::GitHub(gc) => Box::new(gc),
         ChannelType::Unknown => {
             panic!("Unknown channel type!");
         }
     };
 
-    // Assign logger
-    channel.logger = Logger::new(config_options.log_level.clone());
-
     logger.info(log_out!("Made it to init"));
     // Initialize Channel.
-    channel.init().await.unwrap();
+    if let Err(e) = channel.init(config_options.log_level.clone()).await {
+        logger.crit(log_out!("Couldn't initialize!"));
+        exit(-1);
+    }
 
     // Start Notion App if configured to do so
     // TODO: Replace with launch_app abstraction

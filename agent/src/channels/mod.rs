@@ -2,6 +2,8 @@ use std::fmt::{Display, self};
 use serde::{Deserialize, Serialize};
 pub mod notion;
 use notion::NotionChannel;
+pub mod github;
+use github::GitHubChannel;
 use async_trait::async_trait;
 use crate::cmd::AgentCommand;
 
@@ -41,8 +43,8 @@ impl Display for ChannelError {
 /// Send it a String and call it a day
 #[async_trait]
 pub trait Channel {
-    async fn init(&mut self) -> Result<String, ChannelError>;
-    async fn send(&self, data: String, command_block_id: &str) -> Result<String, ChannelError>;
+    async fn init(&mut self, log_level: u64) -> Result<String, ChannelError>;
+    async fn send(&self, data: String, rel: &str) -> Result<String, ChannelError>;
     async fn receive(&self) -> Result<Vec<AgentCommand>, ChannelError>;
     async fn complete(&self, cmd: AgentCommand) -> ();
     fn to_base64(&self) -> String;
@@ -53,5 +55,6 @@ pub trait Channel {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ChannelType {
     Notion(NotionChannel),
+    GitHub(GitHubChannel),
     Unknown
 }
