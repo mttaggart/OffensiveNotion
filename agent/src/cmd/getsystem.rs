@@ -1,33 +1,33 @@
 #[cfg(windows)] use windows::{
-    core::{PSTR, PWSTR, PCWSTR},
+    // core::{PSTR, PWSTR, PCWSTR},
     Win32::{
         Foundation::{
             CloseHandle,
             HANDLE
         },
         System::Threading::{
-            GetCurrentProcess,
+            // GetCurrentProcess,
             OpenProcessToken,
             OpenProcess,
             PROCESS_ALL_ACCESS
         },
         Security::{
-            GetTokenInformation,
+            // GetTokenInformation,
             DuplicateToken,
             ImpersonateLoggedOnUser,
             SecurityImpersonation,
-            TokenElevation,
-            TOKEN_ELEVATION,
-            TOKEN_QUERY,
+            // TokenElevation,
+            // TOKEN_ELEVATION,
+            // TOKEN_QUERY,
             TOKEN_DUPLICATE
         }
     }
 };
 
-#[cfg(windows)] use std::mem;
-#[cfg(windows)] use std::ffi::c_void;
-#[cfg(windows)] use libc;
-#[cfg(windows)] use sysinfo::{ProcessExt, PidExt, System, SystemExt, Pid, Process};
+// #[cfg(windows)] use std::mem;
+// #[cfg(windows)] use std::ffi::c_void;
+// #[cfg(windows)] use libc;
+#[cfg(windows)] use sysinfo::{ProcessExt, PidExt, System, SystemExt};
 #[cfg(windows)] use whoami;
 use std::error::Error;
 use litcrypt::lc;

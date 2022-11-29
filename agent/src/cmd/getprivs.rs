@@ -1,13 +1,13 @@
 use std::error::Error;
-use is_root::is_root;
+#[cfg(not(windows))]use is_root::is_root;
 use litcrypt::lc;
 use crate::cmd::command_out;
 
 #[cfg(windows)] use std::mem;
-#[cfg(windows)] use std::ptr::null_mut;
+// #[cfg(windows)] use std::ptr::null_mut;
 #[cfg(windows)] use std::ffi::c_void;
 #[cfg(windows)] use windows::{
-    core::{PSTR, PWSTR, PCWSTR},
+    // core::{PSTR, PWSTR, PCWSTR},
     Win32::{
         Foundation::{
             CloseHandle,
