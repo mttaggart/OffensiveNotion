@@ -3,7 +3,7 @@ use litcrypt::lc;
 #[cfg(windows)] use base64::decode as b64_decode;
 #[cfg(windows)] use reqwest::Client;
 #[cfg(windows)] use crate::logger::{Logger, log_out};
-use crate::logger::Logger;
+#[cfg(not(windows))] use crate::logger::Logger;
 use crate::cmd::{CommandArgs, command_out};
 #[cfg(windows)] use windows::Win32:: {
     Foundation::{
