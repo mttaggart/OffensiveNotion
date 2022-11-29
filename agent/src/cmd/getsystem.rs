@@ -94,6 +94,7 @@ pub async fn handle(logger: &Logger) -> Result<String, Box<dyn Error>> {
         }
     }
     #[cfg(not(windows))] {
+        logger.err(log_out!("Getsystem called on non-Windows machine"));
         command_out!("This module only works on Windows!")
     }
 }

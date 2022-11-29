@@ -5,7 +5,6 @@ use aws_config::{meta::region::{RegionProviderChain}, from_env};
 use aws_smithy_http::byte_stream::{ByteStream};
 use aws_smithy_http::body::SdkBody;
 use crate::cmd::CommandArgs;
-use crate::config::ConfigOptions;
 use crate::logger::{Logger, log_out };
 use aws_sdk_s3::{
     Client, 

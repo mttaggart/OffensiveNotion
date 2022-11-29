@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use base64::encode;
 use reqwest::Client;
 use reqwest::header::{HeaderMap, AUTHORIZATION, USER_AGENT, ACCEPT};
-use serde_json::json;
+use serde_json::{json, to_string};
 use async_trait::async_trait;
 use crate::logger::*;
 use whoami::hostname;
@@ -282,11 +282,15 @@ impl Channel for GitHubChannel {
         }
     }
 
+    /// Produces a base64 encoded String of the Options.
+    ///
+    /// This is useful for sending ConfigOptions to launch commands
+    /// 
     fn to_base64(&self) -> String {
-        todo!()
+        encode(to_string(&self.config).unwrap().as_bytes())
     }
 
-    fn update(&self, _options:String) -> Result<String,ChannelError>  {
+    fn update(&self, _options:String) -> Result<String, ChannelError>  {
         todo!()
     }
 }

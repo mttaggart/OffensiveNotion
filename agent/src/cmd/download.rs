@@ -4,7 +4,7 @@ use std::fs::File;
 use reqwest::Client;
 use litcrypt::lc;
 use crate::cmd::{CommandArgs, command_out};
-use crate::logger::{Logger, log_out};
+use crate::logger::{Logger};
 
 /// Downloads a file to the local system.
 /// 
@@ -22,7 +22,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     if r.status().is_success() {
         if let Ok(mut out_file) = File::create(&path) {
             match copy(&mut r.bytes().await?.as_ref(), &mut out_file) {
-                Ok(b)  => { return command_out!("File written to ", &path);},
+                Ok(_)  => { return command_out!("File written to ", &path);},
                 Err(_) => { return command_out!("Could not write file"); }
             }
         } else {

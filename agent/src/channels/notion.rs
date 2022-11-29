@@ -58,7 +58,7 @@ impl NotionChannel {
     /// all the way down. When the full config file is loaded from wherever it's loaded,
     /// this struct will already exist and not need to be parsed here.
     /// 
-    async fn new(config: NotionConfig, is_admin: bool, log_level: u64) -> Result<NotionChannel, ChannelError> {
+    async fn _new(config: NotionConfig, log_level: u64) -> Result<NotionChannel, ChannelError> {
 
         let logger = Logger::new(log_level);
         
@@ -324,7 +324,7 @@ impl Channel for NotionChannel {
     /// Updates the config
     /// TODO: Implement this
     /// 
-    fn update(&self, options: String) -> Result<String, ChannelError> {
+    fn update(&self, _options: String) -> Result<String, ChannelError> {
 
         command_out!("Config updated")
     }

@@ -1,10 +1,10 @@
 use std::error::Error;
 use litcrypt::lc;
 use crate::cmd::command_out;
-use crate::logger::{Logger, log_out};
+// use crate::logger::{Logger, log_out};
 
-use std::fs;
-use std::path::{Path, PathBuf};
+// use std::fs;
+// use std::path::{Path, PathBuf};
 
 pub async fn handle()-> Result<String, Box<dyn Error>> {
     
@@ -26,7 +26,8 @@ pub async fn handle()-> Result<String, Box<dyn Error>> {
         }
 
         if return_string.is_empty() {
-            Ok(lc!("[*] Directory is empty"))
+            command_out!("Directory is empty")
+            // Ok(lc!("[*] Directory is empty"))
         } else {
             Ok(return_string)
         }

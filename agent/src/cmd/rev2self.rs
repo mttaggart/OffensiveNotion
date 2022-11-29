@@ -11,7 +11,7 @@
 #[cfg(windows)] use whoami;
 use std::error::Error;
 use litcrypt::lc;
-use crate::logger::{Logger, log_out};
+// use crate::logger::{Logger, log_out};
 use crate::cmd::command_out;
 
 /// Reverts to self if impersonated

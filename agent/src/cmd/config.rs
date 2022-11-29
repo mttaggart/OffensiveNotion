@@ -1,7 +1,7 @@
 use std::error::Error;
 use litcrypt::lc;
 use serde_json;
-use crate::logger::{Logger, log_out};
+use crate::logger::{Logger};
 use crate::cmd::{CommandArgs, ConfigOptions, ConfigOption, command_out};
 
 /// Does the actual work of updating the config.
@@ -56,7 +56,7 @@ async fn update_config(config_key: &str, config_val: &str, config_options: &mut 
 /// the server.
 /// 
 /// Usage: `sleep [CONFIG_ARG] [CONFIG_VALUE]`
-pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptions, logger: &Logger) -> Result<String, Box<dyn Error>> {
+pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptions, _logger: &Logger) -> Result<String, Box<dyn Error>> {
 
     match cmd_args.nth(0) {
         Some(arg) => {

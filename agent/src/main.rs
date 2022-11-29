@@ -107,7 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     logger.info(log_out!("Made it to init"));
     // Initialize Channel.
-    if let Err(e) = channel.init(config_options.log_level.clone()).await {
+    if let Err(_e) = channel.init(config_options.log_level.clone()).await {
         logger.crit(log_out!("Couldn't initialize!"));
         exit(-1);
     }

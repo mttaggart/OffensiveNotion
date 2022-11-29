@@ -1,6 +1,6 @@
 extern crate encoding;
 use encoding::all::GB18030;
-use encoding::{DecoderTrap,EncoderTrap,Encoding};
+use encoding::{DecoderTrap, Encoding};
 use std::process::Command;
 use std::error::Error;
 use crate::cmd::CommandArgs;

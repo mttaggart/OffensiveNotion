@@ -1,7 +1,7 @@
 use std::error::Error;
 use litcrypt::lc;
-use whoami::{desktop_env, devicename, distro, username, platform, hostname};
-use crate::cmd::command_out;
+use whoami::{desktop_env, distro, username, platform, hostname};
+// use crate::cmd::command_out;
 
 
 /// Returns a whole bunch of info about the current session, leans heavily on the whoami crate and organizes the info
@@ -17,7 +17,7 @@ pub async fn handle() -> Result<String, Box<dyn Error>> {
 
     let session_username: String = username();
     let session_hostname: String = hostname();
-    let desktop_env = desktop_env().to_string();
+    let _desktop_env = desktop_env().to_string();
     let session_distro = distro().to_string();
     let session_platform: String = platform().to_string();
 

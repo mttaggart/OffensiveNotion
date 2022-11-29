@@ -4,7 +4,6 @@ use std::env::{set_var, remove_var};
 use azure_storage::core::prelude::*;
 use azure_storage_blobs::prelude::*;
 use crate::cmd::CommandArgs;
-use crate::config::ConfigOptions;
 use crate::logger::{Logger, log_out };
 
 use crate::cmd::command_out;

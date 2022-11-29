@@ -1,4 +1,3 @@
-use crate::config::ConfigOptions;
 use serde::{Serialize, Deserialize};
 use whoami::username;
 use whoami::hostname;
@@ -142,10 +141,10 @@ pub fn validate_env(e: &EnvCheck) -> bool {
         
         EnvCheck::DomainJoined(j) => {
             j == &is_domain_joined()
-    },
+        },
 
-        // TODO: Implement review for additional EnvChecks.
-        _ => true
+        // // TODO: Implement review for additional EnvChecks.
+        // _ => true
     }
 }
 
