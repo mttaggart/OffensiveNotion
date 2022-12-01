@@ -4,7 +4,6 @@ extern crate tokio;
 extern crate serde_json;
 extern crate whoami;
 extern crate base64;
-
 #[macro_use]
 extern crate litcrypt;
 
@@ -100,6 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut channel: Box<dyn Channel> = match channel_type {
         ChannelType::Notion(nc) => Box::new(nc),
         ChannelType::GitHub(gc) => Box::new(gc),
+        ChannelType::Tumblr(tc) => Box::new(tc),
         ChannelType::Unknown => {
             panic!("Unknown channel type!");
         }

@@ -4,6 +4,8 @@ pub mod notion;
 use notion::NotionChannel;
 pub mod github;
 use github::GitHubChannel;
+pub mod tumblr;
+use tumblr::TumblrChannel;
 use async_trait::async_trait;
 use crate::cmd::AgentCommand;
 
@@ -56,5 +58,6 @@ pub trait Channel {
 pub enum ChannelType {
     Notion(NotionChannel),
     GitHub(GitHubChannel),
+    Tumblr(TumblrChannel),
     Unknown
 }

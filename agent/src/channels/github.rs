@@ -10,7 +10,7 @@ use whoami::hostname;
 use crate::cmd::AgentCommand;
 use crate::cmd::getprivs::is_elevated;
 
-/// Base GiThub API URL
+/// Base GitHub API URL
 const URL_BASE: &str = "https://api.github.com/repos/";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
