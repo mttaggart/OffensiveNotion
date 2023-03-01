@@ -126,7 +126,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger) -> Result<Strin
     logger.debug(format!("Portscan args: {:?}", cmd_args));
     let args: Vec<String> = cmd_args.collect();
 
-    if args.len() <= 4 {
+    if args.len() < 4 {
         command_out!("[-] Improper args.
         [*] Usage: portscan [ip] [true/false] [concurrency] [timeout]
         [*] Example: portscan 192.168.35.5 false 10 0 🎯"
