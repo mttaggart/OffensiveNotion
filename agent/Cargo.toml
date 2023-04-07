@@ -28,6 +28,7 @@ aws-types = "0.46.0"
 azure_storage = "0.5.0"
 azure_storage_blobs = "0.5.0"
 regex = "1.5.5"
+clroxide = { version = "1.1.1", features = ["default", "default-loader"] }
 
 [build-dependencies]
 embed-resource = "1.6"
