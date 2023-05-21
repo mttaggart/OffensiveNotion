@@ -13,8 +13,8 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.136", features=["derive"] }
 serde_json = "1.0"
 libc = "0.2.66"
-sysinfo = "0.23.0"
-whoami = "1.2.1"
+sysinfo = "0.29.0"
+whoami = "1.4.0"
 rand = "0.8.0"
 is-root = "0.1.2"
 base64 = "0.13.0"
